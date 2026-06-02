@@ -1,0 +1,82 @@
+{
+  "destination": "Dallas",
+  "dates": "Saturday",
+  "intent": "Hidden gems, vegetarian-friendly food, aesthetic but not too touristy",
+  "mood": "hidden gems",
+  "summary": "A local-feeling Dallas day built around independent caf\u00e9s, neighborhood art, vegetarian-friendly food, and a skyline finish without turning it into a generic tourist checklist.",
+  "assumptions": [
+    "One full day is available",
+    "The user prefers aesthetic local places",
+    "The user wants vegetarian-friendly food"
+  ],
+  "personalization": {
+    "pace": "medium",
+    "novelty": "hidden gems",
+    "social_energy": "balanced",
+    "physical_energy": "medium",
+    "food_importance": "high",
+    "nature_importance": "medium",
+    "culture_importance": "medium",
+    "romance_importance": "low",
+    "tourist_tolerance": "low",
+    "visual_taste": "aesthetic, local, design-forward"
+  },
+  "days": [
+    {
+      "date_label": "Saturday",
+      "theme": "A hidden-gems Dallas day",
+      "stops": [
+        {
+          "time": "9:30 AM",
+          "place_name": "The Wild Detectives",
+          "category": "Coffee + books",
+          "description": "Start with coffee in an independent bookstore caf\u00e9 that feels local, creative, and low-key.",
+          "why_this_fits": "Matches hidden gems, aesthetic atmosphere, and a slower creative start.",
+          "visual": "coffee",
+          "booking": {
+            "required": false,
+            "type": "none",
+            "label": "No booking needed"
+          },
+          "travel_to_next": {
+            "label": "7 min walk",
+            "distance": "0.4 mi"
+          }
+        },
+        {
+          "time": "11:00 AM",
+          "place_name": "Bishop Arts District",
+          "category": "Neighborhood walk",
+          "description": "Browse murals, small shops, and local streets without feeling trapped in a tourist checklist.",
+          "why_this_fits": "It is aesthetic, walkable, and local-feeling with flexible food options nearby.",
+          "visual": "hidden",
+          "booking": {
+            "required": false,
+            "type": "none",
+            "label": "No booking needed"
+          },
+          "travel_to_next": {
+            "label": "12 min drive",
+            "distance": "4.3 mi"
+          }
+        }
+      ]
+    }
+  ],
+  "route": [
+    {
+      "from": "The Wild Detectives",
+      "to": "Bishop Arts District",
+      "distance": "0.4 mi",
+      "duration": "7 min walk"
+    }
+  ],
+  "bookable_moments": [
+    {
+      "provider": "Google Calendar",
+      "title": "Full itinerary added",
+      "description": "All stops were added with travel buffers.",
+      "time": "All day"
+    }
+  ]
+}
