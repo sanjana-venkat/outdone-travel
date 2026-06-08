@@ -272,20 +272,28 @@ function App() {
       <div className="aurora a3" />
 
       <nav className="navbar">
-        <button className="brand" onClick={() => setStep("login")}>
-          <span className="brand-logo">✦</span>
-          <span>Travel DNA</span>
-        </button>
-
-        <div className="nav-steps">
-          {["Setup", "Mood", "Result"].map((label, i) => {
+        <div className="nav-steps nav-left">
+          {[
+            { label: "Setup", value: "setup" },
+            { label: "Mood", value: "mood" },
+            { label: "Result", value: "result" }
+          ].map((item, i) => {
             const order = ["setup", "mood", "result"];
-            const active = step === order[i];
+            const active = step === item.value;
             const done = order.indexOf(step) > i || step === "loading";
+            const disabled = item.value === "result" && !itinerary;
             return (
-              <span className={active ? "active" : done ? "done" : ""} key={label}>
-                <i /> {label}
-              </span>
+              <button
+                type="button"
+                className={active ? "active" : done ? "done" : ""}
+                key={item.value}
+                disabled={disabled}
+                onClick={() => {
+                  if (!disabled) setStep(item.value);
+                }}
+              >
+                <i /> {item.label}
+              </button>
             );
           })}
         </div>
@@ -484,22 +492,37 @@ function App() {
       {step === "loading" && (
         <main className="screen loading-screen on">
           <section className="loader-layout">
-            <div className="constellation" aria-hidden="true">
-              <svg viewBox="0 0 420 300">
+            <div className={`constellation progress-${Math.min(loadingLine, 6)}`} aria-hidden="true">
+              <svg viewBox="0 0 520 320">
                 <defs>
-                  <linearGradient id="googleLine" x1="0" x2="1">
-                    <stop offset="0%" stopColor="#4285F4" />
-                    <stop offset="35%" stopColor="#34A853" />
-                    <stop offset="65%" stopColor="#FBBC04" />
-                    <stop offset="100%" stopColor="#EA4335" />
-                  </linearGradient>
+                  <filter id="starGlow" x="-80%" y="-80%" width="260%" height="260%">
+                    <feGaussianBlur stdDeviation="5" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
                 </defs>
-                <polyline points="70,205 135,130 210,165 270,80 340,120" />
-                <circle className="blue" cx="70" cy="205" r="8" />
-                <circle className="green" cx="135" cy="130" r="8" />
-                <circle className="yellow" cx="210" cy="165" r="8" />
-                <circle className="blue" cx="270" cy="80" r="8" />
-                <circle className="red" cx="340" cy="120" r="8" />
+
+                <line className="seg seg-1 blue-stroke" x1="72" y1="220" x2="135" y2="148" />
+                <line className="seg seg-2 green-stroke" x1="135" y1="148" x2="218" y2="186" />
+                <line className="seg seg-3 yellow-stroke" x1="218" y1="186" x2="306" y2="92" />
+                <line className="seg seg-4 red-stroke" x1="306" y1="92" x2="388" y2="136" />
+                <line className="seg seg-5 blue-stroke" x1="388" y1="136" x2="455" y2="96" />
+
+                <circle className="node node-1 blue" cx="72" cy="220" r="9" />
+                <circle className="node node-2 green" cx="135" cy="148" r="9" />
+                <circle className="node node-3 yellow" cx="218" cy="186" r="9" />
+                <circle className="node node-4 blue" cx="306" cy="92" r="9" />
+                <circle className="node node-5 red" cx="388" cy="136" r="9" />
+                <circle className="node node-6 green" cx="455" cy="96" r="9" />
+
+                <circle className="halo halo-1" cx="72" cy="220" r="22" />
+                <circle className="halo halo-2" cx="135" cy="148" r="22" />
+                <circle className="halo halo-3" cx="218" cy="186" r="22" />
+                <circle className="halo halo-4" cx="306" cy="92" r="22" />
+                <circle className="halo halo-5" cx="388" cy="136" r="22" />
+                <circle className="halo halo-6" cx="455" cy="96" r="22" />
               </svg>
             </div>
 
@@ -799,51 +822,48 @@ button {
   z-index: 100;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: transparent;
-  border: 0;
-  color: var(--ink);
-  font-weight: 700;
-}
-
-.brand-logo {
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--blue), var(--green));
-  display: grid;
-  place-items: center;
-  color: #fff;
-}
-
 .nav-steps {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
-.nav-steps span {
-  display: flex;
+.nav-left {
+  justify-content: flex-start;
+}
+
+.nav-steps button {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 100px;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 800;
   color: var(--ink3);
+  transition: background .2s, color .2s, border-color .2s;
 }
 
-.nav-steps span.active {
+.nav-steps button:hover:not(:disabled) {
+  background: rgba(255,255,255,.05);
+  color: var(--ink2);
+}
+
+.nav-steps button.active {
   color: var(--ink);
-  background: var(--s2);
-  border: 1px solid var(--bdr2);
+  background: rgba(255,255,255,.07);
+  border-color: var(--bdr2);
 }
 
-.nav-steps span.done {
+.nav-steps button.done {
   color: var(--accent);
+}
+
+.nav-steps button:disabled {
+  opacity: .32;
+  cursor: not-allowed;
 }
 
 .nav-steps i {
@@ -1333,8 +1353,8 @@ input:focus {
 }
 
 .constellation {
-  width: min(420px, 72vw);
-  height: 260px;
+  width: min(540px, 80vw);
+  height: 290px;
   display: grid;
   place-items: center;
 }
@@ -1345,21 +1365,27 @@ input:focus {
   overflow: visible;
 }
 
-.constellation polyline {
-  fill: none;
-  stroke: url(#googleLine);
-  stroke-width: 3;
+.constellation .seg {
+  stroke-width: 4;
   stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 480;
-  stroke-dashoffset: 480;
-  animation: drawConstellation 2.2s ease forwards infinite;
-  filter: drop-shadow(0 0 18px rgba(66,133,244,.25));
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  opacity: 0;
+  filter: drop-shadow(0 0 12px rgba(66,133,244,.35));
+  transition: stroke-dashoffset .55s var(--ease), opacity .35s;
 }
 
-.constellation circle {
-  opacity: .95;
-  animation: pulseStar 2.2s ease-in-out infinite;
+.blue-stroke { stroke: #4285F4; }
+.green-stroke { stroke: #34A853; }
+.yellow-stroke { stroke: #FBBC04; }
+.red-stroke { stroke: #EA4335; }
+
+.constellation .node {
+  opacity: .15;
+  transform: scale(.7);
+  transform-origin: center;
+  filter: url(#starGlow);
+  transition: opacity .35s, transform .45s var(--spring);
 }
 
 .constellation .blue { fill: #4285F4; }
@@ -1367,14 +1393,77 @@ input:focus {
 .constellation .yellow { fill: #FBBC04; }
 .constellation .red { fill: #EA4335; }
 
-@keyframes drawConstellation {
-  0% { stroke-dashoffset: 480; opacity: .35; }
-  45%, 100% { stroke-dashoffset: 0; opacity: 1; }
+.constellation .halo {
+  fill: none;
+  stroke: rgba(255,255,255,.12);
+  stroke-width: 1;
+  opacity: 0;
+  transform-origin: center;
+  animation: haloPulse 2.8s ease-in-out infinite;
 }
 
-@keyframes pulseStar {
-  0%,100% { transform: scale(1); transform-origin: center; }
-  50% { transform: scale(1.24); transform-origin: center; }
+.constellation.progress-0 .node-1,
+.constellation.progress-1 .node-1,
+.constellation.progress-2 .node-1,
+.constellation.progress-3 .node-1,
+.constellation.progress-4 .node-1,
+.constellation.progress-5 .node-1,
+.constellation.progress-6 .node-1,
+.constellation.progress-1 .node-2,
+.constellation.progress-2 .node-2,
+.constellation.progress-3 .node-2,
+.constellation.progress-4 .node-2,
+.constellation.progress-5 .node-2,
+.constellation.progress-6 .node-2,
+.constellation.progress-2 .node-3,
+.constellation.progress-3 .node-3,
+.constellation.progress-4 .node-3,
+.constellation.progress-5 .node-3,
+.constellation.progress-6 .node-3,
+.constellation.progress-3 .node-4,
+.constellation.progress-4 .node-4,
+.constellation.progress-5 .node-4,
+.constellation.progress-6 .node-4,
+.constellation.progress-4 .node-5,
+.constellation.progress-5 .node-5,
+.constellation.progress-6 .node-5,
+.constellation.progress-5 .node-6,
+.constellation.progress-6 .node-6 {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.constellation.progress-1 .seg-1,
+.constellation.progress-2 .seg-1,
+.constellation.progress-3 .seg-1,
+.constellation.progress-4 .seg-1,
+.constellation.progress-5 .seg-1,
+.constellation.progress-6 .seg-1,
+.constellation.progress-2 .seg-2,
+.constellation.progress-3 .seg-2,
+.constellation.progress-4 .seg-2,
+.constellation.progress-5 .seg-2,
+.constellation.progress-6 .seg-2,
+.constellation.progress-3 .seg-3,
+.constellation.progress-4 .seg-3,
+.constellation.progress-5 .seg-3,
+.constellation.progress-6 .seg-3,
+.constellation.progress-4 .seg-4,
+.constellation.progress-5 .seg-4,
+.constellation.progress-6 .seg-4,
+.constellation.progress-5 .seg-5,
+.constellation.progress-6 .seg-5 {
+  stroke-dashoffset: 0;
+  opacity: 1;
+}
+
+.constellation.progress-6 .halo {
+  opacity: .7;
+}
+
+@keyframes haloPulse {
+  0%,100% { transform: scale(.75); opacity: .10; }
+  50% { transform: scale(1.15); opacity: .35; }
 }
 
 .loading-copy h2 {
@@ -1769,7 +1858,11 @@ small {
 
 @media(max-width: 600px) {
   .navbar {
-    padding: 0 20px;
+    padding: 0 16px;
+  }
+
+  .nav-steps button {
+    padding: 7px 10px;
   }
 
   .screen {
