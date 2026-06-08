@@ -62,7 +62,7 @@ function photoUrlFromPlace(place) {
   const photoName = place?.photos?.[0]?.name;
   if (!photoName || !GOOGLE_MAPS_API_KEY) return null;
 
-  return `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=1200&maxHeightPx=800&key=${GOOGLE_MAPS_API_KEY}`;
+  return `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=1200&key=${GOOGLE_MAPS_API_KEY}`;
 }
 
 async function enrichStopWithPlaces(stop, destination) {
