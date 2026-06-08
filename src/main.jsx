@@ -123,6 +123,9 @@ function App() {
   const [itinerary, setItinerary] = useState(null);
   const [googleReady, setGoogleReady] = useState(false);
   const [error, setError] = useState("");
+  const [showSubscribe, setShowSubscribe] = useState(false);
+  const [subscribeEmail, setSubscribeEmail] = useState("");
+  const [subscribeSaved, setSubscribeSaved] = useState(false);
   const shellRef = useRef(null);
 
   useEffect(() => {
@@ -579,6 +582,18 @@ function App() {
                 ))}
               </div>
               {itinerary?.summary && <p className="res-summary">{itinerary.summary}</p>}
+              {itinerary?.generatedBy === "fallback" && (
+                <div className="fallback-banner">
+                  <span>Demo fallback</span>
+                  <p>
+                    Gemini free-tier credits are limited, so Travel DNA generated this
+                    preview locally while still attempting to enrich places with Google Places.
+                  </p>
+                  <button type="button" onClick={() => setShowSubscribe(true)}>
+                    Like this idea? Get updates
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
@@ -591,6 +606,9 @@ function App() {
             </button>
             <button className="btn-accent" onClick={generatePlan}>
               Regenerate ✦
+            </button>
+            <button className="btn-outline" onClick={() => setShowSubscribe(true)}>
+              Subscribe for updates
             </button>
           </section>
 
@@ -605,6 +623,25 @@ function App() {
                     {stop.time} <span>{stop.period}</span>
                   </h3>
                   <h4>{stop.name}</h4>
+
+                  <div className="place-meta prominent">
+                    {stop.rating && (
+                      <span className="rating-pill">★ {stop.rating}{stop.userRatingCount ? ` · ${stop.userRatingCount.toLocaleString()} reviews` : ""}</span>
+                    )}
+                    {stop.openNow !== undefined && (
+                      <span>{stop.openNow ? "Open now" : "Hours vary"}</span>
+                    )}
+                    {stop.address && <span>{stop.address}</span>}
+                    {stop.mapsUrl && (
+                      <a href={stop.mapsUrl} target="_blank" rel="noreferrer">
+                        Open in Google Maps
+                      </a>
+                    )}
+                    {!stop.rating && stop.placesStatus !== "google-places" && (
+                      <span className="demo-pill">Places details unavailable in fallback</span>
+                    )}
+                  </div>
+
                   <p>{stop.description}</p>
 
                   <div className="s-photo">
@@ -614,23 +651,8 @@ function App() {
                       loading="lazy"
                     />
                     <div className="s-photo-ov" />
-                    <span>{stop.photoQuery || stop.name}</span>
+                    <span>{stop.placesStatus === "google-places" ? "Google Places photo" : (stop.photoQuery || stop.name)}</span>
                   </div>
-
-                  {(stop.rating || stop.address || stop.mapsUrl || stop.openNow !== undefined) && (
-                    <div className="place-meta">
-                      {stop.rating && <span>★ {stop.rating}</span>}
-                      {stop.openNow !== undefined && (
-                        <span>{stop.openNow ? "Open now" : "Hours vary"}</span>
-                      )}
-                      {stop.address && <span>{stop.address}</span>}
-                      {stop.mapsUrl && (
-                        <a href={stop.mapsUrl} target="_blank" rel="noreferrer">
-                          Open in Google Maps
-                        </a>
-                      )}
-                    </div>
-                  )}
 
                   <small>{stop.routeFromPrevious}</small>
                 </div>
@@ -639,6 +661,67 @@ function App() {
           </section>
         </main>
       )}
+      {showSubscribe && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="subscribe-modal glass-panel">
+            <button
+              className="modal-close"
+              type="button"
+              onClick={() => {
+                setShowSubscribe(false);
+                setSubscribeSaved(false);
+              }}
+            >
+              ×
+            </button>
+
+            <div className="spark">✦</div>
+            <p className="label">Early access</p>
+            <h2>Like this idea?</h2>
+            <p>
+              Travel DNA is running in demo mode right now. Gemini API credits
+              are limited, so fallback plans keep the experience alive while the
+              product evolves.
+            </p>
+            <p>
+              Subscribe to get updates when live personalization, better Google
+              Places photos, saved preferences, and richer planning are ready.
+            </p>
+
+            <form
+              className="subscribe-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!subscribeEmail.trim()) return;
+                const existing = JSON.parse(localStorage.getItem("travelDnaSubscribers") || "[]");
+                localStorage.setItem(
+                  "travelDnaSubscribers",
+                  JSON.stringify([...existing, subscribeEmail.trim()])
+                );
+                setSubscribeSaved(true);
+              }}
+            >
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={subscribeEmail}
+                onChange={(event) => setSubscribeEmail(event.target.value)}
+                required
+              />
+              <button className="btn-accent" type="submit">
+                Keep me updated
+              </button>
+            </form>
+
+            {subscribeSaved && (
+              <div className="subscribe-success">
+                You’re on the list. For now this is saved locally for the prototype.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -1893,6 +1976,162 @@ small {
   .s-photo {
     height: 210px;
   }
+}
+
+
+.fallback-banner {
+  margin-top: 18px;
+  width: min(760px, 100%);
+  border: 1px solid rgba(251,188,4,.24);
+  background:
+    radial-gradient(circle at 12% 20%, rgba(251,188,4,.10), transparent 34%),
+    rgba(255,255,255,.055);
+  border-radius: 22px;
+  padding: 16px 18px;
+  backdrop-filter: blur(14px);
+}
+
+.fallback-banner span {
+  display: inline-flex;
+  color: #fbbc04;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.fallback-banner p {
+  margin: 0 0 12px;
+  max-width: 650px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255,255,255,.70);
+}
+
+.fallback-banner button {
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: rgba(251,188,4,.16);
+  color: #ffd56a;
+  font-weight: 900;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0,0,0,.62);
+  backdrop-filter: blur(16px);
+}
+
+.subscribe-modal {
+  width: min(620px, 100%);
+  border-radius: 34px;
+  padding: 34px;
+  position: relative;
+}
+
+.subscribe-modal h2 {
+  margin-top: 6px;
+  font-size: clamp(40px, 6vw, 64px);
+}
+
+.modal-close {
+  position: absolute;
+  right: 22px;
+  top: 18px;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--bdr);
+  background: rgba(255,255,255,.06);
+  color: var(--ink);
+  font-size: 24px;
+}
+
+.subscribe-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.subscribe-form input {
+  flex: 1;
+}
+
+.subscribe-success {
+  margin-top: 14px;
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: var(--accent2);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+
+/* Equal image mood grid override */
+.mood-grid.image-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+  width: 100% !important;
+}
+
+.image-mood-tile {
+  height: 260px !important;
+  min-height: 260px !important;
+  grid-column: span 1 !important;
+  grid-row: span 1 !important;
+  border-radius: 32px !important;
+}
+
+.image-mood-tile.active .mood-check,
+.mood-check {
+  display: none !important;
+}
+
+@media(max-width: 900px) {
+  .mood-grid.image-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media(max-width: 620px) {
+  .mood-grid.image-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .subscribe-form {
+    flex-direction: column;
+  }
+}
+
+
+.place-meta.prominent {
+  margin: 8px 0 14px;
+}
+
+.place-meta.prominent span,
+.place-meta.prominent a {
+  background: rgba(255,255,255,.075);
+}
+
+.place-meta .rating-pill {
+  color: #fbbc04;
+  border-color: rgba(251,188,4,.24);
+  background: rgba(251,188,4,.10);
+}
+
+.place-meta .demo-pill {
+  color: var(--ink3);
+  border-color: rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
 }
 `;
 
