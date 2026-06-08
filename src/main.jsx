@@ -448,30 +448,23 @@ function App() {
             </p>
           </section>
 
-          <section className="mood-grid">
-            {moodVibes.map((vibe) => (
+          <section className="mood-grid image-grid">
+            {moodVibes.map((vibe, index) => (
               <button
                 type="button"
                 key={vibe.id}
-                className={selectedMoods.includes(vibe.id) ? "mood-tile active" : "mood-tile"}
+                className={selectedMoods.includes(vibe.id) ? "image-mood-tile active" : "image-mood-tile"}
                 onClick={() => toggleMood(vibe.id)}
               >
-                <span className="mood-icon">{vibe.icon}</span>
-                <strong>{vibe.title}</strong>
-                <p>{vibe.tag}</p>
-                <span className="mood-check">✓</span>
+                <img src={vibe.img} alt={vibe.title} loading="lazy" />
+                <span className="tile-number">{String(index + 1).padStart(2, "0")}</span>
+                <div className="image-tile-overlay" />
+                <div className="image-tile-content">
+                  <strong>{vibe.title}</strong>
+                  <p>{vibe.tag}</p>
+                </div>
               </button>
             ))}
-          </section>
-
-          <section className="mood-image-strip">
-            {selectedMoodObjects.length ? selectedMoodObjects.map((vibe) => (
-              <article className="mood-image-card" key={vibe.id}>
-                <img src={vibe.img} alt={vibe.title} />
-                <div />
-                <span>{vibe.title}</span>
-              </article>
-            )) : null}
           </section>
 
           <section className="bottom-cta glass-panel">
@@ -1209,120 +1202,104 @@ input:focus {
   margin-bottom: 34px;
 }
 
-.mood-grid {
+.mood-grid.image-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(160px, 1fr));
-  gap: 18px;
-}
-
-.mood-tile {
-  position: relative;
-  min-height: 178px;
-  border-radius: 30px;
-  border: 2px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.035);
-  color: var(--ink);
-  padding: 26px 24px;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  transition: border-color .2s, background .2s, transform .2s;
-}
-
-.mood-tile:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255,255,255,.20);
-}
-
-.mood-tile.active {
-  background:
-    radial-gradient(circle at 80% 70%, rgba(0,212,170,.12), transparent 36%),
-    rgba(26,115,232,.12);
-  border-color: var(--blue);
-}
-
-.mood-icon {
-  width: 54px;
-  height: 54px;
-  border-radius: 18px;
-  display: grid;
-  place-items: center;
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.72);
-  font-size: 24px;
-  margin-bottom: 22px;
-}
-
-.mood-tile.active .mood-icon {
-  background: rgba(66,133,244,.20);
-  color: var(--blue2, #8ab4f8);
-}
-
-.mood-tile strong {
-  display: block;
-  font-size: 24px;
-  line-height: 1.1;
-  letter-spacing: -.02em;
-}
-
-.mood-tile p {
-  margin: 8px 0 0;
-  font-size: 15px;
-  color: var(--ink2);
-  line-height: 1.35;
-}
-
-.mood-check {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  display: none;
-  place-items: center;
-  background: var(--blue);
-  color: white;
-  font-weight: 900;
-}
-
-.mood-tile.active .mood-check {
-  display: grid;
-}
-
-.mood-image-strip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: clamp(220px, 24vw, 340px);
   gap: 16px;
-  margin-top: 22px;
+  width: 100%;
 }
 
-.mood-image-card {
-  height: 160px;
-  border-radius: 28px;
-  overflow: hidden;
+.image-mood-tile {
   position: relative;
-  border: 1px solid var(--bdr);
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 32px;
+  padding: 0;
+  text-align: left;
+  background: var(--s2);
+  color: white;
+  min-height: 220px;
+  box-shadow: 0 20px 70px rgba(0,0,0,.22);
+  transition: transform .28s var(--ease), border-color .2s, box-shadow .2s, opacity .2s;
 }
 
-.mood-image-card img {
+.image-mood-tile:nth-child(1),
+.image-mood-tile:nth-child(8) {
+  grid-row: span 2;
+}
+
+.image-mood-tile:nth-child(9) {
+  grid-column: span 2;
+}
+
+.image-mood-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 28px 90px rgba(0,0,0,.32);
+}
+
+.image-mood-tile.active {
+  border-color: var(--blue);
+  box-shadow:
+    0 0 0 4px rgba(66,133,244,.18),
+    0 28px 90px rgba(0,0,0,.34);
+}
+
+.image-mood-tile img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: brightness(.56) saturate(.92);
+  transition: transform .75s var(--ease), filter .35s;
 }
 
-.mood-image-card div {
+.image-mood-tile:hover img,
+.image-mood-tile.active img {
+  transform: scale(1.07);
+  filter: brightness(.72) saturate(1.08);
+}
+
+.image-tile-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,.70), transparent);
+  background:
+    linear-gradient(to top, rgba(0,0,0,.84), rgba(0,0,0,.20) 54%, rgba(0,0,0,.08)),
+    radial-gradient(circle at 80% 8%, rgba(66,133,244,.20), transparent 30%);
 }
 
-.mood-image-card span {
+.tile-number {
   position: absolute;
-  left: 18px;
-  bottom: 16px;
+  left: 22px;
+  top: 20px;
+  z-index: 2;
+  font-size: 12px;
+  letter-spacing: .12em;
   font-weight: 800;
+  color: rgba(255,255,255,.58);
+}
+
+.image-tile-content {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 22px;
+  z-index: 2;
+}
+
+.image-tile-content strong {
+  display: block;
+  font-size: clamp(23px, 2.5vw, 32px);
+  line-height: 1;
+  letter-spacing: -.035em;
+}
+
+.image-tile-content p {
+  margin: 9px 0 0;
+  color: rgba(255,255,255,.70);
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 .bottom-cta {
@@ -1759,8 +1736,12 @@ small {
 }
 
 @media(max-width: 1120px) {
-  .mood-grid {
-    grid-template-columns: repeat(3, minmax(160px, 1fr));
+  .mood-grid.image-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .image-mood-tile:nth-child(9) {
+    grid-column: span 1;
   }
 }
 
@@ -1784,12 +1765,16 @@ small {
 }
 
 @media(max-width: 720px) {
-  .mood-grid {
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  .mood-grid.image-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 230px;
   }
 
-  .mood-image-strip {
-    grid-template-columns: 1fr;
+  .image-mood-tile:nth-child(1),
+  .image-mood-tile:nth-child(8),
+  .image-mood-tile:nth-child(9) {
+    grid-row: span 1;
+    grid-column: span 1;
   }
 
   .bottom-cta {
@@ -1799,20 +1784,17 @@ small {
 }
 
 @media(max-width: 600px) {
+  .mood-grid.image-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 220px;
+  }
+
   .navbar {
     padding: 0 20px;
   }
 
   .screen {
     padding: 40px 20px;
-  }
-
-  .mood-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .mood-tile {
-    min-height: 150px;
   }
 
   .res-hero {
