@@ -19,134 +19,95 @@ function prettyDate(value) {
   });
 }
 
-const travelerTypes = [
-  {
-    id: "hidden-gem-hunter",
-    title: "Hidden Gem Hunter",
-    emoji: "🗺️",
-    description: "I want places most tourists miss."
-  },
-  {
-    id: "food-pilgrim",
-    title: "Food Pilgrim",
-    emoji: "🍜",
-    description: "I travel through meals."
-  },
-  {
-    id: "cultural-explorer",
-    title: "Cultural Explorer",
-    emoji: "🏯",
-    description: "History, architecture, local traditions."
-  },
-  {
-    id: "slow-wanderer",
-    title: "Slow Wanderer",
-    emoji: "🌿",
-    description: "Less checklist, more presence."
-  },
-  {
-    id: "luxury-curator",
-    title: "Luxury Curator",
-    emoji: "✨",
-    description: "Premium experiences and beautiful details."
-  },
-  {
-    id: "adventure-seeker",
-    title: "Adventure Seeker",
-    emoji: "🏔️",
-    description: "Give me movement and challenge."
-  },
-  {
-    id: "memory-collector",
-    title: "Memory Collector",
-    emoji: "📸",
-    description: "I chase moments worth remembering."
-  },
-  {
-    id: "local-living",
-    title: "Local Living",
-    emoji: "🌎",
-    description: "I want to feel like I live there."
-  }
+const destinationSuggestions = [
+  "Kyoto, Japan",
+  "Oaxaca, Mexico",
+  "Big Island, Hawaii",
+  "Kauai, Hawaii",
+  "San Francisco, CA",
+  "New York City",
+  "Paris, France",
+  "Amalfi Coast, Italy",
+  "Marrakech, Morocco",
+  "Patagonia, Argentina",
+  "Tokyo, Japan",
+  "Barcelona, Spain",
+  "Ubud, Bali",
+  "Mexico City, Mexico"
 ];
 
 const moodVibes = [
   {
-    id: "packed",
-    title: "Packed",
-    tag: "Full, optimized, energetic",
-    signal: "more stops, efficient routing, full day pacing",
-    img: "https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    id: "adventurous",
+    title: "Adventurous",
+    tag: "Push the edge",
+    signal: "hikes, movement, active experiences, discovery",
+    icon: "△",
+    img: "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
-    id: "relaxed",
-    title: "Relaxed",
-    tag: "Slow, spacious, restorative",
+    id: "slow-easy",
+    title: "Slow & easy",
+    tag: "Breathe it in",
     signal: "few stops, long pauses, gentle transitions",
+    icon: "〰",
     img: "https://images.pexels.com/photos/2868242/pexels-photo-2868242.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
-    id: "private",
-    title: "Private",
-    tag: "Quiet, intimate, low-crowd",
-    signal: "hidden corners, calm cafés, nature, secluded experiences",
-    img: "https://images.pexels.com/photos/2070033/pexels-photo-2070033.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    id: "cultural",
+    title: "Cultural",
+    tag: "Art, history, depth",
+    signal: "museums, architecture, rituals, history, meaningful places",
+    icon: "▱",
+    img: "https://images.pexels.com/photos/1510595/pexels-photo-1510595.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "culinary",
+    title: "Culinary",
+    tag: "Eat like a local",
+    signal: "food-led planning, neighborhood restaurants, local specialties",
+    icon: "╯",
+    img: "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "nature",
+    title: "Into nature",
+    tag: "Wild, open, free",
+    signal: "nature, viewpoints, walks, parks, scenic routes",
+    icon: "△",
+    img: "https://images.pexels.com/photos/3408354/pexels-photo-3408354.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "social",
     title: "Social",
-    tag: "Markets, nightlife, people",
-    signal: "lively areas, events, markets, community experiences",
-    img: "https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    tag: "Meet, mix, connect",
+    signal: "lively areas, events, markets, group-friendly experiences",
+    icon: "♧",
+    img: "https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
-    id: "comfort",
-    title: "Comfort",
-    tag: "Easy, safe, familiar",
-    signal: "easy transport, high ratings, predictable experiences",
-    img: "https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    id: "active",
+    title: "Active",
+    tag: "Move and explore",
+    signal: "walking, biking, hikes, lots of movement, active pacing",
+    icon: "⌁",
+    img: "https://images.pexels.com/photos/1578662/pexels-photo-1578662.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
-    id: "adventurous",
-    title: "Adventurous",
-    tag: "Movement, challenge, newness",
-    signal: "hikes, remote places, active experiences, discovery",
-    img: "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400"
-  },
-  {
-    id: "local-food",
-    title: "Local Food",
-    tag: "Markets, cafés, small restaurants",
-    signal: "food-led planning, neighborhood restaurants, local specialties",
-    img: "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    id: "open",
+    title: "Open to anything",
+    tag: "Let Gemini decide",
+    signal: "surprise me, balanced plan, flexible recommendations",
+    icon: "⌁",
+    img: "https://images.pexels.com/photos/2070033/pexels-photo-2070033.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "romantic",
     title: "Romantic",
-    tag: "Scenic, intimate, memorable",
+    tag: "Intentional, slow",
     signal: "golden hour, lanterns, views, beautiful dinner, partner-friendly",
+    icon: "♡",
     img: "https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1400"
-  },
-  {
-    id: "high-end",
-    title: "High-End",
-    tag: "Top-rated, premium, polished",
-    signal: "luxury, reservations, premium restaurants, high-rated experiences",
-    img: "https://images.pexels.com/photos/1839919/pexels-photo-1839919.jpeg?auto=compress&cs=tinysrgb&w=1400"
-  },
-  {
-    id: "spontaneous",
-    title: "Spontaneous",
-    tag: "Flexible, playful, unscripted",
-    signal: "open blocks, surprise detours, wandering, less reservation pressure",
-    img: "https://images.pexels.com/photos/1578662/pexels-photo-1578662.jpeg?auto=compress&cs=tinysrgb&w=1400"
-  },
-  {
-    id: "explore",
-    title: "Explore",
-    tag: "Unknown streets, local texture",
-    signal: "hidden neighborhoods, lesser-known stops, unexpected discovery",
-    img: "https://images.pexels.com/photos/1510595/pexels-photo-1510595.jpeg?auto=compress&cs=tinysrgb&w=1400"
   }
 ];
 
@@ -157,8 +118,7 @@ function App() {
   const [date, setDate] = useState(getToday());
   const [diet, setDiet] = useState("Vegetarian");
   const [planFor, setPlanFor] = useState("Date");
-  const [travelerProfile, setTravelerProfile] = useState(["food-pilgrim", "slow-wanderer"]);
-  const [selectedMoods, setSelectedMoods] = useState(["romantic", "local-food", "explore"]);
+  const [selectedMoods, setSelectedMoods] = useState(["active", "romantic"]);
   const [loadingLine, setLoadingLine] = useState(0);
   const [itinerary, setItinerary] = useState(null);
   const [googleReady, setGoogleReady] = useState(false);
@@ -233,10 +193,6 @@ function App() {
     };
   }, [step]);
 
-  const selectedTravelerObjects = travelerProfile
-    .map((id) => travelerTypes.find((type) => type.id === id))
-    .filter(Boolean);
-
   const selectedMoodObjects = selectedMoods
     .map((id) => moodVibes.find((vibe) => vibe.id === id))
     .filter(Boolean);
@@ -244,9 +200,9 @@ function App() {
   const loadingItems = useMemo(
     () => [
       user?.name ? `${user.name}'s lightweight profile` : "Quick feeler profile",
-      "Long-term traveler type",
-      "Today's mood signals",
+      "Today’s mood signals",
       "Dietary preferences",
+      "Destination context",
       "Google Places candidates",
       "Real place photos and ratings",
       "Gemini itinerary generation"
@@ -254,18 +210,10 @@ function App() {
     [user]
   );
 
-  function toggleTraveler(id) {
-    setTravelerProfile((current) => {
-      if (current.includes(id)) return current.filter((item) => item !== id);
-      if (current.length >= 2) return current;
-      return [...current, id];
-    });
-  }
-
   function toggleMood(id) {
     setSelectedMoods((current) => {
       if (current.includes(id)) return current.filter((item) => item !== id);
-      if (current.length >= 3) return current;
+      if (current.length >= 3) return [...current.slice(1), id];
       return [...current, id];
     });
   }
@@ -291,10 +239,9 @@ function App() {
           date,
           diet,
           travelWith: planFor,
-          travelerProfile: selectedTravelerObjects,
           selectedMoods: selectedMoodObjects,
           instruction:
-            "Create a real, specific, mood-first day plan. Use travelerProfile as long-term identity and selectedMoods as today's short-term intent. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links."
+            "Create a real, specific, mood-first day plan. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links."
         })
       });
 
@@ -331,7 +278,7 @@ function App() {
         </button>
 
         <div className="nav-steps">
-          {["Profile", "Mood", "Result"].map((label, i) => {
+          {["Setup", "Mood", "Result"].map((label, i) => {
             const order = ["setup", "mood", "result"];
             const active = step === order[i];
             const done = order.indexOf(step) > i || step === "loading";
@@ -345,7 +292,7 @@ function App() {
 
         {step !== "login" && (
           <button className="btn-outline" onClick={() => setStep("setup")}>
-            ↩ Start over
+            Start over
           </button>
         )}
       </nav>
@@ -375,7 +322,7 @@ function App() {
                   )}
                 </div>
                 <button className="btn-accent" onClick={() => setStep("setup")}>
-                  Continue without sign in →
+                  Continue without sign in
                 </button>
               </div>
             </div>
@@ -389,7 +336,7 @@ function App() {
               ))}
               <div className="hero-stat hs1">
                 <b>DNA</b>
-                <span>personality + mood</span>
+                <span>data + mood</span>
               </div>
               <div className="hero-stat hs2">
                 <b className="gem">AI</b>
@@ -401,152 +348,138 @@ function App() {
       )}
 
       {step === "setup" && (
-        <main className="screen on">
+        <main className="screen setup-screen on">
           <section className="setup-header">
             <p className="label">Step 1 / 2</p>
-            <h2>Build your Travel DNA.</h2>
+            <h2>Set the plan.</h2>
             <p>
-              First, set your long-term traveler type. Then we’ll layer today’s
-              mood on top.
+              We’ll infer your longer-term travel style from your lightweight
+              profile later. For now, tell us where, when, and what constraints matter.
             </p>
           </section>
 
-          <section className="setup-grid">
-            <div className="form-panel">
-              <label>
-                <span>Destination</span>
-                <input
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  placeholder="City, neighborhood, or place"
-                />
-              </label>
-
-              <label>
-                <span>When</span>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
-              </label>
-
-              <Select
-                label="Dietary preference"
-                value={diet}
-                setValue={setDiet}
-                options={["Vegetarian", "Vegan", "No restrictions", "Gluten-free"]}
+          <section className="form-shell glass-panel">
+            <label>
+              <span>Destination</span>
+              <input
+                list="destinations"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                placeholder="City, neighborhood, or place"
               />
+              <datalist id="destinations">
+                {destinationSuggestions.map((item) => (
+                  <option value={item} key={item} />
+                ))}
+              </datalist>
+            </label>
 
-              <Select
-                label="Going with"
-                value={planFor}
-                setValue={setPlanFor}
-                options={["Solo", "Date", "Friends", "Family", "Workday"]}
-              />
-
-              <section className="traveler-section">
-                <div>
-                  <p className="label">Choose 1–2</p>
-                  <h3>What kind of traveler are you?</h3>
-                </div>
-
-                <div className="traveler-grid">
-                  {travelerTypes.map((type) => (
-                    <button
-                      type="button"
-                      key={type.id}
-                      className={travelerProfile.includes(type.id) ? "traveler-card active" : "traveler-card"}
-                      onClick={() => toggleTraveler(type.id)}
-                    >
-                      <span>{type.emoji}</span>
-                      <strong>{type.title}</strong>
-                      <p>{type.description}</p>
-                    </button>
-                  ))}
-                </div>
-              </section>
-
-              <div className="pi-card">
-                <div className="spark">✦</div>
-                <p className="label">Personal Intelligence Preview</p>
-                <h3>We don't have full access to your Google Personal Intelligence yet.</h3>
-                <p>
-                  We’re working on it. Soon, we’ll skip these questions with your
-                  Google data. For now, give us a quick feeler.
-                </p>
-                {user ? (
-                  <div className="profile-chip">
-                    <img src={user.picture} alt="" />
-                    Signed in as {user.name}
-                  </div>
-                ) : (
-                  <div className="profile-chip">Quick feeler mode</div>
-                )}
-              </div>
-
-              <button className="btn-accent" onClick={() => setStep("mood")}>
-                Choose today’s mood →
-              </button>
+            <div className="suggestions">
+              {destinationSuggestions.slice(0, 6).map((item) => (
+                <button
+                  type="button"
+                  key={item}
+                  className={destination === item ? "suggestion active" : "suggestion"}
+                  onClick={() => setDestination(item)}
+                >
+                  {item}
+                </button>
+              ))}
             </div>
 
-            <aside className="preview-card">
-              <img src={selectedMoodObjects[0]?.img || moodVibes[0].img} alt="" />
-              <div>
-                <h3>{destination || "Your destination"}</h3>
-                <p>{prettyDate(date)}</p>
-                <div className="preview-tags">
-                  {selectedTravelerObjects.map((type) => (
-                    <span key={type.id}>{type.title}</span>
-                  ))}
+            <label>
+              <span>When</span>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </label>
+
+            <Select
+              label="Dietary preference"
+              value={diet}
+              setValue={setDiet}
+              options={["Vegetarian", "Vegan", "No restrictions", "Gluten-free"]}
+            />
+
+            <Select
+              label="Going with"
+              value={planFor}
+              setValue={setPlanFor}
+              options={["Solo", "Date", "Friends", "Family", "Workday"]}
+            />
+
+            <div className="pi-card">
+              <div className="spark">✦</div>
+              <p className="label">Personal Intelligence Preview</p>
+              <h3>We don't have full access to your Google Personal Intelligence yet.</h3>
+              <p>
+                We’re working on it. Soon, we’ll skip these questions with your
+                Google data. For now, give us a quick feeler.
+              </p>
+              {user ? (
+                <div className="profile-chip">
+                  <img src={user.picture} alt="" />
+                  Signed in as {user.name}
                 </div>
-              </div>
-            </aside>
+              ) : (
+                <div className="profile-chip">Quick feeler mode</div>
+              )}
+            </div>
+
+            <button className="btn-accent primary-wide" onClick={() => setStep("mood")}>
+              Choose today’s mood
+            </button>
           </section>
         </main>
       )}
 
       {step === "mood" && (
-        <main className="screen vibe-screen on">
-          <section className="vibe-header">
+        <main className="screen mood-screen on">
+          <section className="mood-header">
             <p className="label">Step 2 / 2 · Choose up to 3</p>
             <h2>
               What’s your <span className="gem">mood today?</span>
             </h2>
             <p>
-              Your traveler type is the baseline. These images are the mood
-              layer for this specific plan.
+              This one input reshapes your entire day. It’s the variable Gemini
+              can’t infer from data alone.
             </p>
           </section>
 
-          <section className="mood-mosaic">
-            {moodVibes.map((vibe, i) => (
+          <section className="mood-grid">
+            {moodVibes.map((vibe) => (
               <button
+                type="button"
                 key={vibe.id}
-                className={`mood-card mood-${i + 1} ${
-                  selectedMoods.includes(vibe.id) ? "selected" : ""
-                }`}
+                className={selectedMoods.includes(vibe.id) ? "mood-tile active" : "mood-tile"}
                 onClick={() => toggleMood(vibe.id)}
               >
-                <img src={vibe.img} alt={vibe.title} loading="lazy" />
-                <div className="mood-overlay" />
-                <div className="mood-check">✓</div>
-                <div className="mood-content">
-                  <span>0{i + 1}</span>
-                  <strong>{vibe.title}</strong>
-                  <p>{vibe.tag}</p>
-                </div>
+                <span className="mood-icon">{vibe.icon}</span>
+                <strong>{vibe.title}</strong>
+                <p>{vibe.tag}</p>
+                <span className="mood-check">✓</span>
               </button>
             ))}
           </section>
 
-          <section className="vibe-footer">
+          <section className="mood-image-strip">
+            {selectedMoodObjects.length ? selectedMoodObjects.map((vibe) => (
+              <article className="mood-image-card" key={vibe.id}>
+                <img src={vibe.img} alt={vibe.title} />
+                <div />
+                <span>{vibe.title}</span>
+              </article>
+            )) : null}
+          </section>
+
+          <section className="bottom-cta glass-panel">
             <div>
-              {selectedMoodObjects.length ? (
-                selectedMoodObjects.map((v) => <span key={v.id}>{v.title}</span>)
-              ) : (
-                <p>No moods selected yet — choose up to 3</p>
-              )}
+              <p className="label">Selected mood</p>
+              <div className="selected-chips">
+                {selectedMoodObjects.map((v) => <span key={v.id}>{v.title}</span>)}
+              </div>
             </div>
             <button className="btn-accent" onClick={generatePlan}>
               Build with Gemini ✦
@@ -557,26 +490,43 @@ function App() {
 
       {step === "loading" && (
         <main className="screen loading-screen on">
-          <div className="loader-ring">
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-          <p className="label">Gemini is thinking</p>
-          <h2>
-            Decoding your <span className="gem">Travel DNA</span>
-          </h2>
+          <section className="loader-layout">
+            <div className="constellation" aria-hidden="true">
+              <svg viewBox="0 0 420 300">
+                <defs>
+                  <linearGradient id="googleLine" x1="0" x2="1">
+                    <stop offset="0%" stopColor="#4285F4" />
+                    <stop offset="35%" stopColor="#34A853" />
+                    <stop offset="65%" stopColor="#FBBC04" />
+                    <stop offset="100%" stopColor="#EA4335" />
+                  </linearGradient>
+                </defs>
+                <polyline points="70,205 135,130 210,165 270,80 340,120" />
+                <circle className="blue" cx="70" cy="205" r="8" />
+                <circle className="green" cx="135" cy="130" r="8" />
+                <circle className="yellow" cx="210" cy="165" r="8" />
+                <circle className="blue" cx="270" cy="80" r="8" />
+                <circle className="red" cx="340" cy="120" r="8" />
+              </svg>
+            </div>
 
-          <div className="load-strands">
-            {loadingItems.map((item, i) => (
-              <div className={i <= loadingLine ? "on" : ""} key={item}>
-                <b />
-                <span>{item}</span>
-                <em>Done</em>
-              </div>
-            ))}
-          </div>
+            <div className="loading-copy">
+              <p className="label">Gemini is thinking</p>
+              <h2>
+                Decoding your <span className="gem">Travel DNA</span>
+              </h2>
+            </div>
+
+            <div className="load-glass">
+              {loadingItems.map((item, i) => (
+                <div className={i <= loadingLine ? "load-row on" : "load-row"} key={item}>
+                  <b />
+                  <span>{item}</span>
+                  <em>{i <= loadingLine ? "Done" : "Waiting"}</em>
+                </div>
+              ))}
+            </div>
+          </section>
         </main>
       )}
 
@@ -608,9 +558,6 @@ function App() {
               <h2>{itinerary?.destination || destination}</h2>
               <p>{itinerary?.dates || prettyDate(date)}</p>
               <div className="res-dna-strip">
-                {selectedTravelerObjects.map((type) => (
-                  <span key={type.id}>{type.title}</span>
-                ))}
                 {selectedMoodObjects.map((mood) => (
                   <span key={mood.id}>Today: {mood.title}</span>
                 ))}
@@ -621,7 +568,7 @@ function App() {
 
           <section className="action-bar">
             <button className="btn-outline" onClick={() => setStep("setup")}>
-              Edit profile
+              Edit setup
             </button>
             <button className="btn-outline" onClick={() => setStep("mood")}>
               Change mood
@@ -683,12 +630,12 @@ function App() {
 function Starfield() {
   const stars = useMemo(
     () =>
-      Array.from({ length: 90 }).map((_, i) => ({
+      Array.from({ length: 70 }).map((_, i) => ({
         id: i,
         left: `${Math.random() * 100}%`,
         top: `${Math.random() * 100}%`,
-        width: `${Math.random() * 2 + 0.5}px`,
-        height: `${Math.random() * 2 + 0.5}px`,
+        width: `${Math.random() * 1.8 + 0.5}px`,
+        height: `${Math.random() * 1.8 + 0.5}px`,
         animationDelay: `${Math.random() * 5}s`,
         animationDuration: `${Math.random() * 4 + 2}s`
       })),
@@ -749,16 +696,17 @@ body,
   --s1: #0d1117;
   --s2: #131920;
   --s3: #1a2230;
-  --bdr: rgba(255, 255, 255, 0.07);
-  --bdr2: rgba(255, 255, 255, 0.12);
+  --bdr: rgba(255, 255, 255, 0.08);
+  --bdr2: rgba(255, 255, 255, 0.14);
   --ink: #f0f2f5;
-  --ink2: #8892a0;
-  --ink3: #4a5260;
-  --blue: #1a73e8;
-  --blue2: #4d9eff;
+  --ink2: #9aa4b2;
+  --ink3: #606a78;
+  --blue: #4285f4;
+  --green: #34a853;
+  --yellow: #fbbc04;
+  --red: #ea4335;
   --accent: #00d4aa;
   --accent2: rgba(0, 212, 170, 0.12);
-  --gold: #f5a623;
   --ease: cubic-bezier(.16, 1, .3, 1);
   --spring: cubic-bezier(.34, 1.56, .64, 1);
 }
@@ -766,9 +714,8 @@ body,
 body {
   font-family: 'Google Sans', Inter, system-ui, sans-serif;
   background:
-    radial-gradient(circle at 18% 8%, rgba(66,133,244,.14), transparent 30%),
-    radial-gradient(circle at 88% 14%, rgba(0,212,170,.12), transparent 28%),
-    radial-gradient(circle at 50% 100%, rgba(251,188,4,.08), transparent 26%),
+    radial-gradient(circle at 18% 8%, rgba(66,133,244,.10), transparent 30%),
+    radial-gradient(circle at 88% 14%, rgba(0,212,170,.09), transparent 28%),
     var(--bg);
   color: var(--ink);
   overflow-x: hidden;
@@ -806,54 +753,42 @@ button {
   position: absolute;
   border-radius: 50%;
   background: #fff;
-  opacity: .25;
-  animation: twinkle 3s ease-in-out infinite;
+  opacity: .22;
+  animation: twinkle 3.6s ease-in-out infinite;
 }
 
 @keyframes twinkle {
-  0%, 100% { opacity: .08; }
-  50% { opacity: .62; }
+  0%, 100% { opacity: .06; }
+  50% { opacity: .55; }
 }
 
 .aurora {
   position: fixed;
   border-radius: 50%;
-  filter: blur(120px);
+  filter: blur(110px);
   pointer-events: none;
   z-index: 0;
-  animation: aurdrift 22s ease-in-out infinite;
+  opacity: .75;
 }
 
 .a1 {
-  width: 800px;
-  height: 400px;
-  top: -100px;
-  left: -200px;
-  background: radial-gradient(ellipse, rgba(26, 115, 232, .15), transparent 65%);
+  width: 720px;
+  height: 360px;
+  top: -120px;
+  left: -220px;
+  background: radial-gradient(ellipse, rgba(66, 133, 244, .10), transparent 65%);
 }
 
 .a2 {
-  width: 700px;
-  height: 350px;
-  bottom: -80px;
-  right: -180px;
-  background: radial-gradient(ellipse, rgba(0, 212, 170, .12), transparent 65%);
-  animation-delay: -10s;
+  width: 640px;
+  height: 340px;
+  bottom: -110px;
+  right: -200px;
+  background: radial-gradient(ellipse, rgba(0, 212, 170, .09), transparent 65%);
 }
 
 .a3 {
-  width: 500px;
-  height: 300px;
-  top: 40%;
-  left: 25%;
-  background: radial-gradient(ellipse, rgba(245, 166, 35, .06), transparent 65%);
-  animation-delay: -15s;
-}
-
-@keyframes aurdrift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  30% { transform: translate(40px, -30px) scale(1.06); }
-  60% { transform: translate(-30px, 40px) scale(.94); }
+  display: none;
 }
 
 .navbar {
@@ -864,8 +799,8 @@ button {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--bdr);
-  background: rgba(8, 10, 14, .72);
-  backdrop-filter: blur(24px);
+  background: rgba(8, 10, 14, .78);
+  backdrop-filter: blur(20px);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -884,8 +819,8 @@ button {
 .brand-logo {
   width: 28px;
   height: 28px;
-  border-radius: 7px;
-  background: linear-gradient(135deg, var(--blue), var(--accent));
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--blue), var(--green));
   display: grid;
   place-items: center;
   color: #fff;
@@ -925,16 +860,21 @@ button {
   background: currentColor;
 }
 
+.btn-outline,
+.btn-accent {
+  border-radius: 999px;
+}
+
 .btn-outline {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   background: transparent;
   border: 1px solid var(--bdr2);
-  border-radius: 10px;
   padding: 10px 18px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--ink2);
   transition: all .2s;
 }
@@ -951,40 +891,39 @@ button {
   justify-content: center;
   gap: 8px;
   background: var(--accent);
-  color: #080a0e;
+  color: #07110f;
   border: none;
-  border-radius: 10px;
-  padding: 12px 24px;
+  padding: 13px 26px;
   font-size: 14px;
-  font-weight: 700;
-  transition: all .2s var(--spring);
+  font-weight: 800;
+  transition: transform .2s var(--spring), box-shadow .2s;
 }
 
 .btn-accent:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0, 212, 170, .3);
+  box-shadow: 0 8px 20px rgba(0, 212, 170, .18);
 }
 
 .screen {
   display: block;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1120px;
   padding: 60px 40px;
-  animation: scIn .55s var(--ease) both;
+  animation: scIn .45s var(--ease) both;
   position: relative;
   z-index: 1;
 }
 
 @keyframes scIn {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .label,
 .field-label {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .1em;
+  font-weight: 700;
+  letter-spacing: .11em;
   text-transform: uppercase;
   color: var(--ink3);
 }
@@ -1023,11 +962,18 @@ h1 span {
   background-size: 300% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gsh 5s linear infinite;
+  animation: gsh 7s linear infinite;
 }
 
 @keyframes gsh {
   to { background-position: -300% center; }
+}
+
+.glass-panel {
+  background: rgba(19, 25, 32, .74);
+  border: 1px solid var(--bdr);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 80px rgba(0,0,0,.25);
 }
 
 .hero-screen {
@@ -1064,12 +1010,6 @@ h1 span {
   height: 6px;
   border-radius: 50%;
   background: var(--accent);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: .5; transform: scale(1.4); }
 }
 
 .hero-pill span {
@@ -1102,21 +1042,15 @@ h1 span {
 
 .hcard {
   position: absolute;
-  border-radius: 16px;
+  border-radius: 24px;
   overflow: hidden;
   border: 1px solid var(--bdr2);
-  box-shadow: 0 24px 64px rgba(0,0,0,.5);
-  animation: hfloat 7s ease-in-out infinite;
+  box-shadow: 0 24px 64px rgba(0,0,0,.35);
 }
 
 .hcard-1 { width: 240px; height: 160px; top: 20px; left: 20px; transform: rotate(-3deg); }
-.hcard-2 { width: 200px; height: 140px; top: 60px; right: 0; transform: rotate(4deg); animation-delay: -3s; }
-.hcard-3 { width: 220px; height: 150px; bottom: 40px; left: 60px; transform: rotate(2deg); animation-delay: -5s; }
-
-@keyframes hfloat {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -14px; }
-}
+.hcard-2 { width: 200px; height: 140px; top: 60px; right: 0; transform: rotate(4deg); }
+.hcard-3 { width: 220px; height: 150px; bottom: 40px; left: 60px; transform: rotate(2deg); }
 
 .hcard img {
   width: 100%;
@@ -1130,16 +1064,16 @@ h1 span {
   left: 0;
   right: 0;
   padding: 12px 14px;
-  background: linear-gradient(to top, rgba(0,0,0,.8), transparent);
+  background: linear-gradient(to top, rgba(0,0,0,.78), transparent);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .hero-stat {
   position: absolute;
   background: var(--s2);
   border: 1px solid var(--bdr2);
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 10px 14px;
 }
 
@@ -1157,26 +1091,23 @@ h1 span {
 .hs2 { bottom: 80px; right: 10px; }
 
 .setup-header {
-  margin-bottom: 40px;
+  margin-bottom: 28px;
+  max-width: 820px;
 }
 
-.setup-grid {
+.form-shell {
+  max-width: 780px;
+  border-radius: 34px;
+  padding: clamp(22px, 4vw, 36px);
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 56px;
-  align-items: start;
-}
-
-.form-panel {
-  display: grid;
-  gap: 20px;
+  gap: 22px;
 }
 
 label {
   display: grid;
   gap: 8px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--ink3);
@@ -1184,18 +1115,43 @@ label {
 
 input {
   width: 100%;
-  background: var(--s2);
+  background: rgba(8, 10, 14, .72);
   border: 1px solid var(--bdr);
-  border-radius: 10px;
-  padding: 13px 18px;
+  border-radius: 999px;
+  padding: 15px 20px;
   font-size: 15px;
   color: var(--ink);
   outline: none;
 }
 
 input:focus {
-  border-color: rgba(0,212,170,.4);
-  background: var(--s3);
+  border-color: rgba(0,212,170,.48);
+  background: rgba(19, 25, 32, .95);
+}
+
+.suggestions,
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestion,
+.chip {
+  padding: 8px 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--bdr);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--ink2);
+}
+
+.suggestion.active,
+.chip.active {
+  background: var(--accent2);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 800;
 }
 
 .field-block {
@@ -1203,90 +1159,11 @@ input:focus {
   gap: 8px;
 }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.chip {
-  padding: 7px 15px;
-  background: var(--s2);
-  border: 1px solid var(--bdr);
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--ink2);
-}
-
-.chip.active {
-  background: var(--accent2);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.traveler-section {
-  display: grid;
-  gap: 16px;
-}
-
-.traveler-section h3 {
-  margin: 6px 0 0;
-  font-size: 24px;
-}
-
-.traveler-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.traveler-card {
-  text-align: left;
-  background: var(--s2);
-  border: 1px solid var(--bdr);
-  border-radius: 14px;
-  padding: 15px;
-  color: var(--ink);
-  transition: all .2s var(--ease);
-}
-
-.traveler-card:hover {
-  border-color: var(--bdr2);
-  transform: translateY(-1px);
-}
-
-.traveler-card.active {
-  background: var(--accent2);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(0,212,170,.08);
-}
-
-.traveler-card span {
-  font-size: 22px;
-}
-
-.traveler-card strong {
-  display: block;
-  margin-top: 8px;
-  font-size: 14px;
-}
-
-.traveler-card p {
-  font-size: 12px;
-  color: var(--ink3);
-  margin: 4px 0 0;
-  line-height: 1.5;
-}
-
-.pi-card,
-.preview-card {
-  background: var(--s2);
-  border: 1px solid var(--bdr);
-  border-radius: 16px;
-}
-
 .pi-card {
   padding: 20px;
+  border-radius: 26px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid var(--bdr);
 }
 
 .spark {
@@ -1294,7 +1171,7 @@ input:focus {
   height: 28px;
   background: var(--accent2);
   color: var(--accent);
-  border-radius: 8px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
   margin-bottom: 12px;
@@ -1319,251 +1196,268 @@ input:focus {
   border-radius: 50%;
 }
 
-.preview-card {
-  position: sticky;
-  top: 100px;
-  overflow: hidden;
+.primary-wide {
+  width: fit-content;
 }
 
-.preview-card img {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  filter: brightness(.7);
+.mood-screen {
+  max-width: 1220px;
 }
 
-.preview-card div {
-  padding: 20px;
+.mood-header {
+  max-width: 900px;
+  margin-bottom: 34px;
 }
 
-.preview-card h3 {
-  font-size: 26px;
-  margin: 0 0 4px;
-}
-
-.preview-tags {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  padding: 0 !important;
-}
-
-.preview-tags span {
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: var(--accent2);
-  color: var(--accent);
-  font-size: 11px;
-}
-
-.vibe-screen {
-  max-width: none;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.vibe-header {
-  max-width: 1100px;
-  margin: 0 auto 32px;
-  padding: 0 40px;
-}
-
-.mood-mosaic {
+.mood-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-auto-rows: minmax(210px, 28vh);
-  gap: 3px;
-  width: 100%;
+  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  gap: 18px;
 }
 
-.mood-card {
+.mood-tile {
   position: relative;
-  overflow: hidden;
-  border: 0;
-  padding: 0;
+  min-height: 178px;
+  border-radius: 30px;
+  border: 2px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.035);
+  color: var(--ink);
+  padding: 26px 24px;
   text-align: left;
-  background: var(--s2);
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: border-color .2s, background .2s, transform .2s;
 }
 
-.mood-1,
-.mood-8 {
-  grid-row: span 2;
+.mood-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,.20);
 }
 
-.mood-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: brightness(.62) saturate(.85);
-  transition: transform .7s var(--ease), filter .4s;
+.mood-tile.active {
+  background:
+    radial-gradient(circle at 80% 70%, rgba(0,212,170,.12), transparent 36%),
+    rgba(26,115,232,.12);
+  border-color: var(--blue);
 }
 
-.mood-card:hover img {
-  transform: scale(1.08);
-  filter: brightness(.8) saturate(1.1);
+.mood-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.72);
+  font-size: 24px;
+  margin-bottom: 22px;
 }
 
-.mood-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,.86), rgba(0,0,0,.1) 52%, transparent);
+.mood-tile.active .mood-icon {
+  background: rgba(66,133,244,.20);
+  color: var(--blue2, #8ab4f8);
 }
 
-.mood-content {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20px 24px;
-  z-index: 2;
-}
-
-.mood-content span {
+.mood-tile strong {
   display: block;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .12em;
-  color: rgba(255,255,255,.42);
-  margin-bottom: 6px;
-}
-
-.mood-content strong {
-  display: block;
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1.1;
-  color: #fff;
+  letter-spacing: -.02em;
 }
 
-.mood-content p {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: rgba(255,255,255,.58);
-}
-
-.mood-card.selected {
-  outline: 3px solid var(--accent);
-  outline-offset: -3px;
+.mood-tile p {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: var(--ink2);
+  line-height: 1.35;
 }
 
 .mood-check {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #080a0e;
+  top: 18px;
+  right: 18px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
   display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 3;
+  place-items: center;
+  background: var(--blue);
+  color: white;
   font-weight: 900;
 }
 
-.mood-card.selected .mood-check {
-  display: flex;
+.mood-tile.active .mood-check {
+  display: grid;
 }
 
-.vibe-footer {
-  padding: 20px 40px;
+.mood-image-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.mood-image-card {
+  height: 160px;
+  border-radius: 28px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--bdr);
+}
+
+.mood-image-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mood-image-card div {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.70), transparent);
+}
+
+.mood-image-card span {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  font-weight: 800;
+}
+
+.bottom-cta {
+  margin-top: 22px;
+  padding: 16px 18px;
+  border-radius: 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid var(--bdr);
-  background: rgba(8,10,14,.5);
-  backdrop-filter: blur(12px);
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
+  gap: 18px;
 }
 
-.vibe-footer div {
+.selected-chips {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
-.vibe-footer span {
-  padding: 5px 12px;
+.selected-chips span {
+  padding: 6px 12px;
+  border-radius: 999px;
   background: var(--accent2);
-  border: 1px solid rgba(0,212,170,.2);
-  border-radius: 6px;
-  font-size: 12px;
   color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .loading-screen {
   min-height: calc(100vh - 64px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+}
+
+.loader-layout {
+  width: min(860px, 100%);
+  display: grid;
   gap: 28px;
+  justify-items: center;
   text-align: center;
 }
 
-.loader-ring {
-  position: relative;
-  width: 90px;
-  height: 90px;
-}
-
-.loader-ring span {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  animation: spin 1.3s linear infinite;
-}
-
-.loader-ring span:nth-child(1) { border-top-color: #4285f4; }
-.loader-ring span:nth-child(2) { inset: 12px; border-right-color: var(--accent); animation-direction: reverse; animation-duration: 2.1s; }
-.loader-ring span:nth-child(3) { inset: 24px; border-bottom-color: #fbbc04; animation-duration: 2.9s; }
-.loader-ring span:nth-child(4) { inset: 36px; border-left-color: #ea4335; animation-direction: reverse; animation-duration: 1.8s; }
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.load-strands {
-  width: 100%;
-  max-width: 480px;
+.constellation {
+  width: min(420px, 72vw);
+  height: 260px;
   display: grid;
+  place-items: center;
 }
 
-.load-strands div {
+.constellation svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.constellation polyline {
+  fill: none;
+  stroke: url(#googleLine);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 480;
+  stroke-dashoffset: 480;
+  animation: drawConstellation 2.2s ease forwards infinite;
+  filter: drop-shadow(0 0 18px rgba(66,133,244,.25));
+}
+
+.constellation circle {
+  opacity: .95;
+  animation: pulseStar 2.2s ease-in-out infinite;
+}
+
+.constellation .blue { fill: #4285F4; }
+.constellation .green { fill: #34A853; }
+.constellation .yellow { fill: #FBBC04; }
+.constellation .red { fill: #EA4335; }
+
+@keyframes drawConstellation {
+  0% { stroke-dashoffset: 480; opacity: .35; }
+  45%, 100% { stroke-dashoffset: 0; opacity: 1; }
+}
+
+@keyframes pulseStar {
+  0%,100% { transform: scale(1); transform-origin: center; }
+  50% { transform: scale(1.24); transform-origin: center; }
+}
+
+.loading-copy h2 {
+  margin-top: 6px;
+}
+
+.load-glass {
+  width: min(620px, 100%);
+  padding: 20px 22px;
+  border-radius: 30px;
+  background: rgba(19,25,32,.68);
+  border: 1px solid var(--bdr);
+  backdrop-filter: blur(18px);
+}
+
+.load-row {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 0;
+  padding: 13px 0;
   border-bottom: 1px solid var(--bdr);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink3);
-  opacity: .18;
+  opacity: .32;
 }
 
-.load-strands div.on {
+.load-row:last-child {
+  border-bottom: 0;
+}
+
+.load-row.on {
   opacity: 1;
   color: var(--ink2);
 }
 
-.load-strands b {
-  width: 6px;
-  height: 6px;
+.load-row b {
+  width: 7px;
+  height: 7px;
   background: var(--ink3);
   border-radius: 50%;
+  flex: 0 0 auto;
 }
 
-.load-strands div.on b {
+.load-row.on b {
   background: var(--accent);
 }
 
-.load-strands em {
+.load-row em {
   margin-left: auto;
   font-style: normal;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--accent);
 }
 
@@ -1571,7 +1465,7 @@ input:focus {
   width: min(620px, 100%);
   background: var(--s2);
   border: 1px solid var(--bdr2);
-  border-radius: 20px;
+  border-radius: 30px;
   padding: 34px;
   text-align: left;
   box-shadow: 0 32px 80px rgba(0,0,0,.45);
@@ -1626,7 +1520,7 @@ input:focus {
   padding: 5px 12px;
   background: var(--accent2);
   border: 1px solid rgba(0,212,170,.2);
-  border-radius: 6px;
+  border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .08em;
@@ -1654,12 +1548,12 @@ input:focus {
 }
 
 .res-dna-strip span {
-  padding: 5px 12px;
+  padding: 6px 12px;
   background: rgba(255,255,255,.08);
   border: 1px solid rgba(255,255,255,.12);
-  border-radius: 6px;
+  border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: rgba(255,255,255,.72);
   backdrop-filter: blur(8px);
 }
@@ -1672,9 +1566,7 @@ input:focus {
   padding: 16px clamp(28px, 6vw, 80px);
   border-bottom: 1px solid var(--bdr);
   border-top: 1px solid var(--bdr);
-  background:
-    linear-gradient(90deg, rgba(66,133,244,.10), rgba(0,212,170,.08), rgba(251,188,4,.06)),
-    rgba(8,10,14,.68);
+  background: rgba(8,10,14,.72);
   backdrop-filter: blur(18px);
   position: sticky;
   top: 64px;
@@ -1782,7 +1674,7 @@ input:focus {
 }
 
 .s-photo {
-  border-radius: 18px;
+  border-radius: 26px;
   height: 240px;
   position: relative;
   overflow: hidden;
@@ -1796,8 +1688,7 @@ input:focus {
 }
 
 .s-photo:hover {
-  transform: scale(1.025);
-  box-shadow: 0 28px 90px rgba(26,115,232,.20);
+  transform: scale(1.015);
 }
 
 .s-photo img {
@@ -1810,8 +1701,8 @@ input:focus {
 }
 
 .s-photo:hover img {
-  transform: scale(1.08);
-  filter: saturate(1.1) contrast(1.03);
+  transform: scale(1.06);
+  filter: saturate(1.08) contrast(1.02);
 }
 
 .s-photo-ov {
@@ -1819,20 +1710,20 @@ input:focus {
   inset: 0;
   background:
     linear-gradient(to top, rgba(0,0,0,.68), transparent 58%),
-    radial-gradient(circle at 78% 12%, rgba(66,133,244,.24), transparent 35%);
+    radial-gradient(circle at 78% 12%, rgba(66,133,244,.20), transparent 35%);
 }
 
 .s-photo span {
   position: relative;
   z-index: 1;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: rgba(255,255,255,.9);
   background: rgba(0,0,0,.36);
   border: 1px solid rgba(255,255,255,.12);
   backdrop-filter: blur(8px);
-  padding: 5px 12px;
-  border-radius: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
 }
 
 .place-meta {
@@ -1867,20 +1758,20 @@ small {
   color: var(--ink3);
 }
 
+@media(max-width: 1120px) {
+  .mood-grid {
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+  }
+}
+
 @media(max-width: 980px) {
-  .hero-inner,
-  .setup-grid {
+  .hero-inner {
     grid-template-columns: 1fr;
     gap: 48px;
   }
 
-  .hero-cards,
-  .preview-card {
+  .hero-cards {
     display: none;
-  }
-
-  .mood-mosaic {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .s-body {
@@ -1889,6 +1780,21 @@ small {
 
   .nav-steps {
     display: none;
+  }
+}
+
+@media(max-width: 720px) {
+  .mood-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .mood-image-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-cta {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
@@ -1901,24 +1807,12 @@ small {
     padding: 40px 20px;
   }
 
-  .traveler-grid,
-  .mood-mosaic {
+  .mood-grid {
     grid-template-columns: 1fr;
   }
 
-  .mood-card {
-    min-height: 210px;
-  }
-
-  .vibe-header,
-  .vibe-footer {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .vibe-footer {
-    flex-direction: column;
-    align-items: stretch;
+  .mood-tile {
+    min-height: 150px;
   }
 
   .res-hero {
