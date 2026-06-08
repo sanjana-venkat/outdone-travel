@@ -101,13 +101,8 @@ export default async function handler(req, res) {
       dates,
       diet,
       travelWith,
-      travelerProfile = [],
       selectedMoods = []
     } = req.body || {};
-
-    const travelerText = travelerProfile
-      .map((item) => `${item.title}: ${item.description}`)
-      .join("; ");
 
     const moodText = selectedMoods
       .map((item) => `${item.title}: ${item.signal || item.tag}`)
@@ -123,15 +118,13 @@ Diet: ${diet}
 Planning for: ${travelWith}
 User: ${user?.name || "guest"}
 
-Long-term traveler profile:
-${travelerText || "No traveler profile selected"}
-
 Today's mood layer:
 ${moodText || "No mood selected"}
 
+Assume long-term travel personality can be inferred from lightweight Google context in future versions, but for now only use the user's mood, destination, diet, and travel companion.
+
 Rules:
 - Generate concrete places in or near the destination. No generic placeholders.
-- Make the plan feel like traveler profile + today's mood combined.
 - It should not feel like a generic tourist top-10.
 - Respect dietary preference.
 - Include 4 to 6 stops.
@@ -152,7 +145,7 @@ JSON schema:
       "period": "AM",
       "category": "DAWN · NATURE",
       "name": "Specific place name",
-      "description": "Specific reason this stop matches the user's profile and today's mood",
+      "description": "Specific reason this stop matches today's mood",
       "photoQuery": "Specific place name, destination",
       "routeFromPrevious": "short route note"
     }
