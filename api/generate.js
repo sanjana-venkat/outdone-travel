@@ -1,6 +1,19 @@
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
+const FALLBACK_IMAGES = [
+  "https://images.pexels.com/photos/1619317/pexels-photo-1619317.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  "https://images.pexels.com/photos/3408354/pexels-photo-3408354.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  "https://images.pexels.com/photos/1510595/pexels-photo-1510595.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  "https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  "https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  "https://images.pexels.com/photos/2868242/pexels-photo-2868242.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  "https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  "https://images.pexels.com/photos/2070033/pexels-photo-2070033.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  "https://images.pexels.com/photos/1839919/pexels-photo-1839919.jpeg?auto=compress&cs=tinysrgb&w=1400"
+];
+
 function stripCodeFence(text = "") {
   return text
     .replace(/^```json\s*/i, "")
@@ -18,6 +31,87 @@ function safeJsonParse(text) {
     if (!match) throw new Error("Gemini did not return JSON.");
     return JSON.parse(match[0]);
   }
+}
+
+function normalizeKey(text = "") {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function uniqueFallbackImage(index, usedImages) {
+  for (let offset = 0; offset < FALLBACK_IMAGES.length; offset += 1) {
+    const candidate = FALLBACK_IMAGES[(index + offset) % FALLBACK_IMAGES.length];
+    if (!usedImages.has(candidate)) {
+      usedImages.add(candidate);
+      return candidate;
+    }
+  }
+
+  return FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
+}
+
+function fallbackItinerary({ destination, dates, diet, travelWith, selectedMoods }) {
+  const dest = destination || "Kyoto, Japan";
+  const d = dates || "Today";
+  const moods = (selectedMoods || []).map((m) => m.title).filter(Boolean);
+  const moodLine = moods.length ? moods.join(" + ") : "Slow & easy";
+
+  const baseStops = [
+    {
+      time: "8:30",
+      period: "AM",
+      category: "DAWN · RESET",
+      name: dest.toLowerCase().includes("kyoto") ? "Kyoto Gyoen National Garden" : `${dest} morning walk`,
+      description: `Start with a low-friction, mood-matched moment before the day gets crowded. This is designed around ${moodLine.toLowerCase()} energy.`,
+      photoQuery: dest.toLowerCase().includes("kyoto") ? "Kyoto Gyoen National Garden, Kyoto" : `${dest} scenic morning`,
+      routeFromPrevious: "Start of plan"
+    },
+    {
+      time: "10:30",
+      period: "AM",
+      category: "COMFORT · PAUSE",
+      name: dest.toLowerCase().includes("kyoto") ? "Cafe Bibliotic Hello!" : `Vegetarian-friendly café in ${dest}`,
+      description: `A relaxed café pause that respects ${diet || "your dietary preference"} and gives the day room to breathe.`,
+      photoQuery: dest.toLowerCase().includes("kyoto") ? "Cafe Bibliotic Hello Kyoto" : `${dest} vegetarian cafe`,
+      routeFromPrevious: "Easy walk or short taxi from the previous stop"
+    },
+    {
+      time: "1:00",
+      period: "PM",
+      category: "LOCAL · DISCOVERY",
+      name: dest.toLowerCase().includes("kyoto") ? "Nanzen-ji Temple" : `${dest} cultural neighborhood`,
+      description: "A textured local stop chosen to feel more personal than a generic top-10 itinerary.",
+      photoQuery: dest.toLowerCase().includes("kyoto") ? "Nanzen-ji Temple Kyoto" : `${dest} cultural neighborhood`,
+      routeFromPrevious: "Gentle route with room to wander"
+    },
+    {
+      time: "4:30",
+      period: "PM",
+      category: "GOLDEN HOUR · MOOD",
+      name: dest.toLowerCase().includes("kyoto") ? "Shogunzuka Seiryuden" : `${dest} sunset viewpoint`,
+      description: "A beautiful late-day moment for reflection, photos, and emotional payoff.",
+      photoQuery: dest.toLowerCase().includes("kyoto") ? "Shogunzuka Seiryuden Kyoto" : `${dest} sunset viewpoint`,
+      routeFromPrevious: "Short taxi or scenic transit"
+    },
+    {
+      time: "7:30",
+      period: "PM",
+      category: "DINNER · CLOSE",
+      name: dest.toLowerCase().includes("kyoto") ? "Ain Soph Journey Kyoto" : `${dest} dinner spot`,
+      description: `A dinner ending that keeps the day aligned with ${travelWith || "your group"} and ${diet || "your preferences"}.`,
+      photoQuery: dest.toLowerCase().includes("kyoto") ? "Ain Soph Journey Kyoto" : `${dest} dinner restaurant`,
+      routeFromPrevious: "Finish with an easy evening route"
+    }
+  ];
+
+  return {
+    destination: dest,
+    dates: d,
+    selectedMood: moodLine,
+    generatedBy: "fallback",
+    summary:
+      "This is a Travel DNA fallback preview generated because Gemini free-tier credits are limited. It still uses your setup and mood signals, and attempts to enrich places with Google Places where available.",
+    stops: baseStops
+  };
 }
 
 async function searchGooglePlace({ query, destination }) {
@@ -60,16 +154,22 @@ async function searchGooglePlace({ query, destination }) {
 
 function photoUrlFromPlace(place) {
   const photoName = place?.photos?.[0]?.name;
-  if (!photoName || !GOOGLE_MAPS_API_KEY) return null;
-
-  return `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=1200&key=${GOOGLE_MAPS_API_KEY}`;
+  if (!photoName) return null;
+  return `/api/place-photo?name=${encodeURIComponent(photoName)}`;
 }
 
-async function enrichStopWithPlaces(stop, destination) {
+async function enrichStopWithPlaces(stop, destination, index = 0, usedImages = new Set()) {
   const searchQuery = stop.photoQuery || stop.name;
   const place = await searchGooglePlace({ query: searchQuery, destination });
 
-  if (!place) return stop;
+  if (!place) {
+    console.warn("Places lookup returned no result:", { searchQuery, destination });
+    return {
+      ...stop,
+      imageUrl: stop.imageUrl || uniqueFallbackImage(index, usedImages),
+      placesStatus: "fallback-image"
+    };
+  }
 
   return {
     ...stop,
@@ -81,8 +181,22 @@ async function enrichStopWithPlaces(stop, destination) {
     userRatingCount: place.userRatingCount,
     openNow: place.currentOpeningHours?.openNow,
     mapsUrl: place.googleMapsUri,
-    imageUrl: photoUrlFromPlace(place)
+    imageUrl: photoUrlFromPlace(place) || uniqueFallbackImage(index, usedImages),
+    placesStatus: photoUrlFromPlace(place) ? "google-places" : "fallback-image"
   };
+}
+
+async function enrichItinerary(itinerary, destination) {
+  const stops = Array.isArray(itinerary.stops) ? itinerary.stops : [];
+  const usedImages = new Set();
+  itinerary.stops = await Promise.all(
+    stops.map((stop, index) => enrichStopWithPlaces(stop, itinerary.destination || destination, index, usedImages))
+  );
+
+  const firstGoogleImage = itinerary.stops.find((s) => s.placesStatus === "google-places")?.imageUrl;
+  itinerary.heroImageUrl = firstGoogleImage || itinerary.stops[0]?.imageUrl || FALLBACK_IMAGES[0];
+
+  return itinerary;
 }
 
 export default async function handler(req, res) {
@@ -90,20 +204,30 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Use POST." });
   }
 
+  const {
+    user,
+    destination,
+    dates,
+    diet,
+    travelWith,
+    selectedMoods = []
+  } = req.body || {};
+
+  const fallback = () =>
+    enrichItinerary(
+      fallbackItinerary({ destination, dates, diet, travelWith, selectedMoods }),
+      destination
+    );
+
   if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: "Missing GEMINI_API_KEY in Vercel environment variables." });
+    const itinerary = await fallback();
+    return res.status(200).json({
+      ...itinerary,
+      fallbackReason: "Missing Gemini API key"
+    });
   }
 
   try {
-    const {
-      user,
-      destination,
-      dates,
-      diet,
-      travelWith,
-      selectedMoods = []
-    } = req.body || {};
-
     const moodText = selectedMoods
       .map((item) => `${item.title}: ${item.signal || item.tag}`)
       .join("; ");
@@ -120,8 +244,6 @@ User: ${user?.name || "guest"}
 
 Today's mood layer:
 ${moodText || "No mood selected"}
-
-Assume long-term travel personality can be inferred from lightweight Google context in future versions, but for now only use the user's mood, destination, diet, and travel companion.
 
 Rules:
 - Generate concrete places in or near the destination. No generic placeholders.
@@ -171,28 +293,36 @@ JSON schema:
     const raw = await geminiRes.json();
 
     if (!geminiRes.ok) {
-      return res.status(500).json({
-        error: raw?.error?.message || "Gemini API request failed."
+      console.error("Gemini fallback:", raw);
+      const itinerary = await fallback();
+      return res.status(200).json({
+        ...itinerary,
+        fallbackReason: raw?.error?.message || "Gemini API request failed."
       });
     }
 
     const text = raw?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
-      return res.status(500).json({ error: "Gemini returned an empty response." });
+      const itinerary = await fallback();
+      return res.status(200).json({
+        ...itinerary,
+        fallbackReason: "Gemini returned an empty response."
+      });
     }
 
     const itinerary = safeJsonParse(text);
+    const enriched = await enrichItinerary(itinerary, destination);
 
-    const stops = Array.isArray(itinerary.stops) ? itinerary.stops : [];
-    itinerary.stops = await Promise.all(
-      stops.map((stop) => enrichStopWithPlaces(stop, itinerary.destination || destination))
-    );
-
-    return res.status(200).json(itinerary);
+    return res.status(200).json({
+      ...enriched,
+      generatedBy: "gemini"
+    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      error: error.message || "Could not generate itinerary."
+    console.error("Fallback after error:", error);
+    const itinerary = await fallback();
+    return res.status(200).json({
+      ...itinerary,
+      fallbackReason: error.message || "Could not generate itinerary."
     });
   }
 }
