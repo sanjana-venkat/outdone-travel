@@ -2442,9 +2442,9 @@ small {
   --surface-3: #232A33;
   --line: rgba(255,255,255,.09);
   --line-strong: rgba(255,255,255,.16);
-  --secondary: #4FA8A8;
-  --secondary-soft: rgba(79,168,168,.10);
-  --secondary-line: rgba(79,168,168,.20);
+  --secondary: #5D7FA3;
+  --secondary-soft: rgba(93,127,163,.10);
+  --secondary-line: rgba(93,127,163,.22);
 }
 
 body,
@@ -2494,7 +2494,7 @@ h1 span,
 }
 
 .btn-accent:hover {
-  background: #5AB3B3 !important;
+  background: #6E8FB3 !important;
   box-shadow: none !important;
 }
 
@@ -2563,7 +2563,7 @@ h1 span,
 
 .showreel-copy span {
   display: inline-flex;
-  color: #BFE4E4 !important;
+  color: #D1DEEA !important;
   background: rgba(255,255,255,.055) !important;
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 999px;
@@ -2620,7 +2620,7 @@ h1 span,
 }
 
 .itinerary-line b {
-  color: #BFE4E4 !important;
+  color: #D1DEEA !important;
   font-size: 12px;
 }
 
@@ -2663,9 +2663,9 @@ h1 span,
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(79,168,168,.12) !important;
-  border-color: rgba(79,168,168,.32) !important;
-  color: #BFE4E4 !important;
+  background: rgba(93,127,163,.14) !important;
+  border-color: rgba(93,127,163,.34) !important;
+  color: #D1DEEA !important;
 }
 
 .image-mood-tile.active {
@@ -2680,7 +2680,7 @@ h1 span,
 
 .res-tag,
 .place-meta a {
-  color: #BFE4E4 !important;
+  color: #D1DEEA !important;
 }
 
 @media(max-width: 980px) {
@@ -2707,6 +2707,74 @@ h1 span,
   .showreel-copy h3 {
     font-size: 30px;
   }
+}
+
+
+/* Slate blue premium override */
+:root {
+  --secondary: #5D7FA3;
+  --secondary-soft: rgba(93,127,163,.10);
+  --secondary-line: rgba(93,127,163,.22);
+}
+
+.pulse,
+.generation-chip i {
+  background: var(--secondary) !important;
+  box-shadow: none !important;
+}
+
+.hero-pill {
+  background: rgba(255,255,255,.035) !important;
+  border-color: rgba(255,255,255,.10) !important;
+}
+
+.hero-pill span {
+  color: rgba(255,255,255,.76) !important;
+}
+
+.showreel-copy span,
+.itinerary-line b,
+.generation-chip,
+.res-tag,
+.place-meta a {
+  color: #D1DEEA !important;
+}
+
+.generation-chip {
+  background: rgba(93,127,163,.12) !important;
+  border-color: rgba(93,127,163,.28) !important;
+}
+
+.btn-accent {
+  background: #5D7FA3 !important;
+  color: #0F1115 !important;
+}
+
+.btn-accent:hover {
+  background: #6E8FB3 !important;
+}
+
+.suggestion.active,
+.chip.active,
+.selected-chips span {
+  background: rgba(93,127,163,.14) !important;
+  border-color: rgba(93,127,163,.34) !important;
+  color: #D1DEEA !important;
+}
+
+.image-mood-tile.active,
+.s-pin.featured {
+  border-color: #5D7FA3 !important;
+}
+
+.showreel-frame {
+  border-color: rgba(255,255,255,.13) !important;
+  box-shadow: none !important;
+}
+
+.itinerary-line {
+  background: rgba(15,17,21,.72) !important;
+  border-color: rgba(255,255,255,.12) !important;
 }
 
 `;
