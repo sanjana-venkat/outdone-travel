@@ -461,11 +461,10 @@ function App() {
               </div>
 
               <h1>
-                Plan anything built for <span>right now.</span>
+                Today feels <span>different.</span>
               </h1>
               <p>
-                A single evening. A full day. A whole trip. Every moment shaped
-                around who you want to be today — not just where you're going.
+                Because even the best recommendation system can't predict what you'll want today. Whether it's a single evening, a full day, or a whole trip. 
               </p>
 
               <div className="hero-cta">
