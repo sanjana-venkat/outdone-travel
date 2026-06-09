@@ -2442,9 +2442,9 @@ small {
   --surface-3: #232A33;
   --line: rgba(255,255,255,.09);
   --line-strong: rgba(255,255,255,.16);
-  --secondary: #5D7FA3;
-  --secondary-soft: rgba(93,127,163,.10);
-  --secondary-line: rgba(93,127,163,.22);
+  --secondary: #BFA77A;
+  --secondary-soft: rgba(191,167,122,.10);
+  --secondary-line: rgba(191,167,122,.24);
 }
 
 body,
@@ -2494,7 +2494,7 @@ h1 span,
 }
 
 .btn-accent:hover {
-  background: #6E8FB3 !important;
+  background: #CAB487 !important;
   box-shadow: none !important;
 }
 
@@ -2563,7 +2563,7 @@ h1 span,
 
 .showreel-copy span {
   display: inline-flex;
-  color: #D1DEEA !important;
+  color: #F2E5C8 !important;
   background: rgba(255,255,255,.055) !important;
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 999px;
@@ -2620,7 +2620,7 @@ h1 span,
 }
 
 .itinerary-line b {
-  color: #D1DEEA !important;
+  color: #F2E5C8 !important;
   font-size: 12px;
 }
 
@@ -2663,9 +2663,9 @@ h1 span,
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(93,127,163,.14) !important;
-  border-color: rgba(93,127,163,.34) !important;
-  color: #D1DEEA !important;
+  background: rgba(191,167,122,.14) !important;
+  border-color: rgba(191,167,122,.34) !important;
+  color: #F2E5C8 !important;
 }
 
 .image-mood-tile.active {
@@ -2680,7 +2680,7 @@ h1 span,
 
 .res-tag,
 .place-meta a {
-  color: #D1DEEA !important;
+  color: #F2E5C8 !important;
 }
 
 @media(max-width: 980px) {
@@ -2712,9 +2712,9 @@ h1 span,
 
 /* Slate blue premium override */
 :root {
-  --secondary: #5D7FA3;
-  --secondary-soft: rgba(93,127,163,.10);
-  --secondary-line: rgba(93,127,163,.22);
+  --secondary: #BFA77A;
+  --secondary-soft: rgba(191,167,122,.10);
+  --secondary-line: rgba(191,167,122,.24);
 }
 
 .pulse,
@@ -2737,34 +2737,34 @@ h1 span,
 .generation-chip,
 .res-tag,
 .place-meta a {
-  color: #D1DEEA !important;
+  color: #F2E5C8 !important;
 }
 
 .generation-chip {
-  background: rgba(93,127,163,.12) !important;
-  border-color: rgba(93,127,163,.28) !important;
+  background: rgba(191,167,122,.12) !important;
+  border-color: rgba(191,167,122,.28) !important;
 }
 
 .btn-accent {
-  background: #5D7FA3 !important;
+  background: #BFA77A !important;
   color: #0F1115 !important;
 }
 
 .btn-accent:hover {
-  background: #6E8FB3 !important;
+  background: #CAB487 !important;
 }
 
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(93,127,163,.14) !important;
-  border-color: rgba(93,127,163,.34) !important;
-  color: #D1DEEA !important;
+  background: rgba(191,167,122,.14) !important;
+  border-color: rgba(191,167,122,.34) !important;
+  color: #F2E5C8 !important;
 }
 
 .image-mood-tile.active,
 .s-pin.featured {
-  border-color: #5D7FA3 !important;
+  border-color: #BFA77A !important;
 }
 
 .showreel-frame {
@@ -2775,6 +2775,78 @@ h1 span,
 .itinerary-line {
   background: rgba(15,17,21,.72) !important;
   border-color: rgba(255,255,255,.12) !important;
+}
+
+
+/* Champagne gold premium override */
+:root {
+  --secondary: #BFA77A;
+  --secondary-soft: rgba(191,167,122,.12);
+  --secondary-line: rgba(191,167,122,.26);
+}
+
+.pulse,
+.generation-chip i {
+  background: var(--secondary) !important;
+  box-shadow: none !important;
+}
+
+.hero-pill {
+  background: rgba(255,255,255,.035) !important;
+  border-color: rgba(255,255,255,.10) !important;
+}
+
+.hero-pill span {
+  color: rgba(255,255,255,.78) !important;
+}
+
+.showreel-copy span,
+.itinerary-line b,
+.generation-chip,
+.res-tag,
+.place-meta a {
+  color: #F2E5C8 !important;
+}
+
+.generation-chip {
+  background: rgba(191,167,122,.12) !important;
+  border-color: rgba(191,167,122,.28) !important;
+}
+
+.btn-accent {
+  background: #BFA77A !important;
+  color: #0F1115 !important;
+}
+
+.btn-accent:hover {
+  background: #CAB487 !important;
+}
+
+.suggestion.active,
+.chip.active,
+.selected-chips span {
+  background: rgba(191,167,122,.14) !important;
+  border-color: rgba(191,167,122,.34) !important;
+  color: #F2E5C8 !important;
+}
+
+.image-mood-tile.active,
+.s-pin.featured {
+  border-color: #BFA77A !important;
+}
+
+.showreel-frame {
+  border-color: rgba(255,255,255,.13) !important;
+  box-shadow: none !important;
+}
+
+.itinerary-line {
+  background: rgba(15,17,21,.72) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+
+.itinerary-line b {
+  min-width: 58px;
 }
 
 `;
