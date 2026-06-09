@@ -766,11 +766,6 @@ function App() {
               <span className="res-tag">{travelArchetype.name}</span>
               <h2>{itinerary?.destination || destination}</h2>
               <p>{itinerary?.dates || prettyDate(date)}</p>
-              <div className="res-dna-strip">
-                {selectedMoodObjects.map((mood) => (
-                  <span key={mood.id}>Today: {mood.title}</span>
-                ))}
-              </div>
               <p className="archetype-line">{travelArchetype.line}</p>
               {itinerary?.summary && <p className="res-summary">{itinerary.summary}</p>}
               {itinerary?.generatedBy === "fallback" && (
@@ -4033,6 +4028,795 @@ input:focus {
 
   .itinerary-line span {
     font-size: 15px !important;
+  }
+}
+
+
+/* Sticky nav + remove repeated mood chips / wrapper */
+.navbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 999 !important;
+}
+
+/* Do not show repeated "Today: Romantic" chips in result hero */
+.res-dna-strip {
+  display: none !important;
+}
+
+/* Remove selected mood wrapper on mood page if old markup remains */
+.bottom-cta.glass-panel {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+  margin: 34px 0 0 !important;
+  justify-content: flex-end !important;
+}
+
+.bottom-cta.glass-panel > div:first-child {
+  display: none !important;
+}
+
+.build-cta-row {
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin: 34px 0 0 !important;
+}
+
+.build-cta-row .btn-accent,
+.bottom-cta.glass-panel .btn-accent {
+  min-width: 260px !important;
+  color: #050608 !important;
+}
+
+@media(max-width: 760px) {
+  .build-cta-row,
+  .bottom-cta.glass-panel {
+    justify-content: stretch !important;
+  }
+
+  .build-cta-row .btn-accent,
+  .bottom-cta.glass-panel .btn-accent {
+    width: 100% !important;
+  }
+}
+
+
+/* Premium restraint pass: white-first, gold only for key actions */
+:root {
+  --accent: #E8D184;
+  --accent-hover: #F1DB91;
+  --accent-soft: rgba(232,209,132,.09);
+  --accent-line: rgba(232,209,132,.22);
+}
+
+/* Default nav and body accents should feel quiet */
+.nav-steps button,
+.nav-tabs button,
+.nav-steps button.done,
+.nav-tabs button.done {
+  color: rgba(255,255,255,.58) !important;
+}
+
+.nav-steps button.active,
+.nav-tabs button.active {
+  color: #FFFFFF !important;
+}
+
+/* Remove gold from general labels/chips. Keep them neutral. */
+.hero-pill span,
+.profile-chip,
+.selected-chips span,
+.res-tag,
+.place-meta a,
+.load-row em,
+.gem,
+.archetype-line,
+.showreel-copy span,
+.generation-chip {
+  color: rgba(255,255,255,.76) !important;
+  background-image: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.hero-pill,
+.profile-chip,
+.selected-chips span,
+.res-tag,
+.spark {
+  background: rgba(255,255,255,.055) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+
+.spark,
+.load-row.on b {
+  background: rgba(255,255,255,.86) !important;
+  color: #050608 !important;
+}
+
+/* Use gold only where it actually means action/progress */
+.btn-accent,
+.nav-subscribe,
+.action-bar .btn-accent,
+.action-bar .maps-trip-btn {
+  background: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+  color: #050608 !important;
+  box-shadow: none !important;
+}
+
+.btn-accent:hover,
+.nav-subscribe:hover,
+.action-bar .btn-accent:hover,
+.action-bar .maps-trip-btn:hover {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+  color: #050608 !important;
+}
+
+.btn-accent:hover *,
+.nav-subscribe:hover *,
+.action-bar .maps-trip-btn:hover * {
+  color: #050608 !important;
+}
+
+/* Mood selection should be mostly white with a thin gold outline only when selected */
+.image-mood-tile.active {
+  border-color: rgba(232,209,132,.72) !important;
+  box-shadow: inset 0 0 0 1px rgba(232,209,132,.72) !important;
+}
+
+.suggestion.active,
+.chip.active {
+  background: rgba(255,255,255,.10) !important;
+  border-color: rgba(255,255,255,.22) !important;
+  color: #FFFFFF !important;
+}
+
+.autocomplete-suggestions .suggestion span {
+  color: rgba(255,255,255,.76) !important;
+  background: rgba(255,255,255,.08) !important;
+}
+
+/* Showreel: only time stamps + generating dot use gold */
+.itinerary-line b {
+  color: var(--accent) !important;
+}
+
+.itinerary-line span {
+  color: #FFFFFF !important;
+}
+
+.generation-chip {
+  background: rgba(255,255,255,.055) !important;
+  border-color: rgba(255,255,255,.12) !important;
+  color: #FFFFFF !important;
+}
+
+.generation-chip i {
+  background: var(--accent) !important;
+}
+
+/* Result page: keep headline and summary white/gray, reduce gold usage */
+.res-content h2,
+.result-copy h2 {
+  color: #FFFFFF !important;
+}
+
+.res-summary,
+.res-content p,
+.result-copy p {
+  color: rgba(255,255,255,.70) !important;
+}
+
+.archetype-line {
+  color: #FFFFFF !important;
+}
+
+.res-tag {
+  color: rgba(255,255,255,.72) !important;
+  background: rgba(255,255,255,.07) !important;
+  border-color: rgba(255,255,255,.13) !important;
+}
+
+.place-meta a {
+  color: #FFFFFF !important;
+  border-color: rgba(255,255,255,.15) !important;
+  background: rgba(255,255,255,.055) !important;
+}
+
+.place-meta .rating-pill {
+  color: var(--accent) !important;
+  border-color: rgba(232,209,132,.22) !important;
+  background: rgba(232,209,132,.08) !important;
+}
+
+.s-pin.featured {
+  border-color: rgba(232,209,132,.45) !important;
+  background: rgba(232,209,132,.08) !important;
+  color: var(--accent) !important;
+}
+
+/* Make secondary buttons feel more premium and less flashy */
+.action-bar .btn-outline,
+.action-bar button.btn-outline,
+.btn-outline {
+  background: rgba(255,255,255,.035) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.72) !important;
+  box-shadow: none !important;
+}
+
+.action-bar .btn-outline:hover,
+.action-bar button.btn-outline:hover,
+.btn-outline:hover {
+  background: rgba(255,255,255,.075) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255,255,255,.22) !important;
+}
+
+/* Subscribe button should not scream */
+.nav-subscribe {
+  background: rgba(255,255,255,.055) !important;
+  border-color: rgba(255,255,255,.14) !important;
+  color: #FFFFFF !important;
+}
+
+.nav-subscribe:hover {
+  background: rgba(255,255,255,.09) !important;
+  border-color: rgba(255,255,255,.22) !important;
+  color: #FFFFFF !important;
+}
+
+/* But primary CTA remains gold */
+.build-cta-row .btn-accent,
+.bottom-cta.glass-panel .btn-accent,
+.maps-trip-btn.btn-accent {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #050608 !important;
+}
+
+
+/* LIGHT MODE EXPERIMENT — solid, editorial, reference-inspired */
+:root {
+  --lm-bg: #8B8B86;
+  --lm-card: #EDEDEC;
+  --lm-card-2: #F6F6F4;
+  --lm-line: rgba(0,0,0,.12);
+  --lm-line-strong: rgba(0,0,0,.18);
+  --lm-text: #050505;
+  --lm-muted: #60605C;
+  --lm-soft: #8A8A84;
+  --lm-black: #050505;
+  --lm-gold: #D8B95F;
+  --lm-gold-2: #E8CD78;
+}
+
+/* Global surface */
+body,
+.app-shell {
+  background: var(--lm-bg) !important;
+  color: var(--lm-text) !important;
+}
+
+.app-shell {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,.16), transparent 38%),
+    var(--lm-bg) !important;
+  padding-bottom: 90px !important;
+}
+
+.stars,
+.aurora {
+  display: none !important;
+}
+
+/* Full-width solid/glass nav like premium app chrome, no pill buttons */
+.navbar {
+  width: 100% !important;
+  height: 64px !important;
+  margin: 0 !important;
+  top: 0 !important;
+  z-index: 999 !important;
+  position: sticky !important;
+  border-radius: 0 !important;
+  padding: 0 clamp(24px, 4vw, 56px) !important;
+  background: rgba(237,237,236,.78) !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(0,0,0,.10) !important;
+  backdrop-filter: blur(22px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(150%) !important;
+  box-shadow: none !important;
+}
+
+.nav-steps,
+.nav-tabs {
+  gap: 22px !important;
+}
+
+.nav-steps i,
+.nav-tabs i,
+.hero-pill .pulse {
+  display: none !important;
+}
+
+.nav-steps button,
+.nav-tabs button {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  color: rgba(0,0,0,.45) !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+}
+
+.nav-steps button:hover,
+.nav-tabs button:hover {
+  color: rgba(0,0,0,.72) !important;
+  background: transparent !important;
+}
+
+.nav-steps button.active,
+.nav-tabs button.active {
+  color: var(--lm-black) !important;
+  background: transparent !important;
+}
+
+.nav-steps button.done,
+.nav-tabs button.done {
+  color: rgba(0,0,0,.55) !important;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+.res-content h2,
+.result-copy h2 {
+  color: var(--lm-text) !important;
+  letter-spacing: -.06em !important;
+}
+
+h1 span,
+.gem {
+  color: var(--lm-text) !important;
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+  animation: none !important;
+}
+
+p,
+.subcopy,
+.res-summary,
+.res-content p,
+.result-copy p {
+  color: rgba(0,0,0,.62) !important;
+}
+
+.label,
+.field-label,
+.s-cat,
+.kicker {
+  color: rgba(0,0,0,.42) !important;
+}
+
+/* Solid buttons like reference: black active, light inactive, gold only for primary CTA */
+.btn-accent,
+.build-cta-row .btn-accent,
+.bottom-cta.glass-panel .btn-accent,
+.action-bar .btn-accent,
+.action-bar .maps-trip-btn {
+  background: var(--lm-black) !important;
+  color: #fff !important;
+  border: 1px solid var(--lm-black) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+
+.btn-accent:hover,
+.build-cta-row .btn-accent:hover,
+.bottom-cta.glass-panel .btn-accent:hover,
+.action-bar .btn-accent:hover,
+.action-bar .maps-trip-btn:hover {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #000 !important;
+  transform: none !important;
+}
+
+.btn-outline,
+.action-bar .btn-outline,
+.action-bar button.btn-outline {
+  background: rgba(255,255,255,.52) !important;
+  color: rgba(0,0,0,.72) !important;
+  border: 1px solid rgba(255,255,255,.70) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+
+.btn-outline:hover,
+.action-bar .btn-outline:hover,
+.action-bar button.btn-outline:hover {
+  background: #fff !important;
+  color: var(--lm-black) !important;
+  border-color: #fff !important;
+  transform: none !important;
+}
+
+.nav-subscribe {
+  background: var(--lm-black) !important;
+  color: #fff !important;
+  border: 1px solid var(--lm-black) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+
+.nav-subscribe:hover,
+.nav-subscribe:hover * {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #000 !important;
+}
+
+/* App panels: solid translucent light cards, no shadows */
+.glass-panel,
+.form-shell,
+.api-error-card,
+.load-glass,
+.subscribe-modal {
+  background: rgba(237,237,236,.82) !important;
+  border: 1px solid rgba(255,255,255,.58) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(22px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(150%) !important;
+}
+
+/* Login/hero preview */
+.hero-pill {
+  background: rgba(237,237,236,.72) !important;
+  border: 1px solid rgba(255,255,255,.58) !important;
+  color: var(--lm-text) !important;
+  box-shadow: none !important;
+}
+
+.hero-pill span {
+  color: var(--lm-text) !important;
+}
+
+.hero-cards.itinerary-showreel {
+  height: 560px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.showreel-frame {
+  width: min(620px, 100%) !important;
+  height: 500px !important;
+  margin: 0 auto !important;
+  border-radius: 34px !important;
+  overflow: hidden !important;
+  background: var(--lm-card) !important;
+  border: 1px solid rgba(255,255,255,.60) !important;
+  box-shadow: none !important;
+}
+
+.showreel-copy,
+.preview-progress,
+.preview-progress::before,
+.preview-progress::after {
+  display: none !important;
+}
+
+.showreel-overlay {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.50)),
+    linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,.05)) !important;
+}
+
+.itinerary-lines {
+  left: 28px !important;
+  right: 28px !important;
+  bottom: 86px !important;
+  gap: 12px !important;
+}
+
+.itinerary-line {
+  display: grid !important;
+  grid-template-columns: 84px 1fr !important;
+  align-items: center !important;
+  min-height: 58px !important;
+  padding: 14px 18px !important;
+  border-radius: 20px !important;
+  background: rgba(255,255,255,.82) !important;
+  border: 1px solid rgba(255,255,255,.70) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(18px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+}
+
+.itinerary-line b {
+  color: var(--lm-black) !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+}
+
+.itinerary-line span {
+  color: var(--lm-black) !important;
+  font-size: clamp(16px, 1.5vw, 22px) !important;
+  font-weight: 900 !important;
+}
+
+.generation-chip {
+  left: 28px !important;
+  bottom: 28px !important;
+  background: var(--lm-black) !important;
+  color: #fff !important;
+  border: 1px solid var(--lm-black) !important;
+  box-shadow: none !important;
+}
+
+.generation-chip i {
+  display: none !important;
+}
+
+/* Inputs and setup screen */
+input {
+  background: rgba(255,255,255,.70) !important;
+  color: var(--lm-text) !important;
+  border: 1px solid rgba(255,255,255,.72) !important;
+  box-shadow: none !important;
+}
+
+input:focus {
+  border-color: rgba(0,0,0,.24) !important;
+  background: #fff !important;
+}
+
+.suggestion,
+.chip {
+  background: rgba(255,255,255,.56) !important;
+  border: 1px solid rgba(255,255,255,.70) !important;
+  color: rgba(0,0,0,.62) !important;
+  box-shadow: none !important;
+}
+
+.suggestion.active,
+.chip.active {
+  background: var(--lm-black) !important;
+  color: #fff !important;
+  border-color: var(--lm-black) !important;
+}
+
+.autocomplete-suggestions .suggestion span {
+  background: rgba(0,0,0,.08) !important;
+  color: var(--lm-muted) !important;
+}
+
+/* Mood cards: image cards remain, but selected state is simple black border */
+.image-mood-tile {
+  border-radius: 30px !important;
+  border: 1px solid rgba(255,255,255,.50) !important;
+  box-shadow: none !important;
+}
+
+.image-mood-tile.active {
+  border-color: var(--lm-black) !important;
+  box-shadow: inset 0 0 0 2px var(--lm-black) !important;
+}
+
+.image-tile-overlay {
+  background:
+    linear-gradient(to top, rgba(0,0,0,.62), rgba(0,0,0,.18) 58%, rgba(255,255,255,.05)) !important;
+}
+
+.bottom-cta.glass-panel {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+}
+
+.bottom-cta.glass-panel > div:first-child,
+.res-dna-strip {
+  display: none !important;
+}
+
+.build-cta-row,
+.bottom-cta.glass-panel {
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin: 34px 0 0 !important;
+}
+
+/* Loader */
+.constellation .seg {
+  filter: none !important;
+}
+
+.load-row {
+  border-color: rgba(0,0,0,.10) !important;
+  color: rgba(0,0,0,.48) !important;
+}
+
+.load-row.on {
+  color: var(--lm-text) !important;
+}
+
+.load-row.on b {
+  background: var(--lm-black) !important;
+}
+
+/* Result hero */
+.result-screen {
+  max-width: 1280px !important;
+  width: 100% !important;
+  padding: 48px clamp(28px, 6vw, 80px) 80px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+.res-hero {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 520px !important;
+  display: block !important;
+  border-radius: 42px !important;
+  border: 1px solid rgba(255,255,255,.58) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.res-gradient {
+  background:
+    linear-gradient(90deg, rgba(237,237,236,.86), rgba(237,237,236,.68), rgba(237,237,236,.22)),
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.22)) !important;
+}
+
+.res-content {
+  position: relative !important;
+  left: 0 !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 920px !important;
+  min-width: 0 !important;
+  padding: clamp(38px, 6vw, 72px) !important;
+}
+
+.res-content h2 {
+  font-size: clamp(48px, 6vw, 86px) !important;
+  line-height: .95 !important;
+  max-width: 920px !important;
+}
+
+.res-tag {
+  background: var(--lm-black) !important;
+  border-color: var(--lm-black) !important;
+  color: #fff !important;
+}
+
+.archetype-line {
+  color: var(--lm-text) !important;
+}
+
+/* Result buttons: no wrapper */
+.action-bar {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+  margin: 24px 0 52px !important;
+  position: static !important;
+  width: auto !important;
+  display: flex !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+/* Timeline */
+.timeline .label {
+  color: rgba(0,0,0,.45) !important;
+}
+
+.stop::after {
+  background: rgba(0,0,0,.14) !important;
+}
+
+.s-pin {
+  background: rgba(255,255,255,.62) !important;
+  border-color: rgba(255,255,255,.72) !important;
+  color: rgba(0,0,0,.54) !important;
+}
+
+.s-pin.featured {
+  background: var(--lm-black) !important;
+  border-color: var(--lm-black) !important;
+  color: #fff !important;
+}
+
+.s-body h3,
+.s-body h4 {
+  color: var(--lm-text) !important;
+}
+
+.s-body p,
+.s-body small {
+  color: rgba(0,0,0,.58) !important;
+}
+
+.s-photo {
+  border-radius: 30px !important;
+  border: 1px solid rgba(255,255,255,.70) !important;
+  box-shadow: none !important;
+}
+
+.s-photo span {
+  background: var(--lm-black) !important;
+  color: #fff !important;
+  border: 0 !important;
+}
+
+.place-meta span,
+.place-meta a {
+  background: rgba(255,255,255,.62) !important;
+  border-color: rgba(255,255,255,.72) !important;
+  color: rgba(0,0,0,.66) !important;
+}
+
+.place-meta .rating-pill {
+  background: var(--lm-black) !important;
+  border-color: var(--lm-black) !important;
+  color: #fff !important;
+}
+
+/* Modal/error */
+.api-error-card h2,
+.subscribe-modal h2 {
+  color: var(--lm-text) !important;
+}
+
+.modal-backdrop {
+  background: rgba(80,80,76,.72) !important;
+}
+
+.modal-close {
+  background: var(--lm-black) !important;
+  border-color: var(--lm-black) !important;
+  color: #fff !important;
+}
+
+@media(max-width: 760px) {
+  .navbar {
+    padding: 0 16px !important;
+  }
+
+  .result-screen {
+    padding: 28px 18px 70px !important;
+  }
+
+  .res-content {
+    padding: 28px !important;
+  }
+
+  .action-bar button,
+  .action-bar a,
+  .build-cta-row .btn-accent,
+  .bottom-cta.glass-panel .btn-accent {
+    width: 100% !important;
+    justify-content: center !important;
   }
 }
 
