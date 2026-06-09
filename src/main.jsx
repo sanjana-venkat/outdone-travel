@@ -492,11 +492,6 @@ function App() {
                   <h3>Kyoto · mood-led day</h3>
                 </div>
 
-                <div className="preview-progress">
-                  <i />
-                  <span>Personalizing around mood</span>
-                </div>
-
                 <div className="itinerary-lines">
                   <div className="itinerary-line line-1">
                     <b>08:30</b>
@@ -763,11 +758,11 @@ function App() {
             <button className="btn-outline" onClick={() => setStep("setup")}>
               Edit setup
             </button>
-            <button className="btn-accent" onClick={generatePlan}>
+            <button className="btn-outline regenerate-btn" onClick={generatePlan}>
               Regenerate ✦
             </button>
             {tripMapsUrl && (
-              <a className="btn-outline maps-trip-btn" href={tripMapsUrl} target="_blank" rel="noreferrer">
+              <a className="btn-accent maps-trip-btn" href={tripMapsUrl} target="_blank" rel="noreferrer">
                 Open trip in Google Maps
               </a>
             )}
@@ -960,8 +955,8 @@ body,
   --green: #34a853;
   --yellow: #fbbc04;
   --red: #ea4335;
-  --accent: #00d4aa;
-  --accent2: rgba(0, 212, 170, 0.12);
+  --accent: #F4D97A;
+  --accent2: rgba(244, 217, 122, 0.13);
   --ease: cubic-bezier(.16, 1, .3, 1);
   --spring: cubic-bezier(.34, 1.56, .64, 1);
 }
@@ -970,7 +965,7 @@ body {
   font-family: 'Google Sans', Inter, system-ui, sans-serif;
   background:
     radial-gradient(circle at 18% 8%, rgba(66,133,244,.10), transparent 30%),
-    radial-gradient(circle at 88% 14%, rgba(0,212,170,.09), transparent 28%),
+    radial-gradient(circle at 88% 14%, rgba(244,217,122,.08), transparent 28%),
     var(--bg);
   color: var(--ink);
   overflow-x: hidden;
@@ -1039,7 +1034,7 @@ button {
   height: 340px;
   bottom: -110px;
   right: -200px;
-  background: radial-gradient(ellipse, rgba(0, 212, 170, .09), transparent 65%);
+  background: radial-gradient(ellipse, rgba(244, 217, 122, .08), transparent 65%);
 }
 
 .a3 {
@@ -1153,7 +1148,7 @@ button {
 
 .btn-accent:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(0, 212, 170, .18);
+  box-shadow: 0 8px 20px rgba(244, 217, 122, .20);
 }
 
 .screen {
@@ -1251,7 +1246,7 @@ h1 span {
   align-items: center;
   gap: 8px;
   background: var(--accent2);
-  border: 1px solid rgba(0, 212, 170, .2);
+  border: 1px solid rgba(244, 217, 122, .26);
   border-radius: 100px;
   padding: 6px 14px;
   width: fit-content;
@@ -1377,7 +1372,7 @@ input {
 }
 
 input:focus {
-  border-color: rgba(0,212,170,.48);
+  border-color: rgba(244,217,122,.42);
   background: rgba(19, 25, 32, .95);
 }
 
@@ -1815,7 +1810,7 @@ input:focus {
   display: inline-flex;
   padding: 5px 12px;
   background: var(--accent2);
-  border: 1px solid rgba(0,212,170,.2);
+  border: 1px solid rgba(244,217,122,.26);
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
@@ -1909,7 +1904,7 @@ input:focus {
 
 .s-pin.featured {
   border-color: var(--accent);
-  background: rgba(0,212,170,.1);
+  background: rgba(244,217,122,.12);
   color: var(--accent);
 }
 
@@ -1979,7 +1974,7 @@ input:focus {
   align-items: end;
   padding: 14px;
   transition: transform .5s var(--ease), box-shadow .5s var(--ease);
-  background: linear-gradient(135deg, #4285f4, #00d4aa);
+  background: linear-gradient(135deg, #4285f4, #F4D97A);
   box-shadow: 0 18px 60px rgba(0,0,0,.28);
 }
 
@@ -2046,8 +2041,8 @@ input:focus {
 
 .place-meta a {
   color: var(--accent);
-  border-color: rgba(0,212,170,.20);
-  background: rgba(0,212,170,.08);
+  border-color: rgba(244,217,122,.26);
+  background: rgba(244,217,122,.10);
 }
 
 small {
@@ -2464,7 +2459,7 @@ small {
   --surface-3: #232A33;
   --line: rgba(255,255,255,.09);
   --line-strong: rgba(255,255,255,.16);
-  --secondary: #BFA77A;
+  --secondary: #F4D97A;
   --secondary-soft: rgba(191,167,122,.10);
   --secondary-line: rgba(191,167,122,.24);
 }
@@ -2516,7 +2511,7 @@ h1 span,
 }
 
 .btn-accent:hover {
-  background: #CAB487 !important;
+  background: #FFE28A !important;
   box-shadow: none !important;
 }
 
@@ -2585,7 +2580,7 @@ h1 span,
 
 .showreel-copy span {
   display: inline-flex;
-  color: #F2E5C8 !important;
+  color: #FFF1B8 !important;
   background: rgba(255,255,255,.055) !important;
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 999px;
@@ -2642,7 +2637,7 @@ h1 span,
 }
 
 .itinerary-line b {
-  color: #F2E5C8 !important;
+  color: #FFF1B8 !important;
   font-size: 12px;
 }
 
@@ -2685,9 +2680,9 @@ h1 span,
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(191,167,122,.14) !important;
-  border-color: rgba(191,167,122,.34) !important;
-  color: #F2E5C8 !important;
+  background: rgba(244,217,122,.16) !important;
+  border-color: rgba(244,217,122,.38) !important;
+  color: #FFF1B8 !important;
 }
 
 .image-mood-tile.active {
@@ -2702,7 +2697,7 @@ h1 span,
 
 .res-tag,
 .place-meta a {
-  color: #F2E5C8 !important;
+  color: #FFF1B8 !important;
 }
 
 @media(max-width: 980px) {
@@ -2734,7 +2729,7 @@ h1 span,
 
 /* Slate blue premium override */
 :root {
-  --secondary: #BFA77A;
+  --secondary: #F4D97A;
   --secondary-soft: rgba(191,167,122,.10);
   --secondary-line: rgba(191,167,122,.24);
 }
@@ -2759,34 +2754,34 @@ h1 span,
 .generation-chip,
 .res-tag,
 .place-meta a {
-  color: #F2E5C8 !important;
+  color: #FFF1B8 !important;
 }
 
 .generation-chip {
-  background: rgba(191,167,122,.12) !important;
-  border-color: rgba(191,167,122,.28) !important;
+  background: rgba(244,217,122,.14) !important;
+  border-color: rgba(244,217,122,.34) !important;
 }
 
 .btn-accent {
-  background: #BFA77A !important;
+  background: #F4D97A !important;
   color: #0F1115 !important;
 }
 
 .btn-accent:hover {
-  background: #CAB487 !important;
+  background: #FFE28A !important;
 }
 
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(191,167,122,.14) !important;
-  border-color: rgba(191,167,122,.34) !important;
-  color: #F2E5C8 !important;
+  background: rgba(244,217,122,.16) !important;
+  border-color: rgba(244,217,122,.38) !important;
+  color: #FFF1B8 !important;
 }
 
 .image-mood-tile.active,
 .s-pin.featured {
-  border-color: #BFA77A !important;
+  border-color: #F4D97A !important;
 }
 
 .showreel-frame {
@@ -2802,9 +2797,9 @@ h1 span,
 
 /* Champagne gold premium override */
 :root {
-  --secondary: #BFA77A;
-  --secondary-soft: rgba(191,167,122,.12);
-  --secondary-line: rgba(191,167,122,.26);
+  --secondary: #F4D97A;
+  --secondary-soft: rgba(244,217,122,.14);
+  --secondary-line: rgba(244,217,122,.30);
 }
 
 .pulse,
@@ -2827,34 +2822,34 @@ h1 span,
 .generation-chip,
 .res-tag,
 .place-meta a {
-  color: #F2E5C8 !important;
+  color: #FFF1B8 !important;
 }
 
 .generation-chip {
-  background: rgba(191,167,122,.12) !important;
-  border-color: rgba(191,167,122,.28) !important;
+  background: rgba(244,217,122,.14) !important;
+  border-color: rgba(244,217,122,.34) !important;
 }
 
 .btn-accent {
-  background: #BFA77A !important;
+  background: #F4D97A !important;
   color: #0F1115 !important;
 }
 
 .btn-accent:hover {
-  background: #CAB487 !important;
+  background: #FFE28A !important;
 }
 
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(191,167,122,.14) !important;
-  border-color: rgba(191,167,122,.34) !important;
-  color: #F2E5C8 !important;
+  background: rgba(244,217,122,.16) !important;
+  border-color: rgba(244,217,122,.38) !important;
+  color: #FFF1B8 !important;
 }
 
 .image-mood-tile.active,
 .s-pin.featured {
-  border-color: #BFA77A !important;
+  border-color: #F4D97A !important;
 }
 
 .showreel-frame {
@@ -2874,9 +2869,9 @@ h1 span,
 
 /* HOME HERO SHOWREEL FIX — champagne gold, visible itinerary animation */
 :root {
-  --secondary: #BFA77A;
-  --secondary-soft: rgba(191,167,122,.12);
-  --secondary-line: rgba(191,167,122,.28);
+  --secondary: #F4D97A;
+  --secondary-soft: rgba(244,217,122,.14);
+  --secondary-line: rgba(244,217,122,.34);
 }
 
 .stars,
@@ -2980,7 +2975,7 @@ h1 span,
 
 .showreel-copy span {
   display: inline-flex !important;
-  color: #F2E5C8 !important;
+  color: #FFF1B8 !important;
   background: rgba(0,0,0,.44) !important;
   border: 1px solid rgba(255,255,255,.14) !important;
   border-radius: 999px !important;
@@ -3033,7 +3028,7 @@ h1 span,
   top: 27px;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, #BFA77A, transparent);
+  background: linear-gradient(90deg, transparent, #F4D97A, transparent);
   transform: translateX(-100%);
   animation: itineraryScan 3s ease-in-out infinite;
 }
@@ -3089,7 +3084,7 @@ h1 span,
 }
 
 .itinerary-line b {
-  color: #F2E5C8 !important;
+  color: #FFF1B8 !important;
   font-size: 16px !important;
   font-weight: 900 !important;
   letter-spacing: -.02em !important;
@@ -3112,9 +3107,9 @@ h1 span,
   gap: 10px !important;
   border-radius: 999px !important;
   padding: 12px 16px !important;
-  background: rgba(191,167,122,.12) !important;
-  border: 1px solid rgba(191,167,122,.30) !important;
-  color: #F2E5C8 !important;
+  background: rgba(244,217,122,.14) !important;
+  border: 1px solid rgba(244,217,122,.36) !important;
+  color: #FFF1B8 !important;
   font-size: 13px !important;
   font-weight: 900 !important;
 }
@@ -3132,32 +3127,32 @@ h1 span,
 }
 
 .btn-accent {
-  background: #BFA77A !important;
+  background: #F4D97A !important;
   color: #0F1115 !important;
   box-shadow: none !important;
 }
 
 .btn-accent:hover {
-  background: #CAB487 !important;
+  background: #FFE28A !important;
   box-shadow: none !important;
 }
 
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(191,167,122,.14) !important;
-  border-color: rgba(191,167,122,.34) !important;
-  color: #F2E5C8 !important;
+  background: rgba(244,217,122,.16) !important;
+  border-color: rgba(244,217,122,.38) !important;
+  color: #FFF1B8 !important;
 }
 
 .image-mood-tile.active,
 .s-pin.featured {
-  border-color: #BFA77A !important;
+  border-color: #F4D97A !important;
 }
 
 .res-tag,
 .place-meta a {
-  color: #F2E5C8 !important;
+  color: #FFF1B8 !important;
 }
 
 @media(max-width: 980px) {
@@ -3237,8 +3232,8 @@ h1 span,
 .nav-actions .btn-accent,
 .nav-actions .btn-primary {
   background: rgba(191,167,122,.16) !important;
-  border: 1px solid rgba(191,167,122,.28) !important;
-  color: #F2E5C8 !important;
+  border: 1px solid rgba(244,217,122,.34) !important;
+  color: #FFF1B8 !important;
   box-shadow: none !important;
 }
 
@@ -3330,13 +3325,13 @@ h1 span,
 .action-bar button:not(:first-child):not(:last-child) {
   background: rgba(255,255,255,.055) !important;
   border: 1px solid rgba(255,255,255,.14) !important;
-  color: #F2E5C8 !important;
+  color: #FFF1B8 !important;
 }
 
 .action-bar button:last-child,
 .action-bar a:last-child {
-  background: #BFA77A !important;
-  border: 1px solid #BFA77A !important;
+  background: #F4D97A !important;
+  border: 1px solid #F4D97A !important;
   color: #0F1115 !important;
 }
 
@@ -3344,8 +3339,8 @@ h1 span,
 .action-bar .btn-accent,
 .action-bar .primary,
 .action-bar [href*="google"] {
-  background: #BFA77A !important;
-  border-color: #BFA77A !important;
+  background: #F4D97A !important;
+  border-color: #F4D97A !important;
   color: #0F1115 !important;
 }
 
@@ -3373,6 +3368,207 @@ h1 span,
     width: 100% !important;
   }
 
+  .action-bar button,
+  .action-bar a {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+
+/* FINAL GOLD + MAPS PRIMARY OVERRIDE */
+:root {
+  --accent: #F4D97A !important;
+  --accent2: rgba(244,217,122,.13) !important;
+  --gold: #F4D97A;
+  --gold-soft: rgba(244,217,122,.13);
+  --gold-line: rgba(244,217,122,.34);
+}
+
+.hero-pill,
+.res-tag,
+.profile-chip,
+.spark,
+.suggestion.active,
+.chip.active,
+.selected-chips span,
+.generation-chip {
+  background: rgba(244,217,122,.13) !important;
+  border-color: rgba(244,217,122,.34) !important;
+  color: #F4D97A !important;
+}
+
+.hero-pill span,
+.nav-steps button.done,
+.load-row.on em,
+.place-meta a,
+.autocomplete-suggestions .suggestion span,
+.gem,
+.showreel-copy span,
+.itinerary-line b,
+.generation-chip,
+.res-tag {
+  color: #F4D97A !important;
+  -webkit-text-fill-color: #F4D97A !important;
+}
+
+h1 span {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: none !important;
+}
+
+.pulse,
+.load-row.on b,
+.s-pin.featured,
+.generation-chip i {
+  background: #F4D97A !important;
+  color: #F4D97A !important;
+}
+
+.btn-accent {
+  background: #F4D97A !important;
+  color: #080A0E !important;
+  border: 1px solid #F4D97A !important;
+  box-shadow: none !important;
+}
+
+.btn-accent:hover {
+  background: #FFE28A !important;
+  border-color: #FFE28A !important;
+  box-shadow: none !important;
+}
+
+.btn-outline {
+  background: rgba(255,255,255,.045) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.76) !important;
+  box-shadow: none !important;
+}
+
+.btn-outline:hover {
+  background: rgba(255,255,255,.08) !important;
+  border-color: rgba(255,255,255,.22) !important;
+  color: #fff !important;
+}
+
+/* Remove the loading/progress line behind the preview copy */
+.preview-progress,
+.preview-progress::before,
+.preview-progress::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Home showreel: gold and white only */
+.showreel-copy span {
+  background: rgba(0,0,0,.46) !important;
+  border-color: rgba(244,217,122,.30) !important;
+}
+
+.itinerary-line {
+  background: rgba(8,10,14,.76) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+
+.itinerary-line span {
+  color: #fff !important;
+}
+
+.generation-chip {
+  background: rgba(244,217,122,.12) !important;
+  border-color: rgba(244,217,122,.34) !important;
+}
+
+/* Result buttons: Google Maps primary, everything else secondary */
+.action-bar {
+  background: transparent !important;
+  border: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 24px 0 52px !important;
+  width: auto !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  position: static !important;
+}
+
+.action-bar .maps-trip-btn {
+  order: 1;
+  background: #F4D97A !important;
+  border-color: #F4D97A !important;
+  color: #080A0E !important;
+}
+
+.action-bar .regenerate-btn,
+.action-bar button:not(.maps-trip-btn),
+.action-bar a:not(.maps-trip-btn) {
+  background: rgba(255,255,255,.045) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.76) !important;
+}
+
+/* Remove lingering cyan/blue accent effects from product UI, but keep Google constellation colors */
+.image-mood-tile.active {
+  border-color: #F4D97A !important;
+  box-shadow: inset 0 0 0 1px #F4D97A !important;
+}
+
+.s-pin.featured {
+  border-color: #F4D97A !important;
+  background: rgba(244,217,122,.12) !important;
+}
+
+.place-meta .rating-pill {
+  color: #F4D97A !important;
+  border-color: rgba(244,217,122,.34) !important;
+  background: rgba(244,217,122,.12) !important;
+}
+
+input:focus {
+  border-color: rgba(244,217,122,.42) !important;
+}
+
+/* Keep the result hero wrapper sized to content */
+.res-hero {
+  height: auto !important;
+  min-height: auto !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  border-radius: 36px !important;
+}
+
+.res-content {
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: fit-content !important;
+  max-width: min(900px, calc(100vw - 96px)) !important;
+  min-width: min(680px, calc(100vw - 96px)) !important;
+}
+
+.result-screen {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+@media(max-width: 760px) {
+  .res-content {
+    min-width: 0 !important;
+    max-width: calc(100vw - 44px) !important;
+  }
+
+  .action-bar {
+    width: 100% !important;
+  }
+
+  .action-bar .maps-trip-btn,
   .action-bar button,
   .action-bar a {
     width: 100% !important;
