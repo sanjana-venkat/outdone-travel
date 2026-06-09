@@ -19,10 +19,9 @@ export default async function handler(req, res) {
         "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY
       },
       body: JSON.stringify({
-        input,
-        includedPrimaryTypes: ["locality", "administrative_area_level_1", "country", "tourist_attraction"],
-        languageCode: "en"
-      })
+  input,
+  languageCode: "en"
+})
     });
 
     const data = await response.json();
