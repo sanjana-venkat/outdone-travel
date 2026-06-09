@@ -526,11 +526,6 @@ function App() {
 
                 <div className="showreel-overlay" />
 
-                <div className="showreel-copy">
-                  <span>Live preview</span>
-                  <h3>Kyoto · mood-led day</h3>
-                </div>
-
                 <div className="itinerary-lines">
                   <div className="itinerary-line line-1">
                     <b>08:30</b>
@@ -3689,6 +3684,355 @@ input:focus {
   .action-bar a {
     width: 100% !important;
     justify-content: center !important;
+  }
+}
+
+
+/* FINAL PREMIUM PASS: no dots, text-only nav active, simplified showreel, gold-only */
+:root {
+  --accent: #F4D97A;
+  --accent-hover: #FFE58A;
+  --accent-soft: rgba(244,217,122,.12);
+  --accent-line: rgba(244,217,122,.30);
+  --bg: #050608;
+}
+
+/* remove leftover decorative AI effects */
+.stars,
+.aurora,
+.preview-progress,
+.preview-progress::before,
+.preview-progress::after {
+  display: none !important;
+}
+
+/* Full-width glass navigation, no pill wrapper */
+.navbar {
+  width: 100% !important;
+  height: 64px !important;
+  margin: 0 !important;
+  top: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 clamp(24px, 4vw, 56px) !important;
+  background:
+    linear-gradient(180deg, rgba(20,22,26,.72), rgba(8,10,14,.50)) !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(255,255,255,.11) !important;
+  backdrop-filter: blur(24px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 18px 55px rgba(0,0,0,.22) !important;
+}
+
+/* Remove dots from Powered by Gemini and nav setup/mood/result */
+.hero-pill .pulse,
+.nav-steps i,
+.nav-tabs i {
+  display: none !important;
+}
+
+/* Nav active state = gold text only, not a button */
+.nav-steps button,
+.nav-tabs button {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,.52) !important;
+  padding: 9px 10px !important;
+}
+
+.nav-steps button:hover,
+.nav-tabs button:hover {
+  background: transparent !important;
+  color: rgba(255,255,255,.78) !important;
+}
+
+.nav-steps button.active,
+.nav-tabs button.active,
+.nav-steps button.done,
+.nav-tabs button.done {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--accent) !important;
+}
+
+/* Gold-only accent system */
+.hero-pill span,
+.nav-subscribe,
+.profile-chip,
+.selected-chips span,
+.res-tag,
+.place-meta a,
+.load-row em,
+.gem,
+.archetype-line,
+.showreel-copy span,
+.itinerary-line b,
+.generation-chip {
+  color: var(--accent) !important;
+  background-image: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.spark,
+.load-row.on b,
+.generation-chip i {
+  background: var(--accent) !important;
+  box-shadow: none !important;
+}
+
+.hero-pill,
+.profile-chip,
+.selected-chips span,
+.res-tag,
+.spark {
+  background: rgba(244,217,122,.09) !important;
+  border-color: rgba(244,217,122,.22) !important;
+}
+
+h1 span {
+  color: #fff !important;
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+  animation: none !important;
+}
+
+/* Buttons: keep text dark on hover */
+.btn-accent,
+.nav-subscribe,
+.action-bar .btn-accent,
+.action-bar .maps-trip-btn {
+  background: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+  color: #050608 !important;
+  box-shadow: none !important;
+}
+
+.btn-accent:hover,
+.nav-subscribe:hover,
+.action-bar .btn-accent:hover,
+.action-bar .maps-trip-btn:hover {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+  color: #050608 !important;
+  box-shadow: none !important;
+}
+
+.btn-accent:hover *,
+.nav-subscribe:hover *,
+.action-bar .maps-trip-btn:hover * {
+  color: #050608 !important;
+}
+
+/* Showreel: remove title/pill, keep animated itinerary only */
+.showreel-copy {
+  display: none !important;
+}
+
+.hero-cards.itinerary-showreel {
+  height: 560px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.showreel-frame {
+  position: relative !important;
+  width: min(620px, 100%) !important;
+  height: 500px !important;
+  border-radius: 34px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  background: #111418 !important;
+  box-shadow: none !important;
+}
+
+.showreel-overlay {
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.14), rgba(0,0,0,.86)),
+    linear-gradient(90deg, rgba(0,0,0,.58), rgba(0,0,0,.12)) !important;
+}
+
+.itinerary-lines {
+  left: 28px !important;
+  right: 28px !important;
+  bottom: 88px !important;
+  gap: 12px !important;
+}
+
+.itinerary-line {
+  display: grid !important;
+  grid-template-columns: 84px 1fr !important;
+  gap: 16px !important;
+  align-items: center !important;
+  min-height: 58px !important;
+  padding: 14px 18px !important;
+  border-radius: 20px !important;
+  background: rgba(5,6,8,.76) !important;
+  border: 1px solid rgba(255,255,255,.13) !important;
+  backdrop-filter: none !important;
+}
+
+.itinerary-line b {
+  color: var(--accent) !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+}
+
+.itinerary-line span {
+  color: rgba(255,255,255,.92) !important;
+  font-size: clamp(16px, 1.6vw, 22px) !important;
+  font-weight: 900 !important;
+}
+
+.generation-chip {
+  left: 28px !important;
+  bottom: 28px !important;
+  background: rgba(244,217,122,.11) !important;
+  border: 1px solid rgba(244,217,122,.28) !important;
+  color: var(--accent) !important;
+}
+
+.generation-chip i {
+  background: var(--accent) !important;
+}
+
+/* Selected/inputs */
+input:focus {
+  border-color: rgba(244,217,122,.48) !important;
+}
+
+.suggestion.active,
+.chip.active {
+  background: rgba(244,217,122,.12) !important;
+  border-color: rgba(244,217,122,.30) !important;
+  color: var(--accent) !important;
+}
+
+.autocomplete-suggestions .suggestion span {
+  color: var(--accent) !important;
+  background: rgba(244,217,122,.12) !important;
+}
+
+.image-mood-tile.active {
+  border-color: var(--accent) !important;
+  box-shadow: inset 0 0 0 1px var(--accent) !important;
+}
+
+.s-pin.featured {
+  border-color: var(--accent) !important;
+  background: rgba(244,217,122,.10) !important;
+  color: var(--accent) !important;
+}
+
+.place-meta a,
+.place-meta .rating-pill {
+  color: var(--accent) !important;
+  border-color: rgba(244,217,122,.24) !important;
+  background: rgba(244,217,122,.09) !important;
+}
+
+/* Result hero uses available column width */
+.result-screen {
+  max-width: 1280px !important;
+  width: 100% !important;
+  padding: 48px clamp(28px, 6vw, 80px) 80px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+.res-hero {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 520px !important;
+  display: block !important;
+  border-radius: 36px !important;
+}
+
+.res-content {
+  position: relative !important;
+  left: 0 !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 920px !important;
+  min-width: 0 !important;
+  padding: clamp(38px, 6vw, 72px) !important;
+}
+
+.res-content h2 {
+  font-size: clamp(48px, 6vw, 86px) !important;
+  line-height: .95 !important;
+  max-width: 920px !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* Result buttons: no wrapper, Maps primary, everything else secondary */
+.action-bar {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+  margin: 24px 0 52px !important;
+  position: static !important;
+  width: auto !important;
+  display: flex !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+.action-bar .btn-outline,
+.action-bar button.btn-outline {
+  background: rgba(255,255,255,.045) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.76) !important;
+  box-shadow: none !important;
+}
+
+@media(max-width: 760px) {
+  .navbar {
+    padding: 0 16px !important;
+  }
+
+  .result-screen {
+    padding: 28px 18px 70px !important;
+  }
+
+  .res-hero {
+    min-height: 440px !important;
+  }
+
+  .res-content {
+    padding: 28px !important;
+  }
+
+  .action-bar {
+    width: 100% !important;
+  }
+
+  .action-bar button,
+  .action-bar a {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .showreel-frame {
+    height: 420px !important;
+    border-radius: 26px !important;
+  }
+
+  .itinerary-line {
+    grid-template-columns: 62px 1fr !important;
+  }
+
+  .itinerary-line span {
+    font-size: 15px !important;
   }
 }
 
