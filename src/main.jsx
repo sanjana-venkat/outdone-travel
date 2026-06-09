@@ -112,6 +112,45 @@ function prettyDate(value) {
   });
 }
 
+function friendlyPlanError(message = "") {
+  const lower = String(message).toLowerCase();
+
+  if (lower.includes("quota") || lower.includes("free_tier") || lower.includes("rate")) {
+    return {
+      title: "Live planning is taking a short pause.",
+      body:
+        "Gemini usage is temporarily capped for this prototype. You can try again shortly, or continue exploring the demo experience while live generation resets.",
+      action: "Try again"
+    };
+  }
+
+  if (lower.includes("api key") || lower.includes("missing") || lower.includes("not found") || lower.includes("unsupported")) {
+    return {
+      title: "The live planner needs a setup check.",
+      body:
+        "One of the connected services needs attention before Travel DNA can generate a fresh plan. Your inputs are safe, and you can go back to adjust the setup.",
+      action: "Try again"
+    };
+  }
+
+  if (lower.includes("places") || lower.includes("maps")) {
+    return {
+      title: "Place details are still warming up.",
+      body:
+        "Google Places is not returning full details yet. The itinerary can still be previewed, but photos, ratings, and Maps links may be incomplete for a moment.",
+      action: "Try again"
+    };
+  }
+
+  return {
+    title: "We couldn’t finish this plan just yet.",
+    body:
+      "Something interrupted the live itinerary generation. Try once more, or adjust the setup and build again.",
+    action: "Try again"
+  };
+}
+
+
 const fallbackDestinationSuggestions = [
   { label: "Kyoto, Japan", aliases: ["kyoto"] },
   { label: "Oaxaca, Mexico", aliases: ["oaxaca"] },
@@ -708,15 +747,15 @@ function App() {
       {step === "apiError" && (
         <main className="screen loading-screen on">
           <div className="api-error-card">
-            <p className="label">Gemini API needs attention</p>
-            <h2>Couldn’t generate the live itinerary.</h2>
-            <p>{error}</p>
+            <p className="label">Travel DNA is still in preview</p>
+            <h2>{friendlyPlanError(error).title}</h2>
+            <p>{friendlyPlanError(error).body}</p>
             <div className="error-actions">
               <button className="btn-outline" onClick={() => setStep("setup")}>
-                Edit setup
+                Review setup
               </button>
               <button className="btn-accent" onClick={generatePlan}>
-                Try Gemini again ✦
+                {friendlyPlanError(error).action} ✦
               </button>
             </div>
           </div>
@@ -741,10 +780,11 @@ function App() {
               {itinerary?.summary && <p className="res-summary">{itinerary.summary}</p>}
               {itinerary?.generatedBy === "fallback" && (
                 <div className="fallback-banner">
-                  <span>Demo fallback</span>
+                  <span>Preview mode</span>
                   <p>
-                    Gemini free-tier credits are limited, so Travel DNA generated this
-                    preview locally while still attempting to enrich places with Google Places.
+                    Live Gemini generation is temporarily capped, so Travel DNA is showing
+                    a designed preview experience while still attempting to enrich places
+                    with Google Places.
                   </p>
                   <button type="button" onClick={() => setShowSubscribe(true)}>
                     Like this idea? Get updates
@@ -758,7 +798,7 @@ function App() {
             <button className="btn-outline" onClick={() => setStep("setup")}>
               Edit setup
             </button>
-            <button className="btn-outline regenerate-btn" onClick={generatePlan}>
+            <button className="btn-outline" onClick={generatePlan}>
               Regenerate ✦
             </button>
             {tripMapsUrl && (
@@ -830,9 +870,8 @@ function App() {
             <p className="label">Early access</p>
             <h2>Like this idea?</h2>
             <p>
-              Travel DNA is running in demo mode right now. Gemini API credits
-              are limited, so fallback plans keep the experience alive while the
-              product evolves.
+              Travel DNA is in preview right now. Live planning may pause when
+              Gemini usage is capped, but the product experience is continuing to evolve.
             </p>
             <p>
               Subscribe to get updates when live personalization, better Google
@@ -955,8 +994,8 @@ body,
   --green: #34a853;
   --yellow: #fbbc04;
   --red: #ea4335;
-  --accent: #F4D97A;
-  --accent2: rgba(244, 217, 122, 0.13);
+  --accent: #00d4aa;
+  --accent2: rgba(0, 212, 170, 0.12);
   --ease: cubic-bezier(.16, 1, .3, 1);
   --spring: cubic-bezier(.34, 1.56, .64, 1);
 }
@@ -965,7 +1004,7 @@ body {
   font-family: 'Google Sans', Inter, system-ui, sans-serif;
   background:
     radial-gradient(circle at 18% 8%, rgba(66,133,244,.10), transparent 30%),
-    radial-gradient(circle at 88% 14%, rgba(244,217,122,.08), transparent 28%),
+    radial-gradient(circle at 88% 14%, rgba(0,212,170,.09), transparent 28%),
     var(--bg);
   color: var(--ink);
   overflow-x: hidden;
@@ -1034,7 +1073,7 @@ button {
   height: 340px;
   bottom: -110px;
   right: -200px;
-  background: radial-gradient(ellipse, rgba(244, 217, 122, .08), transparent 65%);
+  background: radial-gradient(ellipse, rgba(0, 212, 170, .09), transparent 65%);
 }
 
 .a3 {
@@ -1148,7 +1187,7 @@ button {
 
 .btn-accent:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(244, 217, 122, .20);
+  box-shadow: 0 8px 20px rgba(0, 212, 170, .18);
 }
 
 .screen {
@@ -1246,7 +1285,7 @@ h1 span {
   align-items: center;
   gap: 8px;
   background: var(--accent2);
-  border: 1px solid rgba(244, 217, 122, .26);
+  border: 1px solid rgba(0, 212, 170, .2);
   border-radius: 100px;
   padding: 6px 14px;
   width: fit-content;
@@ -1372,7 +1411,7 @@ input {
 }
 
 input:focus {
-  border-color: rgba(244,217,122,.42);
+  border-color: rgba(0,212,170,.48);
   background: rgba(19, 25, 32, .95);
 }
 
@@ -1810,7 +1849,7 @@ input:focus {
   display: inline-flex;
   padding: 5px 12px;
   background: var(--accent2);
-  border: 1px solid rgba(244,217,122,.26);
+  border: 1px solid rgba(0,212,170,.2);
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
@@ -1904,7 +1943,7 @@ input:focus {
 
 .s-pin.featured {
   border-color: var(--accent);
-  background: rgba(244,217,122,.12);
+  background: rgba(0,212,170,.1);
   color: var(--accent);
 }
 
@@ -1974,7 +2013,7 @@ input:focus {
   align-items: end;
   padding: 14px;
   transition: transform .5s var(--ease), box-shadow .5s var(--ease);
-  background: linear-gradient(135deg, #4285f4, #F4D97A);
+  background: linear-gradient(135deg, #4285f4, #00d4aa);
   box-shadow: 0 18px 60px rgba(0,0,0,.28);
 }
 
@@ -2041,8 +2080,8 @@ input:focus {
 
 .place-meta a {
   color: var(--accent);
-  border-color: rgba(244,217,122,.26);
-  background: rgba(244,217,122,.10);
+  border-color: rgba(0,212,170,.20);
+  background: rgba(0,212,170,.08);
 }
 
 small {
@@ -2459,7 +2498,7 @@ small {
   --surface-3: #232A33;
   --line: rgba(255,255,255,.09);
   --line-strong: rgba(255,255,255,.16);
-  --secondary: #F4D97A;
+  --secondary: #BFA77A;
   --secondary-soft: rgba(191,167,122,.10);
   --secondary-line: rgba(191,167,122,.24);
 }
@@ -2511,7 +2550,7 @@ h1 span,
 }
 
 .btn-accent:hover {
-  background: #FFE28A !important;
+  background: #CAB487 !important;
   box-shadow: none !important;
 }
 
@@ -2580,7 +2619,7 @@ h1 span,
 
 .showreel-copy span {
   display: inline-flex;
-  color: #FFF1B8 !important;
+  color: #F2E5C8 !important;
   background: rgba(255,255,255,.055) !important;
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 999px;
@@ -2637,7 +2676,7 @@ h1 span,
 }
 
 .itinerary-line b {
-  color: #FFF1B8 !important;
+  color: #F2E5C8 !important;
   font-size: 12px;
 }
 
@@ -2680,9 +2719,9 @@ h1 span,
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(244,217,122,.16) !important;
-  border-color: rgba(244,217,122,.38) !important;
-  color: #FFF1B8 !important;
+  background: rgba(191,167,122,.14) !important;
+  border-color: rgba(191,167,122,.34) !important;
+  color: #F2E5C8 !important;
 }
 
 .image-mood-tile.active {
@@ -2697,7 +2736,7 @@ h1 span,
 
 .res-tag,
 .place-meta a {
-  color: #FFF1B8 !important;
+  color: #F2E5C8 !important;
 }
 
 @media(max-width: 980px) {
@@ -2729,7 +2768,7 @@ h1 span,
 
 /* Slate blue premium override */
 :root {
-  --secondary: #F4D97A;
+  --secondary: #BFA77A;
   --secondary-soft: rgba(191,167,122,.10);
   --secondary-line: rgba(191,167,122,.24);
 }
@@ -2754,34 +2793,34 @@ h1 span,
 .generation-chip,
 .res-tag,
 .place-meta a {
-  color: #FFF1B8 !important;
+  color: #F2E5C8 !important;
 }
 
 .generation-chip {
-  background: rgba(244,217,122,.14) !important;
-  border-color: rgba(244,217,122,.34) !important;
+  background: rgba(191,167,122,.12) !important;
+  border-color: rgba(191,167,122,.28) !important;
 }
 
 .btn-accent {
-  background: #F4D97A !important;
+  background: #BFA77A !important;
   color: #0F1115 !important;
 }
 
 .btn-accent:hover {
-  background: #FFE28A !important;
+  background: #CAB487 !important;
 }
 
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(244,217,122,.16) !important;
-  border-color: rgba(244,217,122,.38) !important;
-  color: #FFF1B8 !important;
+  background: rgba(191,167,122,.14) !important;
+  border-color: rgba(191,167,122,.34) !important;
+  color: #F2E5C8 !important;
 }
 
 .image-mood-tile.active,
 .s-pin.featured {
-  border-color: #F4D97A !important;
+  border-color: #BFA77A !important;
 }
 
 .showreel-frame {
@@ -2797,9 +2836,9 @@ h1 span,
 
 /* Champagne gold premium override */
 :root {
-  --secondary: #F4D97A;
-  --secondary-soft: rgba(244,217,122,.14);
-  --secondary-line: rgba(244,217,122,.30);
+  --secondary: #BFA77A;
+  --secondary-soft: rgba(191,167,122,.12);
+  --secondary-line: rgba(191,167,122,.26);
 }
 
 .pulse,
@@ -2822,34 +2861,34 @@ h1 span,
 .generation-chip,
 .res-tag,
 .place-meta a {
-  color: #FFF1B8 !important;
+  color: #F2E5C8 !important;
 }
 
 .generation-chip {
-  background: rgba(244,217,122,.14) !important;
-  border-color: rgba(244,217,122,.34) !important;
+  background: rgba(191,167,122,.12) !important;
+  border-color: rgba(191,167,122,.28) !important;
 }
 
 .btn-accent {
-  background: #F4D97A !important;
+  background: #BFA77A !important;
   color: #0F1115 !important;
 }
 
 .btn-accent:hover {
-  background: #FFE28A !important;
+  background: #CAB487 !important;
 }
 
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(244,217,122,.16) !important;
-  border-color: rgba(244,217,122,.38) !important;
-  color: #FFF1B8 !important;
+  background: rgba(191,167,122,.14) !important;
+  border-color: rgba(191,167,122,.34) !important;
+  color: #F2E5C8 !important;
 }
 
 .image-mood-tile.active,
 .s-pin.featured {
-  border-color: #F4D97A !important;
+  border-color: #BFA77A !important;
 }
 
 .showreel-frame {
@@ -2869,9 +2908,9 @@ h1 span,
 
 /* HOME HERO SHOWREEL FIX — champagne gold, visible itinerary animation */
 :root {
-  --secondary: #F4D97A;
-  --secondary-soft: rgba(244,217,122,.14);
-  --secondary-line: rgba(244,217,122,.34);
+  --secondary: #BFA77A;
+  --secondary-soft: rgba(191,167,122,.12);
+  --secondary-line: rgba(191,167,122,.28);
 }
 
 .stars,
@@ -2975,7 +3014,7 @@ h1 span,
 
 .showreel-copy span {
   display: inline-flex !important;
-  color: #FFF1B8 !important;
+  color: #F2E5C8 !important;
   background: rgba(0,0,0,.44) !important;
   border: 1px solid rgba(255,255,255,.14) !important;
   border-radius: 999px !important;
@@ -3028,7 +3067,7 @@ h1 span,
   top: 27px;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, #F4D97A, transparent);
+  background: linear-gradient(90deg, transparent, #BFA77A, transparent);
   transform: translateX(-100%);
   animation: itineraryScan 3s ease-in-out infinite;
 }
@@ -3084,7 +3123,7 @@ h1 span,
 }
 
 .itinerary-line b {
-  color: #FFF1B8 !important;
+  color: #F2E5C8 !important;
   font-size: 16px !important;
   font-weight: 900 !important;
   letter-spacing: -.02em !important;
@@ -3107,9 +3146,9 @@ h1 span,
   gap: 10px !important;
   border-radius: 999px !important;
   padding: 12px 16px !important;
-  background: rgba(244,217,122,.14) !important;
-  border: 1px solid rgba(244,217,122,.36) !important;
-  color: #FFF1B8 !important;
+  background: rgba(191,167,122,.12) !important;
+  border: 1px solid rgba(191,167,122,.30) !important;
+  color: #F2E5C8 !important;
   font-size: 13px !important;
   font-weight: 900 !important;
 }
@@ -3127,32 +3166,32 @@ h1 span,
 }
 
 .btn-accent {
-  background: #F4D97A !important;
+  background: #BFA77A !important;
   color: #0F1115 !important;
   box-shadow: none !important;
 }
 
 .btn-accent:hover {
-  background: #FFE28A !important;
+  background: #CAB487 !important;
   box-shadow: none !important;
 }
 
 .suggestion.active,
 .chip.active,
 .selected-chips span {
-  background: rgba(244,217,122,.16) !important;
-  border-color: rgba(244,217,122,.38) !important;
-  color: #FFF1B8 !important;
+  background: rgba(191,167,122,.14) !important;
+  border-color: rgba(191,167,122,.34) !important;
+  color: #F2E5C8 !important;
 }
 
 .image-mood-tile.active,
 .s-pin.featured {
-  border-color: #F4D97A !important;
+  border-color: #BFA77A !important;
 }
 
 .res-tag,
 .place-meta a {
-  color: #FFF1B8 !important;
+  color: #F2E5C8 !important;
 }
 
 @media(max-width: 980px) {
@@ -3232,8 +3271,8 @@ h1 span,
 .nav-actions .btn-accent,
 .nav-actions .btn-primary {
   background: rgba(191,167,122,.16) !important;
-  border: 1px solid rgba(244,217,122,.34) !important;
-  color: #FFF1B8 !important;
+  border: 1px solid rgba(191,167,122,.28) !important;
+  color: #F2E5C8 !important;
   box-shadow: none !important;
 }
 
@@ -3325,13 +3364,13 @@ h1 span,
 .action-bar button:not(:first-child):not(:last-child) {
   background: rgba(255,255,255,.055) !important;
   border: 1px solid rgba(255,255,255,.14) !important;
-  color: #FFF1B8 !important;
+  color: #F2E5C8 !important;
 }
 
 .action-bar button:last-child,
 .action-bar a:last-child {
-  background: #F4D97A !important;
-  border: 1px solid #F4D97A !important;
+  background: #BFA77A !important;
+  border: 1px solid #BFA77A !important;
   color: #0F1115 !important;
 }
 
@@ -3339,8 +3378,8 @@ h1 span,
 .action-bar .btn-accent,
 .action-bar .primary,
 .action-bar [href*="google"] {
-  background: #F4D97A !important;
-  border-color: #F4D97A !important;
+  background: #BFA77A !important;
+  border-color: #BFA77A !important;
   color: #0F1115 !important;
 }
 
@@ -3376,199 +3415,276 @@ h1 span,
 }
 
 
-/* FINAL GOLD + MAPS PRIMARY OVERRIDE */
+/* FINAL POLISH: full-width glass nav, premium gold only, result hero full-column */
 :root {
-  --accent: #F4D97A !important;
-  --accent2: rgba(244,217,122,.13) !important;
-  --gold: #F4D97A;
-  --gold-soft: rgba(244,217,122,.13);
-  --gold-line: rgba(244,217,122,.34);
+  --accent: #F4D97A;
+  --accent2: rgba(244,217,122,.13);
+  --accent-line: rgba(244,217,122,.32);
+  --bg: #050608;
+}
+
+body {
+  background: #050608 !important;
+}
+
+.app-shell {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.026), transparent 260px),
+    #050608 !important;
+}
+
+.stars,
+.aurora {
+  display: none !important;
+}
+
+/* Full-width glass nav, not pill */
+.navbar {
+  width: 100% !important;
+  height: 64px !important;
+  margin: 0 !important;
+  top: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 clamp(24px, 4vw, 56px) !important;
+  background:
+    linear-gradient(180deg, rgba(18,20,24,.70), rgba(8,10,14,.50)) !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(255,255,255,.11) !important;
+  backdrop-filter: blur(24px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 18px 55px rgba(0,0,0,.22) !important;
+}
+
+.nav-steps button.active {
+  background: rgba(255,255,255,.075) !important;
+  border-color: rgba(255,255,255,.14) !important;
+  color: #fff !important;
+}
+
+.nav-steps button.done,
+.nav-subscribe,
+.hero-pill span,
+.profile-chip,
+.selected-chips span,
+.res-tag,
+.place-meta a,
+.load-row em,
+.gem,
+.archetype-line {
+  color: #F4D97A !important;
+  background-image: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.nav-steps i,
+.pulse,
+.spark,
+.load-row.on b,
+.generation-chip i {
+  background: #F4D97A !important;
+  box-shadow: none !important;
 }
 
 .hero-pill,
-.res-tag,
 .profile-chip,
-.spark,
-.suggestion.active,
-.chip.active,
 .selected-chips span,
-.generation-chip {
-  background: rgba(244,217,122,.13) !important;
-  border-color: rgba(244,217,122,.34) !important;
-  color: #F4D97A !important;
-}
-
-.hero-pill span,
-.nav-steps button.done,
-.load-row.on em,
-.place-meta a,
-.autocomplete-suggestions .suggestion span,
-.gem,
-.showreel-copy span,
-.itinerary-line b,
-.generation-chip,
-.res-tag {
-  color: #F4D97A !important;
-  -webkit-text-fill-color: #F4D97A !important;
+.res-tag,
+.spark {
+  background: rgba(244,217,122,.10) !important;
+  border-color: rgba(244,217,122,.24) !important;
 }
 
 h1 span {
   color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
   background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+  animation: none !important;
 }
 
-.pulse,
-.load-row.on b,
-.s-pin.featured,
-.generation-chip i {
-  background: #F4D97A !important;
-  color: #F4D97A !important;
-}
-
-.btn-accent {
-  background: #F4D97A !important;
-  color: #080A0E !important;
-  border: 1px solid #F4D97A !important;
-  box-shadow: none !important;
-}
-
-.btn-accent:hover {
-  background: #FFE28A !important;
-  border-color: #FFE28A !important;
-  box-shadow: none !important;
-}
-
-.btn-outline {
-  background: rgba(255,255,255,.045) !important;
-  border: 1px solid rgba(255,255,255,.14) !important;
-  color: rgba(255,255,255,.76) !important;
-  box-shadow: none !important;
-}
-
-.btn-outline:hover {
-  background: rgba(255,255,255,.08) !important;
-  border-color: rgba(255,255,255,.22) !important;
-  color: #fff !important;
-}
-
-/* Remove the loading/progress line behind the preview copy */
 .preview-progress,
 .preview-progress::before,
 .preview-progress::after {
   display: none !important;
-  content: none !important;
 }
 
-/* Home showreel: gold and white only */
-.showreel-copy span {
-  background: rgba(0,0,0,.46) !important;
-  border-color: rgba(244,217,122,.30) !important;
-}
-
-.itinerary-line {
-  background: rgba(8,10,14,.76) !important;
-  border-color: rgba(255,255,255,.12) !important;
-}
-
-.itinerary-line span {
-  color: #fff !important;
+/* Gold-only showreel */
+.showreel-copy span,
+.itinerary-line b,
+.generation-chip {
+  color: #F4D97A !important;
 }
 
 .generation-chip {
   background: rgba(244,217,122,.12) !important;
-  border-color: rgba(244,217,122,.34) !important;
+  border-color: rgba(244,217,122,.32) !important;
 }
 
-/* Result buttons: Google Maps primary, everything else secondary */
-.action-bar {
-  background: transparent !important;
-  border: 0 !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  margin: 24px 0 52px !important;
-  width: auto !important;
-  border-radius: 0 !important;
-  display: flex !important;
-  gap: 12px !important;
-  flex-wrap: wrap !important;
-  position: static !important;
+.itinerary-line {
+  background: rgba(5,6,8,.78) !important;
+  border-color: rgba(255,255,255,.13) !important;
 }
 
-.action-bar .maps-trip-btn {
-  order: 1;
-  background: #F4D97A !important;
-  border-color: #F4D97A !important;
-  color: #080A0E !important;
+input:focus {
+  border-color: rgba(244,217,122,.48) !important;
 }
 
-.action-bar .regenerate-btn,
-.action-bar button:not(.maps-trip-btn),
-.action-bar a:not(.maps-trip-btn) {
-  background: rgba(255,255,255,.045) !important;
-  border: 1px solid rgba(255,255,255,.14) !important;
-  color: rgba(255,255,255,.76) !important;
+.suggestion.active,
+.chip.active {
+  background: rgba(244,217,122,.13) !important;
+  border-color: rgba(244,217,122,.32) !important;
+  color: #F4D97A !important;
 }
 
-/* Remove lingering cyan/blue accent effects from product UI, but keep Google constellation colors */
+.autocomplete-suggestions .suggestion span {
+  color: #F4D97A !important;
+  background: rgba(244,217,122,.13) !important;
+}
+
 .image-mood-tile.active {
   border-color: #F4D97A !important;
   box-shadow: inset 0 0 0 1px #F4D97A !important;
 }
 
+.image-tile-overlay {
+  background:
+    linear-gradient(to top, rgba(0,0,0,.84), rgba(0,0,0,.20) 54%, rgba(0,0,0,.08)) !important;
+}
+
 .s-pin.featured {
   border-color: #F4D97A !important;
-  background: rgba(244,217,122,.12) !important;
+  background: rgba(244,217,122,.10) !important;
+  color: #F4D97A !important;
+}
+
+.place-meta a {
+  border-color: rgba(244,217,122,.24) !important;
+  background: rgba(244,217,122,.10) !important;
 }
 
 .place-meta .rating-pill {
   color: #F4D97A !important;
-  border-color: rgba(244,217,122,.34) !important;
-  background: rgba(244,217,122,.12) !important;
+  border-color: rgba(244,217,122,.28) !important;
+  background: rgba(244,217,122,.10) !important;
 }
 
-input:focus {
-  border-color: rgba(244,217,122,.42) !important;
+/* Result layout: hero takes full available column width */
+.result-screen {
+  max-width: 1280px !important;
+  width: 100% !important;
+  padding: 48px clamp(28px, 6vw, 80px) 80px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
 }
 
-/* Keep the result hero wrapper sized to content */
 .res-hero {
+  width: 100% !important;
+  max-width: none !important;
   height: auto !important;
-  min-height: auto !important;
-  width: fit-content !important;
-  max-width: 100% !important;
+  min-height: 520px !important;
+  display: block !important;
   border-radius: 36px !important;
 }
 
 .res-content {
   position: relative !important;
-  left: auto !important;
+  left: 0 !important;
   bottom: auto !important;
   transform: none !important;
-  width: fit-content !important;
-  max-width: min(900px, calc(100vw - 96px)) !important;
-  min-width: min(680px, calc(100vw - 96px)) !important;
+  width: 100% !important;
+  max-width: 920px !important;
+  min-width: 0 !important;
+  padding: clamp(38px, 6vw, 72px) !important;
 }
 
-.result-screen {
+.res-content h2 {
+  font-size: clamp(48px, 6vw, 86px) !important;
+  line-height: .95 !important;
+  max-width: 920px !important;
+  overflow-wrap: anywhere !important;
+}
+
+.res-summary,
+.res-content p {
+  max-width: 800px !important;
+}
+
+/* Result action bar: no wrapper; Google Maps primary; everything else secondary */
+.action-bar {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+  margin: 24px 0 52px !important;
+  position: static !important;
+  width: auto !important;
   display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+.action-bar .btn-outline,
+.action-bar button.btn-outline {
+  background: rgba(255,255,255,.045) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.76) !important;
+  box-shadow: none !important;
+}
+
+.action-bar .btn-accent,
+.action-bar .maps-trip-btn {
+  background: #F4D97A !important;
+  border: 1px solid #F4D97A !important;
+  color: #050608 !important;
+  box-shadow: none !important;
+}
+
+.btn-accent {
+  background: #F4D97A !important;
+  color: #050608 !important;
+  box-shadow: none !important;
+}
+
+.btn-accent:hover {
+  background: #FFE58A !important;
+  box-shadow: none !important;
+}
+
+.api-error-card h2 {
+  max-width: 560px !important;
+}
+
+.api-error-card p {
+  max-width: 560px !important;
 }
 
 @media(max-width: 760px) {
+  .navbar {
+    padding: 0 16px !important;
+  }
+
+  .result-screen {
+    padding: 28px 18px 70px !important;
+  }
+
+  .res-hero {
+    min-height: 440px !important;
+  }
+
   .res-content {
-    min-width: 0 !important;
-    max-width: calc(100vw - 44px) !important;
+    padding: 28px !important;
   }
 
   .action-bar {
     width: 100% !important;
   }
 
-  .action-bar .maps-trip-btn,
   .action-bar button,
   .action-bar a {
     width: 100% !important;
