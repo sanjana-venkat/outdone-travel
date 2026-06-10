@@ -253,7 +253,7 @@ function App() {
                 <span>Powered by Gemini</span>
               </div>
               <h1>Today feels <span>different.</span></h1>
-              <p>Because even the best recommendation system can't predict what you'll want today. Whether it's a single evening, a full day, or a whole trip.</p>
+              <p>Because even the best recommendation system can't predict what you'll want now. Whether it's a single evening, a full day, or a whole trip.</p>
               <div className="hero-cta">
                 <div className="google-wrap">
                   <div id="googleSignIn" />
