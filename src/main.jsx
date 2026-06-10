@@ -593,8 +593,8 @@ button { cursor: pointer; }
 }
 .btn-accent:hover { opacity: .88; }
 .btn-accent:active { transform: scale(.98); }
-.nav-subscribe { min-height: 42px !important; padding: 0 16px !important; font-size: 12px; background: var(--panel-3) !important; border: 1px solid var(--line-strong) !important; color: var(--ink) !important; }
-.nav-subscribe:hover { background: #fff !important; border-color: rgba(0,0,0,.2) !important; opacity: 1 !important; }
+.nav-subscribe { min-height: 42px !important; padding: 0 16px !important; font-size: 12px; background: var(--panel-2) !important; border: 1px solid var(--line) !important; color: var(--ink) !important; font-weight: 700 !important; }
+.nav-subscribe:hover { background: #fff !important; border-color: rgba(0,0,0,.18) !important; opacity: 1 !important; }
 
 /* ── SCREENS ── */
 .screen { display: block; width: 100%; max-width: 1160px; padding: clamp(40px,6vw,82px) clamp(20px,4vw,56px); animation: scIn .3s var(--ease) both; }
