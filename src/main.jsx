@@ -74,7 +74,7 @@ const moodVibes = [
 function App() {
   const [user, setUser] = useState(null);
   const [step, setStep] = useState("login");
-  const [destination, setDestination] = useState("Paris, France");
+  const [destination, setDestination] = useState("Paris");
   const [placePredictions, setPlacePredictions] = useState([]);
   const [isAutocompleting, setIsAutocompleting] = useState(false);
   const [date, setDate] = useState(getToday());
@@ -89,6 +89,11 @@ function App() {
   const [subscribeEmail, setSubscribeEmail] = useState("");
   const [subscribeSaved, setSubscribeSaved] = useState(false);
   const shellRef = useRef(null);
+
+  function goTo(s) {
+    window.scrollTo({ top: 0, behavior: "instant" });
+    setStep(s);
+  }
 
   useEffect(() => {
     let rafId;
@@ -117,7 +122,7 @@ function App() {
         callback: (response) => {
           const payload = JSON.parse(atob(response.credential.split(".")[1]));
           setUser({ name: payload.name, email: payload.email, picture: payload.picture });
-          setStep("setup");
+          goTo("setup");
         }
       });
       buttonContainer.innerHTML = "";
@@ -179,7 +184,7 @@ function App() {
   }
 
   async function generatePlan() {
-    setStep("loading");
+    goTo("loading");
     setError("");
     setLoadingLine(0);
     setItinerary(null);
@@ -194,11 +199,11 @@ function App() {
       if (!res.ok || data?.error) throw new Error(data?.error || "Gemini API route failed");
       setLoadingLine(loadingItems.length - 1);
       setItinerary(data);
-      setTimeout(() => setStep("result"), 450);
+      setTimeout(() => goTo("result"), 450);
     } catch (err) {
       console.error(err);
       setError(err.message || "Gemini could not generate the plan.");
-      setStep("apiError");
+      goTo("apiError");
     } finally {
       clearInterval(interval);
     }
@@ -216,7 +221,7 @@ function App() {
             const done = order.indexOf(step) > i || step === "loading";
             const disabled = item.value === "result" && !itinerary;
             return (
-              <button type="button" className={active ? "active" : done ? "done" : ""} key={item.value} disabled={disabled} onClick={() => { if (!disabled) setStep(item.value); }}>
+              <button type="button" className={active ? "active" : done ? "done" : ""} key={item.value} disabled={disabled} onClick={() => { if (!disabled) goTo(item.value); }}>
                 <i /> {item.label}
               </button>
             );
@@ -242,7 +247,7 @@ function App() {
                   <div id="googleSignIn" />
                   {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google sign in...</div>}
                 </div>
-                <button className="btn-accent" onClick={() => setStep("setup")}>Continue without sign in</button>
+                <button className="btn-accent" onClick={() => goTo("setup")}>Continue without sign in</button>
               </div>
             </div>
             <div className="hero-cards itinerary-showreel" aria-label="Itinerary preview animation">
@@ -258,6 +263,7 @@ function App() {
                   <div className="itinerary-line line-2"><b>12:00</b><span>Vegetarian lunch nearby</span></div>
                   <div className="itinerary-line line-3"><b>17:30</b><span>Golden-hour walk</span></div>
                 </div>
+                <div className="generation-chip"><i /><span>Generating plan</span></div>
               </div>
             </div>
           </section>
@@ -301,7 +307,7 @@ function App() {
                 <div className="profile-chip">Quick feeler mode</div>
               )}
             </div>
-            <button className="btn-accent primary-wide" onClick={() => setStep("mood")}>Choose today's mood</button>
+            <button className="btn-accent primary-wide" onClick={() => goTo("mood")}>Choose today's mood</button>
           </section>
         </main>
       )}
@@ -351,10 +357,6 @@ function App() {
           {/* Centre column */}
           <div className="loader-centre">
             <div className="loader-head">
-              <div className="loader-pill">
-                <span className="loader-pulse" />
-                <span>Gemini is thinking</span>
-              </div>
               <h2 className="loader-headline">
                 Decoding your<br /><span className="gem">Travel DNA</span>
               </h2>
@@ -388,7 +390,7 @@ function App() {
             <h2>Live planning is taking a short pause.</h2>
             <p>The prototype could not finish a fresh plan right now. Review your setup or try again in a moment.</p>
             <div className="error-actions">
-              <button className="btn-outline" onClick={() => setStep("setup")}>Edit setup</button>
+              <button className="btn-outline" onClick={() => goTo("setup")}>Edit setup</button>
               <button className="btn-accent" onClick={generatePlan}>Try Gemini again ✦</button>
             </div>
           </div>
@@ -417,7 +419,7 @@ function App() {
           </section>
 
           <section className="action-bar">
-            <button className="btn-outline" onClick={() => setStep("setup")}>Edit setup</button>
+            <button className="btn-outline" onClick={() => goTo("setup")}>Edit setup</button>
             <button className="btn-outline" onClick={generatePlan}>Regenerate</button>
             {tripMapsUrl && (
               <a className="btn-accent maps-trip-btn" href={tripMapsUrl} target="_blank" rel="noreferrer">Open trip in Google Maps</a>
@@ -578,8 +580,8 @@ button { cursor: pointer; }
 }
 .btn-accent:hover { opacity: .88; }
 .btn-accent:active { transform: scale(.98); }
-.nav-subscribe { min-height: 42px !important; padding: 0 16px !important; font-size: 12px; background: transparent !important; border: 1px solid rgba(0,0,0,.16) !important; color: var(--ink) !important; }
-.nav-subscribe:hover { background: var(--panel-2) !important; opacity: 1 !important; }
+.nav-subscribe { min-height: 42px !important; padding: 0 16px !important; font-size: 12px; background: var(--panel-3) !important; border: 1px solid var(--line-strong) !important; color: var(--ink) !important; }
+.nav-subscribe:hover { background: #fff !important; border-color: rgba(0,0,0,.2) !important; opacity: 1 !important; }
 
 /* ── SCREENS ── */
 .screen { display: block; width: 100%; max-width: 1160px; padding: clamp(40px,6vw,82px) clamp(20px,4vw,56px); animation: scIn .3s var(--ease) both; }
@@ -603,7 +605,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .hero-pill span { font-size: 11px; font-weight: 800; color: var(--ink-3); letter-spacing: .05em; text-transform: uppercase; }
 .hero-left > p { max-width: 620px; font-size: clamp(17px,1.35vw,20px); line-height: 1.6; color: var(--ink-2); }
 .hero-cta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.google-wrap { min-height: 44px; display: inline-flex; align-items: center; border-radius: 999px; overflow: hidden; background: #F6F4EF; border: 1px solid rgba(0,0,0,.14); }
+.google-wrap { min-height: 44px; display: inline-flex; align-items: center; border-radius: 999px; overflow: hidden; background: transparent; border: none; }
 .google-wrap iframe { border-radius: 999px !important; }
 #googleSignIn, #googleSignIn > div { border-radius: 999px !important; background: transparent !important; }
 .google-loading { color: var(--ink-3); font-size: 13px; font-weight: 700; padding: 0 16px; }
@@ -640,7 +642,7 @@ input[type="date"] { color-scheme: light; }
 .suggestions, .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .suggestion, .chip { padding: 8px 16px; background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--ink-2); transition: background .12s, color .12s; }
 .suggestion:hover, .chip:hover { background: var(--panel-3); color: var(--ink); }
-.suggestion.active, .chip.active { background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 800; }
+.suggestion.active, .chip.active { background: var(--panel-3); border-color: rgba(0,0,0,.26); color: var(--ink); font-weight: 800; }
 .autocomplete-loading { display: inline-flex; align-items: center; padding: 8px 12px; color: var(--ink-3); font-size: 12px; font-weight: 700; }
 .field-block { display: grid; gap: 8px; }
 .pi-card { padding: 24px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line-strong); }
@@ -654,9 +656,9 @@ input[type="date"] { color-scheme: light; }
 /* ── MOOD GRID ── */
 .mood-screen { max-width: 1240px; }
 .mood-grid.image-grid { display: grid !important; grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 14px !important; width: 100% !important; }
-.image-mood-tile { position: relative; overflow: hidden; border: 2px solid transparent !important; border-radius: 28px !important; padding: 0; text-align: left; background: var(--surface); height: 220px !important; min-height: 220px !important; transition: border-color .15s; box-shadow: none; }
+.image-mood-tile { position: relative; overflow: hidden; border: 3px solid transparent !important; border-radius: 28px !important; padding: 0; text-align: left; background: var(--surface); height: 220px !important; min-height: 220px !important; transition: border-color .15s; box-shadow: none; }
 .image-mood-tile:hover { border-color: var(--line-strong) !important; }
-.image-mood-tile.active { border-color: var(--gold-bright) !important; box-shadow: inset 0 0 0 2px var(--gold-bright) !important; }
+.image-mood-tile.active { border-color: var(--gold-bright) !important; box-shadow: inset 0 0 0 1px var(--gold-bright) !important; }
 .image-mood-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.86) saturate(1.08); transition: transform .4s var(--ease); }
 .image-mood-tile:hover img, .image-mood-tile.active img { transform: scale(1.03); }
 .image-tile-overlay { position: absolute; inset: 0; background: linear-gradient(to top,rgba(0,0,0,.48),rgba(0,0,0,.04) 68%); }
