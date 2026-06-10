@@ -393,8 +393,6 @@ function App() {
 
       {step === "loading" && (
         <main className="loading-screen on">
-          <div className="loader-two-col">
-          <div className="loader-right">
           {/* Visual stage — driven by loadingLine (0-6) */}
           <div className="loader-stage">
 
@@ -508,26 +506,26 @@ function App() {
             </div>
 
           </div>{/* end loader-stage */}
-          </div>{/* end loader-right */}
-            <div className="loader-left">
-              <div className="loader-head">
-                <h2 className="loader-headline">Decoding your<br/><span className="gem">Travel DNA</span></h2>
-                <p className="loader-sub">{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
-              </div>
-              <div className="loader-list">
-                {loadingItems.map((item, i) => (
-                  <div key={item} className={`loader-item${i < loadingLine ? " li-done" : ""}${i === loadingLine ? " li-active" : ""}`}>
-                    <span className="li-dot" />
-                    <span className="li-text">{item}</span>
-                    {i < loadingLine && <span className="li-badge">Done</span>}
-                  </div>
-                ))}
-              </div>
-              <div className="loader-bar-track">
-                <div className="loader-bar-fill" style={{ width: `${Math.round(((loadingLine + 1) / loadingItems.length) * 100)}%` }} />
-              </div>
-              <p className="loader-pct">{Math.round(((loadingLine + 1) / loadingItems.length) * 100)}% complete</p>
+
+          {/* Single column: headline then list then bar */}
+          <div className="loader-bottom">
+            <div className="loader-head">
+              <h2 className="loader-headline">Decoding your<br/><span className="gem">Travel DNA</span></h2>
+              <p className="loader-sub">{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
             </div>
+            <div className="loader-list">
+              {loadingItems.map((item, i) => (
+                <div key={item} className={`loader-item${i < loadingLine ? " li-done" : ""}${i === loadingLine ? " li-active" : ""}`}>
+                  <span className="li-dot" />
+                  <span className="li-text">{item}</span>
+                  {i < loadingLine && <span className="li-badge">Done</span>}
+                </div>
+              ))}
+            </div>
+            <div className="loader-bar-track">
+              <div className="loader-bar-fill" style={{ width: `${Math.round(((loadingLine + 1) / loadingItems.length) * 100)}%` }} />
+            </div>
+            <p className="loader-pct">{Math.round(((loadingLine + 1) / loadingItems.length) * 100)}% complete</p>
           </div>
         </main>
       )}
@@ -836,59 +834,30 @@ input[type="date"] { color-scheme: light; }
   width: 100%; min-height: calc(100vh - 64px);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
+  gap: 36px;
   padding: 48px clamp(20px,4vw,56px) 56px;
   animation: scIn .3s var(--ease) both;
 }
 
-/* Two-column wrapper */
-.loader-two-col {
-  display: grid;
-  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
-  gap: 56px;
-  width: 100%;
-  max-width: 960px;
-  align-items: start;
-}
-
-/* Right: animation */
-.loader-right {
-  position: relative;
-}
-
-/* Left: headline + list */
-.loader-left {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-@media(max-width: 720px) {
-  .loader-two-col {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-  .loader-right { order: -1; }
-}
-
 .loader-stage {
   position: relative;
-  width: 100%;
+  width: min(520px, 100%);
   height: 260px;
+  flex-shrink: 0;
 }
 
-/* Each .ls is a visual stage — hidden by default */
+/* Each .ls is a visual stage — hidden by default, pure dissolve */
 .ls {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
   opacity: 0; pointer-events: none;
-  transform: scale(.97) translateY(8px);
-  transition: opacity .5s var(--ease), transform .5s var(--ease);
+  transition: opacity .6s var(--ease);
 }
 .ls.ls-active {
-  opacity: 1; transform: scale(1) translateY(0); pointer-events: auto;
+  opacity: 1; pointer-events: auto;
 }
 .ls.ls-done {
-  opacity: 0; transform: scale(1.02) translateY(-6px);
+  opacity: 0;
 }
 
 /* ── STAGE 0: Profile ── */
@@ -1069,7 +1038,11 @@ input[type="date"] { color-scheme: light; }
 .gorb-core-sm { font-size: 12px; animation: coreGlow 2s ease-in-out infinite; }
 @keyframes coreGlow { 0%,100%{opacity:.5;} 50%{opacity:1;} }
 
-.loader-head { display: flex; flex-direction: column; gap: 10px; }
+.loader-bottom {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 24px; width: min(460px, 100%); text-align: center;
+}
+.loader-head { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .loader-headline { font-size: clamp(32px,4vw,48px) !important; font-weight: 900 !important; letter-spacing: -.045em !important; line-height: 1.0 !important; margin: 0 !important; color: var(--ink) !important; }
 .loader-sub { font-size: 13px; font-weight: 500; color: var(--ink-3); margin: 0; line-height: 1.4; }
 
