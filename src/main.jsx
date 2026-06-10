@@ -263,7 +263,7 @@ function App() {
                   <div className="itinerary-line line-2"><b>12:00</b><span>Vegetarian lunch nearby</span></div>
                   <div className="itinerary-line line-3"><b>17:30</b><span>Golden-hour walk</span></div>
                 </div>
-                <div className="generation-chip"><i /><span>Generating plan</span></div>
+              
               </div>
             </div>
           </section>
@@ -546,25 +546,17 @@ button { cursor: pointer; }
 .navbar {
   position: sticky; top: 0; z-index: 999;
   width: 100%;
-  height: auto;
-  padding: 10px 24px;
+  height: 64px;
+  padding: 0 clamp(24px, 4vw, 56px);
   display: flex; align-items: center; justify-content: space-between;
-  background: transparent;
   border: none;
-  box-shadow: none;
-}
-.navbar::before {
-  content: "";
-  position: absolute;
-  inset: 8px 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.6);
-  background: rgba(238,236,230,.68);
+  border-bottom: 1px solid rgba(255,255,255,.5);
+  background: rgba(238,236,230,.72);
   backdrop-filter: blur(28px) saturate(180%) brightness(1.03);
   -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.03);
-  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 4px 20px rgba(0,0,0,.05);
-  z-index: -1;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 1px 12px rgba(0,0,0,.04);
 }
+.navbar::before { display: none; }
 .nav-steps, .nav-actions, .error-actions { display: flex; align-items: center; gap: 6px; }
 .nav-steps { gap: 28px; }
 .nav-steps i { display: none; }
