@@ -121,7 +121,7 @@ function App() {
         }
       });
       buttonContainer.innerHTML = "";
-      window.google.accounts.id.renderButton(buttonContainer, { theme: "filled_black", size: "large", shape: "pill", text: "continue_with", width: 320 });
+      window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: 320 });
     };
     loadGoogleButton();
     return () => { cancelled = true; };
@@ -604,10 +604,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .hero-pill span { font-size: 11px; font-weight: 800; color: var(--ink-3); letter-spacing: .05em; text-transform: uppercase; }
 .hero-left > p { max-width: 620px; font-size: clamp(17px,1.35vw,20px); line-height: 1.6; color: var(--ink-2); }
 .hero-cta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.google-wrap { min-height: 44px; border: 1px solid var(--gold-line) !important; border-radius: 999px !important; padding: 2px !important; background: var(--panel-3) !important; display: inline-flex !important; align-items: center !important; overflow: hidden !important; }
-.google-wrap iframe, #googleSignIn, #googleSignIn > div { border-radius: 999px !important; }
-.google-loading { color: var(--ink-3); font-size: 13px; font-weight: 700; }
-.hero-cta > .btn-accent { background: var(--panel-3) !important; color: var(--ink) !important; border-color: var(--gold-line) !important; }
+.google-wrap { min-height: 44px; display: inline-flex; align-items: center; border-radius: 999px; overflow: hidden; background: #F6F4EF; border: 1px solid rgba(0,0,0,.14); }
+.google-wrap iframe { border-radius: 999px !important; }
+#googleSignIn, #googleSignIn > div { border-radius: 999px !important; background: transparent !important; }
+.google-loading { color: var(--ink-3); font-size: 13px; font-weight: 700; padding: 0 16px; }
+.hero-cta > .btn-accent { background: var(--panel-3) !important; color: var(--ink) !important; border: 1px solid var(--line-strong) !important; }
 .hero-cta > .btn-accent:hover { background: #fff !important; opacity: 1 !important; }
 
 /* ── SHOWREEL ── */
@@ -630,8 +631,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .itinerary-line b { color: var(--accent) !important; font-weight: 800; }
 
 /* ── SETUP ── */
-.setup-header, .mood-header { margin-bottom: 30px; max-width: 840px; }
-.form-shell { max-width: 880px; border-radius: 0; background: transparent !important; border: 0 !important; padding: 0 !important; display: grid; gap: 34px; }
+.setup-header, .mood-header { margin-bottom: 30px; max-width: 640px; }
+.form-shell { max-width: 640px; border-radius: 0; background: transparent !important; border: 0 !important; padding: 0 !important; display: grid; gap: 28px; }
 label { display: grid; gap: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
 input { width: 100%; background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: 24px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; transition: border-color .15s, background .15s; }
 input:focus { border-color: rgba(0,0,0,.26); background: var(--panel-3); }
