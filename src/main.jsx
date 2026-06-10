@@ -112,6 +112,29 @@ function prettyDate(value) {
   });
 }
 
+function destinationHeroImage(destination = "", fallback = "") {
+  const place = String(destination).toLowerCase();
+
+  if (place.includes("paris")) {
+    return "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1800&q=85";
+  }
+
+  if (place.includes("kyoto")) {
+    return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1800&q=85";
+  }
+
+  if (place.includes("new york")) {
+    return "https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?auto=format&fit=crop&w=1800&q=85";
+  }
+
+  if (place.includes("san francisco")) {
+    return "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1800&q=85";
+  }
+
+  return fallback;
+}
+
+
 const fallbackDestinationSuggestions = [
   { label: "Kyoto, Japan", aliases: ["kyoto"] },
   { label: "Oaxaca, Mexico", aliases: ["oaxaca"] },
@@ -3085,6 +3108,86 @@ input:focus{
     width:100%!important;
     justify-content:center!important;
   }
+}
+
+
+/* ===== FINAL RESULT POLISH: iconic hero + readable date + clean location pin ===== */
+
+/* Top result hero should be vibrant and readable */
+.res-hero img {
+  opacity: 1 !important;
+  filter: brightness(.88) saturate(1.18) contrast(1.04) !important;
+}
+
+.res-gradient {
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.72), rgba(0,0,0,.38), rgba(0,0,0,.06)),
+    linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.20)) !important;
+}
+
+/* Date must be legible */
+.res-content time,
+.res-content .date,
+.res-date,
+.result-date,
+.res-content > p:first-of-type {
+  color: rgba(255,255,255,.86) !important;
+  opacity: 1 !important;
+}
+
+/* If date is rendered as the muted paragraph directly under title */
+.res-content h2 + p {
+  color: rgba(255,255,255,.86) !important;
+  opacity: 1 !important;
+}
+
+/* Cleaner timeline location marker: simple map pin, not the weird target icon */
+.s-pin,
+.s-pin.featured {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 50% !important;
+  background: #C8A957 !important;
+  border: 1px solid rgba(0,0,0,.10) !important;
+  color: transparent !important;
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  box-shadow: none !important;
+}
+
+.s-pin::before {
+  content: "" !important;
+  width: 14px !important;
+  height: 14px !important;
+  border: 3px solid #080808 !important;
+  border-radius: 50% 50% 50% 0 !important;
+  transform: rotate(-45deg) translateY(-1px) !important;
+  display: block !important;
+  background: transparent !important;
+}
+
+.s-pin::after {
+  content: "" !important;
+  position: absolute !important;
+  width: 4px !important;
+  height: 4px !important;
+  border-radius: 50% !important;
+  background: #080808 !important;
+  top: 17px !important;
+  left: 19px !important;
+  transform: none !important;
+}
+
+/* Timeline line should feel subtle */
+.stop::after,
+.timeline-line {
+  background: rgba(0,0,0,.12) !important;
+}
+
+/* Hero location title: keep more destination context if available */
+.res-content h2 {
+  text-shadow: 0 1px 2px rgba(0,0,0,.18) !important;
 }
 
 `;
