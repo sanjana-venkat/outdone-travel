@@ -6,17 +6,29 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function getTravelArchetype(moods = []) {
   const ids = moods.map((m) => m.id);
-  const titles = moods.map((m) => m.title);
-  const has = (value) => ids.includes(value) || titles.includes(value);
-  if (has("romantic") && has("active") && has("nature")) return { name: "The Scenic Spark", line: "Romantic energy, movement, and open-air moments." };
-  if (has("romantic") && has("comfort")) return { name: "The Soft Landing", line: "A gentle, intimate plan with room to slow down." };
-  if (has("culinary") && has("cultural")) return { name: "The Local Romantic", line: "Food, texture, and cultural depth over tourist checklists." };
-  if (has("adventurous") && has("active")) return { name: "The Momentum Seeker", line: "Built for movement, discovery, and a little edge." };
-  if (has("nature") && has("slow-easy")) return { name: "The Quiet Wanderer", line: "Spacious, scenic, and intentionally unhurried." };
-  if (has("social") && has("culinary")) return { name: "The Table Hopper", line: "A social plan shaped around conversation, flavor, and local energy." };
-  if (has("open")) return { name: "The Open Compass", line: "Flexible by design, with Gemini choosing the strongest route." };
-  if (moods.length) return { name: `The ${moods[0].title} Day`, line: `A plan shaped around ${moods.map((m) => m.title.toLowerCase()).join(", ")}.` };
-  return { name: "The Mood-Led Day", line: "A plan shaped around who you want to be today." };
+  const has = (value) => ids.includes(value);
+  if (has("romantic") && has("active") && has("nature")) return { name: "The Scenic Spark", line: "You move through places like someone who notices everything — the light, the pace, the person beside you." };
+  if (has("romantic") && has("slow-easy")) return { name: "The Soft Landing", line: "You travel to feel, not to collect. Unhurried, intentional, and present in every moment." };
+  if (has("romantic") && has("cultural")) return { name: "The Intimate Explorer", line: "You want beauty with substance — places that mean something, shared with someone who matters." };
+  if (has("culinary") && has("cultural")) return { name: "The Local Romantic", line: "You find culture through flavor. Markets, kitchens, and hole-in-the-wall restaurants are your galleries." };
+  if (has("culinary") && has("social")) return { name: "The Table Hopper", line: "For you, the best conversations happen over food. You eat where the locals eat and stay twice as long." };
+  if (has("adventurous") && has("active")) return { name: "The Momentum Seeker", line: "You don't sit still. You're drawn to edges, ascents, and the quiet satisfaction of having pushed yourself." };
+  if (has("adventurous") && has("nature")) return { name: "The Raw Wanderer", line: "Crowds bore you. You're after the kind of beauty that takes effort to reach — and silence when you get there." };
+  if (has("nature") && has("slow-easy")) return { name: "The Quiet Wanderer", line: "You travel to exhale. Open skies, slow mornings, and nothing on a schedule you didn't write yourself." };
+  if (has("social") && has("active")) return { name: "The Energy Chaser", line: "You move fast and meet people doing the same. Cities feel alive to you — and you want to be in the middle of it." };
+  if (has("cultural") && has("slow-easy")) return { name: "The Considered Traveler", line: "You'd rather understand one place deeply than skim ten. Depth over distance, always." };
+  if (has("open") && has("adventurous")) return { name: "The Unscripted", line: "Plans are a starting point for you — not a constraint. You follow what feels right and rarely regret it." };
+  if (has("open")) return { name: "The Open Compass", line: "You show up curious and let the place decide. The best trips you've taken were never fully planned." };
+  if (has("romantic")) return { name: "The Slow Romantic", line: "You travel to feel something. Golden hour, good wine, and nowhere to be — that's the whole point." };
+  if (has("adventurous")) return { name: "The Edge Seeker", line: "You measure a trip by what made your heart rate spike. Comfort is a baseline, not the goal." };
+  if (has("culinary")) return { name: "The Flavor Pilgrim", line: "You plan trips around meals and discover everything else along the way. Eating well is non-negotiable." };
+  if (has("social")) return { name: "The Connector", line: "You leave places with new numbers in your phone. Energy, people, and a full table — that's your version of a great trip." };
+  if (has("nature")) return { name: "The Landscape Chaser", line: "You're drawn to places that make you feel small in the best way. Wild, open, and far from anything ordinary." };
+  if (has("cultural")) return { name: "The Context Seeker", line: "You want the story behind the place. History, art, architecture — you travel to understand, not just to see." };
+  if (has("active")) return { name: "The Kinetic Traveler", line: "You see a city best from a run or a bike. Movement is how you think, explore, and decompress." };
+  if (has("slow-easy")) return { name: "The Unhurried", line: "You know that the best travel memories are almost never the rushed ones. You give places the time they deserve." };
+  if (moods.length) return { name: "The Mood-Led Traveler", line: "You know what you want today — and you're building a day around exactly that feeling." };
+  return { name: "The Mood-Led Traveler", line: "You know what you want today — and you're building a day around exactly that feeling." };
 }
 
 function buildGoogleMapsTripUrl(stops = []) {
@@ -316,7 +328,7 @@ function App() {
         <main className="screen mood-screen on">
           <section className="mood-header">
             <p className="label">Step 2 / 2 · Choose up to 3</p>
-            <h2>What's your <span className="gem">mood today?</span></h2>
+            <h2>What's your <span className="gem">vibe?</span></h2>
             <p>This one input reshapes your entire day. It's the variable Gemini can't infer from data alone.</p>
           </section>
           <section className="mood-grid image-grid">
@@ -341,21 +353,24 @@ function App() {
       {step === "loading" && (
         <main className="loading-screen on">
 
-          {/* Scrolling image strip */}
-          <div className="carousel-wrap" aria-hidden="true">
-            <div className="carousel-track">
-              {[...selectedMoodObjects.concat(moodVibes).slice(0, 7),
-                ...selectedMoodObjects.concat(moodVibes).slice(0, 7)].map((mood, i) => (
-                <div className="cimg" key={mood.id + i}>
-                  <img src={mood.img} alt="" />
-                  <span className="cimg-lbl">{mood.title}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Centre column */}
           <div className="loader-centre">
+
+            {/* Floating mood cards + shuffling pills */}
+            <div className="loader-visual" aria-hidden="true">
+              {selectedMoodObjects.concat(moodVibes).slice(0, 3).map((mood, i) => (
+                <div className={`loader-card loader-card-${i}`} key={mood.id + i}>
+                  <img src={mood.img} alt="" />
+                  <div className="loader-card-ov" />
+                </div>
+              ))}
+              <div className="loader-pills">
+                {[destination, ...selectedMoodObjects.map(m => m.title), diet, planFor].map((label, i) => (
+                  <span className={`lpill lpill-${i}`} key={label}>{label}</span>
+                ))}
+              </div>
+            </div>
+
             <div className="loader-head">
               <h2 className="loader-headline">
                 Decoding your<br /><span className="gem">Travel DNA</span>
@@ -571,7 +586,7 @@ button { cursor: pointer; }
 }
 .nav-steps button:hover:not(:disabled) { background: var(--surface-2); color: var(--ink-2); }
 .nav-steps button.active {
-  background: var(--ink); color: #fff;
+  background: transparent; color: var(--accent);
 }
 .nav-steps button.active::before { background: var(--accent); }
 .nav-steps button.done { color: var(--ink-2); }
@@ -667,9 +682,9 @@ input[type="date"] { color-scheme: light; }
 /* ── MOOD GRID ── */
 .mood-screen { max-width: 1240px; }
 .mood-grid.image-grid { display: grid !important; grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 14px !important; width: 100% !important; }
-.image-mood-tile { position: relative; overflow: hidden; border: 3px solid transparent !important; border-radius: 28px !important; padding: 0; text-align: left; background: var(--surface); height: 220px !important; min-height: 220px !important; transition: border-color .15s; box-shadow: none; }
+.image-mood-tile { position: relative; overflow: hidden; border: 4px solid transparent !important; border-radius: 28px !important; padding: 0; text-align: left; background: var(--surface); height: 220px !important; min-height: 220px !important; transition: border-color .15s; box-shadow: none; }
 .image-mood-tile:hover { border-color: var(--line-strong) !important; }
-.image-mood-tile.active { border-color: var(--gold-bright) !important; box-shadow: inset 0 0 0 1px var(--gold-bright) !important; }
+.image-mood-tile.active { border-color: var(--gold-bright) !important; box-shadow: 0 0 0 1px var(--gold-bright) !important; }
 .image-mood-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.86) saturate(1.08); transition: transform .4s var(--ease); }
 .image-mood-tile:hover img, .image-mood-tile.active img { transform: scale(1.03); }
 .image-tile-overlay { position: absolute; inset: 0; background: linear-gradient(to top,rgba(0,0,0,.48),rgba(0,0,0,.04) 68%); }
@@ -720,6 +735,56 @@ input[type="date"] { color-scheme: light; }
 .cimg-lbl { position: absolute; bottom: 10px; left: 12px; font-size: 12px; font-weight: 800; color: #fff; letter-spacing: -.01em; }
 
 /* Centre column */
+/* Loader visual — floating cards + pills */
+.loader-visual {
+  position: relative;
+  width: min(420px, 100%);
+  height: 180px;
+  flex-shrink: 0;
+}
+.loader-card {
+  position: absolute;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+}
+.loader-card img { width: 100%; height: 100%; object-fit: cover; filter: brightness(.6) saturate(.8); }
+.loader-card-ov { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,10,.5), transparent 60%); }
+.loader-card-0 { width: 160px; height: 120px; left: 0; top: 20px; animation: lcardA 4s ease-in-out infinite; z-index: 1; }
+.loader-card-1 { width: 180px; height: 140px; left: 50%; transform: translateX(-50%); top: 10px; animation: lcardB 4s ease-in-out infinite .6s; z-index: 3; }
+.loader-card-2 { width: 155px; height: 115px; right: 0; top: 24px; animation: lcardC 4s ease-in-out infinite 1.2s; z-index: 1; }
+@keyframes lcardA { 0%,100%{transform:translate(0,0) rotate(-2deg);} 50%{transform:translate(4px,-8px) rotate(-1deg);} }
+@keyframes lcardB { 0%,100%{transform:translateX(-50%) rotate(0.5deg);} 50%{transform:translateX(calc(-50% + 2px)) translateY(-6px) rotate(-0.5deg);} }
+@keyframes lcardC { 0%,100%{transform:translate(0,0) rotate(1.5deg);} 50%{transform:translate(-4px,-10px) rotate(0.5deg);} }
+
+.loader-pills {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  z-index: 5;
+}
+.lpill {
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-2);
+  white-space: nowrap;
+  animation: pillPop 3s ease-in-out infinite;
+}
+.lpill-0 { animation-delay: 0s; }
+.lpill-1 { animation-delay: .4s; background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.lpill-2 { animation-delay: .8s; background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.lpill-3 { animation-delay: 1.2s; }
+.lpill-4 { animation-delay: 1.6s; }
+@keyframes pillPop { 0%,100%{transform:translateY(0);opacity:.8;} 50%{transform:translateY(-4px);opacity:1;} }
+
 .loader-centre {
   display: flex;
   flex-direction: column;
@@ -783,8 +848,7 @@ input[type="date"] { color-scheme: light; }
 
 /* ── TIMELINE ── */
 .timeline { max-width: 100% !important; margin: 0 auto; padding: 48px 0 90px !important; }
-.timeline > .label { display: flex; align-items: center; gap: 16px; margin-bottom: 40px; }
-.timeline > .label::after { content: ""; flex: 1; height: 1px; background: var(--line-strong); }
+.timeline > .label { margin-bottom: 40px; }
 .stop { display: flex; position: relative; margin-bottom: 44px; }
 .stop:not(:last-child)::after { content: ""; position: absolute; left: 4px; top: 22px; bottom: -44px; width: 1px; background: var(--line-strong); }
 
