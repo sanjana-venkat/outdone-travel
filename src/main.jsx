@@ -3190,6 +3190,85 @@ input:focus{
   text-shadow: 0 1px 2px rgba(0,0,0,.18) !important;
 }
 
+
+/* ===== GOOGLE CONNECT FIX: never black in light mode ===== */
+.google-wrap,
+.hero-cta .google-wrap,
+.google-connect-btn,
+.google-login,
+.google-login-btn,
+.google-signin,
+.connect-google,
+.continue-google {
+  background: #F6F3ED !important;
+  border: 1px solid #D8D2C7 !important;
+  color: #1C1C1C !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.google-wrap:hover,
+.hero-cta .google-wrap:hover,
+.google-connect-btn:hover,
+.google-login:hover,
+.google-login-btn:hover,
+.google-signin:hover,
+.connect-google:hover,
+.continue-google:hover {
+  background: #F1EEE8 !important;
+  border-color: #C8A957 !important;
+  color: #1C1C1C !important;
+}
+
+/* If your custom Google CTA is still using btn-accent, force it out of primary black */
+.hero-cta .btn-accent,
+.hero-cta button.btn-accent,
+.google-wrap .btn-accent,
+.google-wrap button,
+.google-wrap a {
+  background: #F6F3ED !important;
+  border-color: transparent !important;
+  color: #1C1C1C !important;
+  box-shadow: none !important;
+}
+
+.hero-cta .btn-accent:hover,
+.hero-cta button.btn-accent:hover,
+.google-wrap .btn-accent:hover,
+.google-wrap button:hover,
+.google-wrap a:hover {
+  background: #F1EEE8 !important;
+  color: #1C1C1C !important;
+}
+
+/* Override any global black button styling inside the Google area */
+.google-wrap *,
+.hero-cta .google-wrap *,
+.google-connect-btn *,
+.google-login *,
+.google-login-btn *,
+.google-signin *,
+.connect-google *,
+.continue-google * {
+  color: #1C1C1C !important;
+}
+
+/* Keep Google icon on a clean white circle */
+.google-wrap img,
+.google-connect-icon,
+.google-icon,
+.google-wrap .google-icon {
+  background: #FFFFFF !important;
+  border-radius: 50% !important;
+}
+
+/* If the Google rendered iframe is black, this wrapper still reads as light */
+.google-wrap iframe {
+  border-radius: 999px !important;
+  background: #F6F3ED !important;
+}
+
 `;
 
 createRoot(document.getElementById("root")).render(<App />);
