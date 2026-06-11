@@ -539,10 +539,27 @@ function App() {
 
       {step === "setup" && (
         <main className="screen setup-screen on">
+
+          {/* Partnership notice — pinned to top */}
+          <div className="partnership-notice">
+            <div className="partnership-notice-left">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              <span>
+                <strong>We don't have a paid Google partnership yet</strong> — so we can't pull your travel history, preferences, or past searches automatically. These questions exist because of that. Once we do, this whole form disappears.
+              </span>
+            </div>
+            {user && (
+              <div className="profile-chip">
+                <img src={user.picture} alt="" />
+                {user.name}
+              </div>
+            )}
+          </div>
+
           <section className="setup-header">
             <p className="label">Step 1 / 2</p>
             <h2>Set the plan.</h2>
-            <p>We'll infer your longer-term travel style from your lightweight profile later. For now, tell us where, when, and what constraints matter.</p>
+            <p>Tell us where, when, and what constraints matter.</p>
           </section>
           <section className="form-shell glass-panel">
             <label>
@@ -563,15 +580,6 @@ function App() {
             </label>
             <Select label="Dietary preference" value={diet} setValue={setDiet} options={["Vegetarian", "Vegan", "No restrictions", "Gluten-free"]} />
             <Select label="Going with" value={planFor} setValue={setPlanFor} options={["Solo", "Date", "Friends", "Family", "Workday"]} />
-            <div className="pi-card">
-              <div className="spark">✦</div>
-              <p className="label">Personal Intelligence Preview</p>
-              <h3>We don't have full access to your Google Personal Intelligence yet.</h3>
-              <p>We're working on it. Soon, we'll skip these questions with your Google data. For now, give us a quick feeler.</p>
-              {user ? (
-                <div className="profile-chip"><img src={user.picture} alt="" />Signed in as {user.name}</div>
-              ) : null}
-            </div>
             <button className="btn-accent primary-wide" onClick={() => goTo("mood")}>Choose today's mood</button>
           </section>
         </main>
@@ -1173,6 +1181,21 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 /* ── SETUP ── */
 .setup-header, .mood-header { margin-bottom: 30px; max-width: 540px; }
+
+/* Partnership notice banner */
+.partnership-notice {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  padding: 14px 18px; border-radius: 16px; margin-bottom: 28px;
+  background: var(--panel); border: 1px solid var(--line-strong);
+  max-width: 640px;
+}
+.partnership-notice-left {
+  display: flex; align-items: flex-start; gap: 10px; flex: 1;
+  font-size: 13px; line-height: 1.6; color: var(--ink-3);
+}
+.partnership-notice-left svg { flex-shrink: 0; margin-top: 2px; color: var(--ink-3); }
+.partnership-notice-left strong { color: var(--ink-2); font-weight: 700; }
+.partnership-notice .profile-chip { flex-shrink: 0; margin-top: 0; align-self: center; }
 .form-shell { max-width: 640px; border-radius: 0; background: transparent !important; border: 0 !important; padding: 0 !important; display: grid; gap: 28px; }
 label { display: grid; gap: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
 input { width: 100%; background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: 24px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; transition: border-color .15s, background .15s; }
@@ -1187,10 +1210,7 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 .suggestion.active, .chip.active { background: var(--gold); border-color: var(--gold); color: #fff; font-weight: 700; }
 .autocomplete-loading { display: inline-flex; align-items: center; padding: 8px 12px; color: var(--ink-3); font-size: 12px; font-weight: 700; }
 .field-block { display: grid; gap: 8px; }
-.pi-card { padding: 24px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line-strong); }
-.spark { width: 28px; height: 28px; background: rgba(51,153,137,.1); color: var(--accent); border: 1px solid rgba(51,153,137,.2); border-radius: 8px; display: grid; place-items: center; margin-bottom: 12px; font-size: 13px; }
-.pi-card h3 { font-size: 15px; font-weight: 800; color: var(--ink); margin: 6px 0 6px; letter-spacing: -.02em; }
-.pi-card p { font-size: 13px; color: var(--ink-3); line-height: 1.6; margin: 0; }
+
 .profile-chip { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 7px 12px; border-radius: 10px; background: var(--surface-3); color: var(--ink-2); font-size: 12px; font-weight: 700; border: 1px solid var(--line-strong); }
 .profile-chip img { width: 22px; height: 22px; border-radius: 50%; }
 .primary-wide { width: fit-content; }
