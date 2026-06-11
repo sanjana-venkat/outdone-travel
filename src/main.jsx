@@ -542,18 +542,18 @@ function App() {
 
           {/* Partnership notice — pinned to top */}
           <div className="partnership-notice">
-            <div className="partnership-notice-left">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-              <span>
-                <strong>We don't have a paid Google partnership yet</strong> — so we can't pull your travel history, preferences, or past searches automatically. These questions exist because of that. Once we do, this whole form disappears.
-              </span>
-            </div>
             {user && (
               <div className="profile-chip">
                 <img src={user.picture} alt="" />
                 {user.name}
               </div>
             )}
+            <div className="partnership-notice-left">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              <span>
+                <strong>We don't have your search history or past trips yet</strong> — so we need to ask. For now, a few quick questions and Gemini handles the rest. When the partnership happens, this whole page vanishes. Promise.
+              </span>
+            </div>
           </div>
 
           <section className="setup-header">
@@ -1184,18 +1184,18 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 /* Partnership notice banner */
 .partnership-notice {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
-  padding: 14px 18px; border-radius: 16px; margin-bottom: 28px;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 18px 20px; border-radius: 16px; margin-bottom: 28px;
   background: var(--panel); border: 1px solid var(--line-strong);
   max-width: 640px;
 }
 .partnership-notice-left {
-  display: flex; align-items: flex-start; gap: 10px; flex: 1;
-  font-size: 13px; line-height: 1.6; color: var(--ink-3);
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 13px; line-height: 1.65; color: var(--ink-3);
 }
 .partnership-notice-left svg { flex-shrink: 0; margin-top: 2px; color: var(--ink-3); }
 .partnership-notice-left strong { color: var(--ink-2); font-weight: 700; }
-.partnership-notice .profile-chip { flex-shrink: 0; margin-top: 0; align-self: center; }
+.partnership-notice .profile-chip { align-self: flex-start; margin-top: 0; }
 .form-shell { max-width: 640px; border-radius: 0; background: transparent !important; border: 0 !important; padding: 0 !important; display: grid; gap: 28px; }
 label { display: grid; gap: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
 input { width: 100%; background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: 24px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; transition: border-color .15s, background .15s; }
