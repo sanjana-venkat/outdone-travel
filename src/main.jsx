@@ -796,7 +796,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .google-wrap iframe { border-radius: 999px !important; }
 #googleSignIn, #googleSignIn > div { border-radius: 999px !important; background: transparent !important; }
 .google-loading { color: var(--ink-3); font-size: 13px; font-weight: 700; padding: 0 16px; }
-.hero-cta > .btn-accent { background: var(--panel-3) !important; color: var(--ink) !important; border: 1.5px solid var(--ink) !important; }
+.hero-cta > .btn-accent { background: transparent !important; color: var(--ink) !important; border: 1.5px solid var(--ink) !important; }
 .hero-cta > .btn-accent:hover { background: var(--ink) !important; color: #fff !important; opacity: 1 !important; }
 
 /* ── SHOWREEL ── */
