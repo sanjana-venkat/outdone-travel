@@ -1195,6 +1195,10 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 .profile-chip img { width: 22px; height: 22px; border-radius: 50%; }
 .primary-wide { width: fit-content; }
 
+@media(max-width: 760px) {
+  .primary-wide { width: 100%; justify-content: center; }
+}
+
 /* ── MOOD GRID ── */
 .mood-screen { max-width: 1240px; }
 .mood-grid.image-grid { display: grid !important; grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 14px !important; width: 100% !important; }
@@ -1511,7 +1515,7 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 .action-bar {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
   margin: 24px 0 52px;
-  background: transparent !important; border: 0 !important; padding: 0 !important;
+  background: transparent !important; border: 0 !important;
 }
 
 /* ── TIMELINE ── */
@@ -1576,7 +1580,8 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
   .navbar { height: 68px !important; padding: 0 20px !important; }
 
   .screen { padding: 32px 20px; }
-  .action-bar { width: 100% !important; padding: 0 20px; margin-top: 20px; gap: 10px; box-sizing: border-box; }
+  /* Action bar: give buttons side breathing room, not full bleed */
+  .action-bar { width: 100% !important; padding: 0 20px !important; margin: 20px 0 0 !important; gap: 10px; box-sizing: border-box; }
   .action-bar button, .action-bar a { width: 100% !important; justify-content: center !important; min-height: 52px !important; }
   .build-cta-row { justify-content: stretch; }
   .build-cta-row .btn-accent { width: 100%; justify-content: center; }
