@@ -758,7 +758,7 @@ button { cursor: pointer; }
   min-height: 50px; padding: 0 24px;
   background: var(--panel-2); border: 1.5px solid var(--ink); color: var(--ink); text-decoration: none;
 }
-.btn-outline:hover { background: var(--panel-3); }
+.btn-outline:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 .btn-accent {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 50px; padding: 0 26px;
@@ -766,8 +766,8 @@ button { cursor: pointer; }
 }
 .btn-accent:hover { opacity: .88; }
 .btn-accent:active { transform: scale(.98); }
-.nav-subscribe { min-height: 42px !important; padding: 0 16px !important; font-size: 12px; background: var(--panel-2) !important; border: 1.5px solid var(--ink) !important; color: var(--ink) !important; font-weight: 700 !important; }
-.nav-subscribe:hover { background: #fff !important; border-color: rgba(0,0,0,.18) !important; opacity: 1 !important; }
+.nav-subscribe { min-height: 42px !important; padding: 0 16px !important; font-size: 12px; background: var(--ink) !important; border: 1.5px solid var(--ink) !important; color: #fff !important; font-weight: 700 !important; }
+.nav-subscribe:hover { background: #222 !important; border-color: #222 !important; opacity: 1 !important; }
 
 /* ── SCREENS ── */
 .screen { display: block; width: 100%; max-width: 1160px; padding: clamp(40px,6vw,82px) clamp(20px,4vw,56px); animation: scIn .3s var(--ease) both; }
@@ -824,9 +824,9 @@ input:focus { border-color: rgba(0,0,0,.26); background: var(--panel-3); }
 input::placeholder { color: var(--ink-3); }
 input[type="date"] { color-scheme: light; }
 .suggestions, .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-.suggestion, .chip { padding: 8px 16px; background: var(--panel-2); border: 1.5px solid var(--ink); border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--ink); transition: background .12s, color .12s; }
-.suggestion:hover, .chip:hover { background: var(--panel-3); color: var(--ink); }
-.suggestion.active, .chip.active { background: var(--panel-3); border-color: rgba(0,0,0,.26); color: var(--ink); font-weight: 800; }
+.suggestion, .chip { padding: 8px 16px; background: var(--panel-2); border: 1.5px solid var(--ink); border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--ink); transition: background .15s, color .15s, border-color .15s; }
+.suggestion:hover, .chip:hover { background: var(--ink); color: #fff; }
+.suggestion.active, .chip.active { background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 700; }
 .autocomplete-loading { display: inline-flex; align-items: center; padding: 8px 12px; color: var(--ink-3); font-size: 12px; font-weight: 700; }
 .field-block { display: grid; gap: 8px; }
 .pi-card { padding: 24px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line-strong); }
