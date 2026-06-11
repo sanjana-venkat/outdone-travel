@@ -478,21 +478,34 @@ function App() {
               <div className="ls-map">
                 <div className="map-dest-label">{destination}</div>
                 <div className="map-sketch">
-                  <svg viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg" className="map-svg">
-                    {/* Connecting lines between 4 points — draw in sequence */}
-                    <line className="map-line ml1" x1="90" y1="120" x2="180" y2="55"/>
-                    <line className="map-line ml2" x1="180" y1="55" x2="280" y2="90"/>
-                    <line className="map-line ml3" x1="280" y1="90" x2="340" y2="40"/>
-                    {/* 4 destination dots */}
-                    <circle className="map-dot md1" cx="90" cy="120" r="7"/>
-                    <circle className="map-dot md2" cx="180" cy="55" r="7"/>
-                    <circle className="map-dot md3" cx="280" cy="90" r="7"/>
-                    <circle className="map-dot md4" cx="340" cy="40" r="7"/>
-                    {/* Labels */}
-                    <text className="map-dot-lbl" x="90" y="138" textAnchor="middle">A</text>
-                    <text className="map-dot-lbl" x="180" y="73" textAnchor="middle">B</text>
-                    <text className="map-dot-lbl" x="280" y="108" textAnchor="middle">C</text>
-                    <text className="map-dot-lbl" x="340" y="58" textAnchor="middle">D</text>
+                  <svg viewBox="0 0 420 155" xmlns="http://www.w3.org/2000/svg" className="map-svg">
+                    {/* River */}
+                    <path d="M 0 95 Q 60 88 110 98 Q 160 108 200 100 Q 260 90 300 96 Q 360 104 420 98" fill="none" stroke="rgba(51,153,137,.18)" strokeWidth="8" strokeLinecap="round"/>
+                    {/* Tree clusters */}
+                    <circle cx="50" cy="60" r="10" fill="rgba(51,153,137,.12)"/>
+                    <circle cx="62" cy="54" r="8" fill="rgba(51,153,137,.1)"/>
+                    <circle cx="150" cy="130" r="9" fill="rgba(51,153,137,.1)"/>
+                    <circle cx="163" cy="136" r="7" fill="rgba(51,153,137,.08)"/>
+                    <circle cx="360" cy="110" r="11" fill="rgba(51,153,137,.1)"/>
+                    <circle cx="374" cy="116" r="8" fill="rgba(51,153,137,.08)"/>
+                    {/* Grid lines — faint map grid */}
+                    <line x1="0" y1="50" x2="420" y2="50" stroke="rgba(0,0,0,.04)" strokeWidth="1"/>
+                    <line x1="0" y1="100" x2="420" y2="100" stroke="rgba(0,0,0,.04)" strokeWidth="1"/>
+                    <line x1="105" y1="0" x2="105" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1"/>
+                    <line x1="210" y1="0" x2="210" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1"/>
+                    <line x1="315" y1="0" x2="315" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1"/>
+                    {/* Route lines — draw in sequence */}
+                    <line className="map-line ml1" x1="80" y1="118" x2="185" y2="62"/>
+                    <line className="map-line ml2" x1="185" y1="62" x2="275" y2="85"/>
+                    <line className="map-line ml3" x1="275" y1="85" x2="345" y2="42"/>
+                    {/* Location dots */}
+                    <circle className="map-dot md1" cx="80" cy="118" r="6"/>
+                    <circle className="map-dot md2" cx="185" cy="62" r="6"/>
+                    <circle className="map-dot md3" cx="275" cy="85" r="6"/>
+                    <circle className="map-dot md4" cx="345" cy="42" r="6"/>
+                    {/* Travelling marker — animates along the route */}
+                    <circle className="map-traveller" cx="80" cy="118" r="9" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.6"/>
+                    <circle className="map-traveller-dot" cx="80" cy="118" r="4" fill="var(--accent)"/>
                   </svg>
                 </div>
               </div>
@@ -526,10 +539,9 @@ function App() {
                 <div className="wire-meta">
                   <div className="wire-tag"/>
                   <div className="wire-title"/>
-                  <div className="wire-sub"/>
                 </div>
                 <div className="wire-stops">
-                  {[0,1,2].map(i => (
+                  {[0,1].map(i => (
                     <div className="wire-stop" key={i}>
                       <div className="wire-dot"/>
                       <div className="wire-lines">
@@ -588,10 +600,12 @@ function App() {
             <img src={itinerary?.heroImageUrl || selectedMoodObjects[0]?.img || moodVibes[0].img} alt="" />
             <div className="res-gradient" />
             <div className="res-content">
-              <h2>{itinerary?.destination || destination}</h2>
-              <p>{itinerary?.dates || prettyDate(date)}</p>
               <p className="archetype-line">{travelArchetype.line}</p>
-              {itinerary?.summary && <p className="res-summary">{itinerary.summary}</p>}
+              <div className="res-right">
+                <h2 className="res-dest-fade">{itinerary?.destination || destination}</h2>
+                <p className="res-date-fade">{itinerary?.dates || prettyDate(date)}</p>
+              </div>
+              {itinerary?.summary && <p className="res-summary res-summary-fade">{itinerary.summary}</p>}
               {itinerary?.generatedBy === "fallback" && (
                 <div className="fallback-banner">
                   <span>Preview mode</span>
@@ -623,10 +637,12 @@ function App() {
                   <h4>{stop.name}</h4>
                   <div className="place-meta prominent">
                     {stop.rating && (
-                      <span className="rating-pill">★ {stop.rating}{stop.userRatingCount ? ` · ${stop.userRatingCount.toLocaleString()} reviews` : ""}</span>
+                      <a className="rating-pill" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.googlePlaceName || stop.name)}`} target="_blank" rel="noreferrer">★ {stop.rating}{stop.userRatingCount ? ` · ${stop.userRatingCount.toLocaleString()} reviews` : ""}</a>
                     )}
                     {stop.openNow !== undefined && <span>{stop.openNow ? "Open now" : "Hours vary"}</span>}
-                    {stop.address && <span>{stop.address}</span>}
+                    {stop.address && (
+                      <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`} target="_blank" rel="noreferrer">{stop.address}</a>
+                    )}
                     {!stop.rating && stop.placesStatus !== "google-places" && <span className="demo-pill">Places details unavailable in fallback</span>}
                   </div>
                   <p>{stop.description}</p>
@@ -842,7 +858,7 @@ input[type="date"] { color-scheme: light; }
 .autocomplete-loading { display: inline-flex; align-items: center; padding: 8px 12px; color: var(--ink-3); font-size: 12px; font-weight: 700; }
 .field-block { display: grid; gap: 8px; }
 .pi-card { padding: 24px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line-strong); }
-.spark { width: 28px; height: 28px; background: var(--gold); color: var(--panel-3); border-radius: 8px; display: grid; place-items: center; margin-bottom: 12px; font-size: 13px; }
+.spark { width: 28px; height: 28px; background: rgba(51,153,137,.1); color: var(--accent); border: 1px solid rgba(51,153,137,.2); border-radius: 8px; display: grid; place-items: center; margin-bottom: 12px; font-size: 13px; }
 .pi-card h3 { font-size: 15px; font-weight: 800; color: var(--ink); margin: 6px 0 6px; letter-spacing: -.02em; }
 .pi-card p { font-size: 13px; color: var(--ink-3); line-height: 1.6; margin: 0; }
 .profile-chip { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 7px 12px; border-radius: 10px; background: var(--surface-3); color: var(--ink-2); font-size: 12px; font-weight: 700; border: 1px solid var(--line-strong); }
@@ -1027,16 +1043,23 @@ input[type="date"] { color-scheme: light; }
   70%  { opacity:1; transform:scale(1.3); }
   100% { opacity:1; transform:scale(1); }
 }
-.map-dot-lbl {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 9px; font-weight: 800;
-  fill: var(--ink); opacity: 0;
-  animation: dotPop .35s var(--ease) forwards;
+/* Travelling marker animation — moves from A→B→C→D */
+.map-traveller {
+  animation: travelPulse 1s ease-in-out infinite, travelRoute 3.2s var(--ease) forwards;
 }
-.map-dot-lbl:nth-child(5) { animation-delay: 0.2s; }
-.map-dot-lbl:nth-child(6) { animation-delay: 1.0s; }
-.map-dot-lbl:nth-child(7) { animation-delay: 1.8s; }
-.map-dot-lbl:nth-child(8) { animation-delay: 2.6s; }
+.map-traveller-dot {
+  animation: travelRoute 3.2s var(--ease) forwards;
+}
+@keyframes travelPulse {
+  0%,100% { r: 9; opacity: .6; }
+  50% { r: 13; opacity: .2; }
+}
+@keyframes travelRoute {
+  0%  { cx: 80; cy: 118; }
+  28% { cx: 185; cy: 62; }
+  56% { cx: 275; cy: 85; }
+  84%,100% { cx: 345; cy: 42; }
+}
 
 /* ── STAGE 4: Places chips ── */
 .ls-places-chips {
@@ -1194,8 +1217,18 @@ input[type="date"] { color-scheme: light; }
 .res-gradient { position: absolute; inset: 0; background: linear-gradient(90deg,rgba(0,0,0,.72),rgba(0,0,0,.38),rgba(0,0,0,.06)), linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.20)); }
 .res-content { position: relative !important; left: 0 !important; bottom: auto !important; transform: none !important; width: 100% !important; padding: clamp(38px,6vw,72px) !important; }
 .res-tag { display: inline-flex; padding: 5px 10px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: .08em; color: #fff; margin-bottom: 14px; text-transform: uppercase; }
-.res-content h2 { font-size: clamp(48px,6vw,84px); color: #fff; margin: 0 0 8px; font-weight: 900; letter-spacing: -.05em; text-shadow: 0 1px 2px rgba(0,0,0,.18); }
-.res-content > p { color: rgba(255,255,255,.86); font-size: 14px; font-weight: 500; }
+.res-right { text-align: right; margin-top: 24px; }
+.res-dest-fade { font-size: clamp(48px,6vw,84px); color: #fff; margin: 0 0 6px; font-weight: 900; letter-spacing: -.05em; text-shadow: 0 1px 2px rgba(0,0,0,.18); opacity: 0; animation: resFadeUp .7s var(--ease) .8s forwards; }
+.res-date-fade { color: rgba(255,255,255,.7); font-size: 14px; font-weight: 400; margin: 0; opacity: 0; animation: resFadeUp .5s var(--ease) 1.1s forwards; }
+.res-summary-fade { opacity: 0; animation: resFadeUp .6s var(--ease) 1.5s forwards; }
+.res-content > p:not(.archetype-line):not(.res-summary-fade) { color: rgba(255,255,255,.86); font-size: 14px; font-weight: 500; }
+@keyframes resFadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+/* Typewriter archetype line */
+.archetype-line {
+  color: #5EC4B5 !important; font-size: 15px !important; font-weight: 700 !important; margin-top: 0;
+  overflow: hidden; white-space: normal;
+  opacity: 0; animation: resFadeUp .5s var(--ease) .1s forwards;
+}
 .res-summary { max-width: 720px; margin-top: 12px; color: rgba(255,255,255,.86) !important; }
 .archetype-line { color: #5EC4B5 !important; font-size: 15px !important; font-weight: 700 !important; margin-top: 8px; }
 .action-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 24px 0 52px; background: transparent !important; border: 0 !important; padding: 0 !important; }
@@ -1206,7 +1239,7 @@ input[type="date"] { color-scheme: light; }
 .stop { display: flex; position: relative; margin-bottom: 44px; }
 .stop:not(:last-child)::after { content: ""; position: absolute; left: 4px; top: 22px; bottom: -44px; width: 1px; background: var(--line-strong); }
 
-/* ── STOP PIN — minimal dot ── */
+/* ── STOP PIN — sticky dot that tracks scroll position ── */
 .s-pin {
   width: 10px;
   height: 10px;
@@ -1216,10 +1249,18 @@ input[type="date"] { color-scheme: light; }
   flex-shrink: 0;
   margin-right: 28px;
   margin-top: 10px;
+  position: sticky;
+  top: 80px;
+  align-self: flex-start;
+  transition: background .3s, border-color .3s;
 }
 .s-pin-featured {
-  background: var(--gold) !important;
-  border-color: var(--gold) !important;
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+.stop:hover .s-pin, .stop:focus-within .s-pin {
+  background: var(--accent);
+  border-color: var(--accent);
 }
 .s-pin-index { display: none; }
 
