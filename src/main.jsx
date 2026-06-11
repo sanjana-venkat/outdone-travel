@@ -392,7 +392,7 @@ function App() {
               <p>We're working on it. Soon, we'll skip these questions with your Google data. For now, give us a quick feeler.</p>
               {user ? (
                 <div className="profile-chip"><img src={user.picture} alt="" />Signed in as {user.name}</div>
-              )}
+              ) : null}
             </div>
             <button className="btn-accent primary-wide" onClick={() => goTo("mood")}>Choose today's mood</button>
           </section>
