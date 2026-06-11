@@ -871,9 +871,6 @@ input[type="date"] { color-scheme: light; }
   height: 260px;
   flex-shrink: 0;
   overflow: hidden;
-  border-radius: 20px;
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
 }
 
 /* Each .ls is a visual stage — hidden by default, pure dissolve */
