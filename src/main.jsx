@@ -1513,16 +1513,16 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 
 /* ── ACTION BAR ── */
 .action-bar {
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   margin: 24px 0 52px;
 }
 .action-icons-row {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  display: contents; /* children participate directly in action-bar flex row */
 }
 .icon-btn {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 6px; width: 72px; min-height: 72px;
-  background: var(--surface); border: 1.5px solid var(--line-strong);
+  background: transparent; border: 1.5px solid var(--line-strong);
   border-radius: 20px; cursor: pointer; color: var(--ink-2);
   font-size: 11px; font-weight: 700; letter-spacing: .02em;
   transition: background .15s, border-color .15s, color .15s;
@@ -1530,22 +1530,16 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 .icon-btn:hover { background: var(--surface-2); border-color: var(--ink); color: var(--ink); }
 .icon-btn:disabled { opacity: .5; cursor: not-allowed; }
 .icon-btn svg { flex-shrink: 0; }
-.icon-btn-active { border-color: var(--accent) !important; color: var(--accent) !important; background: rgba(51,153,137,.07) !important; }
+.icon-btn-active { border-color: var(--accent) !important; color: var(--accent) !important; }
 .icon-btn-loading { opacity: .7; cursor: wait; }
-.cal-icon-btn-done  { border-color: var(--accent) !important; color: var(--accent) !important; background: rgba(51,153,137,.07) !important; }
+.cal-icon-btn-done  { border-color: var(--accent) !important; color: var(--accent) !important; }
 .cal-icon-btn-error { border-color: #c0392b !important; color: #c0392b !important; }
 
+/* Maps CTA: wraps its content, not full width on desktop */
 .action-primary-cta {
-  width: 100%; justify-content: center; gap: 8px;
+  width: auto; padding: 0 28px; gap: 8px;
 }
 
-/* Share/cal old classes kept for spinner reuse */
-.share-btn-copied { border-color: var(--accent) !important; color: var(--accent) !important; }
-.share-btn-loading { opacity: .7; cursor: wait; }
-.cal-btn { gap: 7px; }
-.cal-btn-done  { border-color: var(--accent) !important; color: var(--accent) !important; }
-.cal-btn-error { border-color: #c0392b !important; color: #c0392b !important; }
-.cal-btn-loading { opacity: .7; cursor: wait; }
 @keyframes calSpin { to { transform: rotate(360deg); } }
 .cal-spin { animation: calSpin .8s linear infinite; }
 
@@ -1611,11 +1605,11 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
   .navbar { height: 68px !important; padding: 0 20px !important; }
 
   .screen { padding: 32px 20px; }
-  /* Action bar: icon row stays compact, only primary CTA goes full width */
-  .action-bar { width: 100% !important; padding: 0 20px !important; margin: 20px 0 0 !important; gap: 12px; box-sizing: border-box; }
-  .action-icons-row { gap: 10px; }
-  .icon-btn { flex: 1; min-width: 64px; max-width: 90px; }
-  .action-primary-cta { width: 100% !important; justify-content: center !important; min-height: 52px !important; }
+  /* Action bar: column on mobile, icon row + full-width CTA */
+  .action-bar { width: 100% !important; padding: 0 20px !important; margin: 20px 0 0 !important; gap: 12px; box-sizing: border-box; flex-direction: column; }
+  .action-icons-row { display: flex !important; gap: 10px; width: 100%; }
+  .icon-btn { flex: 1; min-width: 0; max-width: none; }
+  .action-primary-cta { width: 100% !important; justify-content: center !important; min-height: 52px !important; padding: 0 24px !important; }
   .build-cta-row { justify-content: stretch; }
   .build-cta-row .btn-accent { width: 100%; justify-content: center; }
 
