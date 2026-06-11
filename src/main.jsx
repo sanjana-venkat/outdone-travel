@@ -132,6 +132,7 @@ function App() {
   const [subscribeSaved, setSubscribeSaved] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
   const [calendarState, setCalendarState] = useState("idle"); // idle | loading | done | error
   const shellRef = useRef(null);
 
@@ -140,25 +141,24 @@ function App() {
     setStep(s);
   }
 
-  // ── SHARED ITINERARY: decode from URL hash on mount ──────────────
+  // ── SHARED ITINERARY: restore from ?i=<id> on mount ─────────────
   useEffect(() => {
-    const hash = window.location.hash.slice(1); // strip leading #
-    if (!hash.startsWith("i=")) return;
-    try {
-      const encoded = hash.slice(2);
-      const json = decodeURIComponent(atob(encoded));
-      const payload = JSON.parse(json);
-      if (payload.itinerary) setItinerary(payload.itinerary);
-      if (payload.destination) setDestination(payload.destination);
-      if (payload.date) setDate(payload.date);
-      if (payload.selectedMoods) setSelectedMoods(payload.selectedMoods);
-      if (payload.diet) setDiet(payload.diet);
-      if (payload.planFor) setPlanFor(payload.planFor);
-      setStep("result");
-    } catch (e) {
-      console.warn("Could not parse shared itinerary from URL:", e);
-    }
-  }, []); // run once on mount
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("i");
+    if (!id) return;
+    fetch(`/api/save-itinerary?id=${encodeURIComponent(id)}`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(payload => {
+        if (payload.itinerary) setItinerary(payload.itinerary);
+        if (payload.destination) setDestination(payload.destination);
+        if (payload.date) setDate(payload.date);
+        if (payload.selectedMoods) setSelectedMoods(payload.selectedMoods.map(m => m.id || m));
+        if (payload.diet) setDiet(payload.diet);
+        if (payload.planFor) setPlanFor(payload.planFor);
+        setStep("result");
+      })
+      .catch(() => console.warn("Could not load shared itinerary"));
+  }, []);
 
   useEffect(() => {
     let rafId;
@@ -766,43 +766,47 @@ function App() {
               <a className="btn-accent maps-trip-btn" href={tripMapsUrl} target="_blank" rel="noreferrer">Open trip in Google Maps</a>
             )}
             <button
-              className={`btn-outline share-btn${shareCopied ? " share-btn-copied" : ""}`}
-              onClick={() => {
+              className={`btn-outline share-btn${shareCopied ? " share-btn-copied" : ""}${shareLoading ? " share-btn-loading" : ""}`}
+              disabled={shareLoading}
+              onClick={async () => {
+                if (shareLoading) return;
+                setShareLoading(true);
                 try {
-                  const payload = JSON.stringify({
-                    itinerary,
-                    destination,
-                    date,
-                    selectedMoods,
-                    diet,
-                    planFor,
+                  const res = await fetch("/api/save-itinerary", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ itinerary, destination, date, selectedMoods: selectedMoodObjects, diet, planFor }),
                   });
-                  const encoded = btoa(encodeURIComponent(payload));
-                  const shareUrl = `${window.location.origin}${window.location.pathname}#i=${encoded}`;
+                  const { id, error } = await res.json();
+                  if (!id) throw new Error(error || "No ID returned");
+                  const shareUrl = `${window.location.origin}${window.location.pathname}?i=${id}`;
                   if (navigator.share) {
-                    navigator.share({
+                    await navigator.share({
                       title: `Travel DNA — ${itinerary?.destination || destination}`,
                       text: itinerary?.summary || "Check out this itinerary.",
                       url: shareUrl,
                     });
                   } else {
-                    navigator.clipboard.writeText(shareUrl).then(() => {
-                      setShareCopied(true);
-                      setTimeout(() => setShareCopied(false), 2500);
-                    });
+                    await navigator.clipboard.writeText(shareUrl);
+                    setShareCopied(true);
+                    setTimeout(() => setShareCopied(false), 2500);
                   }
                 } catch (e) {
                   console.error("Share failed:", e);
+                } finally {
+                  setShareLoading(false);
                 }
               }}
               title="Share itinerary"
             >
-              {shareCopied ? (
+              {shareLoading ? (
+                <svg className="cal-spin" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="28" strokeDashoffset="10" strokeLinecap="round"/></svg>
+              ) : shareCopied ? (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               ) : (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="12" cy="3" r="1.75" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="13" r="1.75" stroke="currentColor" strokeWidth="1.5"/><circle cx="4" cy="8" r="1.75" stroke="currentColor" strokeWidth="1.5"/><line x1="10.28" y1="4.07" x2="5.72" y2="6.93" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><line x1="5.72" y1="9.07" x2="10.28" y2="11.93" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               )}
-              <span>{shareCopied ? "Copied!" : "Share"}</span>
+              <span>{shareLoading ? "Saving…" : shareCopied ? "Copied!" : "Share"}</span>
             </button>
 
             <button
@@ -1191,6 +1195,7 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 .share-btn { gap: 7px; min-width: 100px; }
 .share-btn svg { flex-shrink: 0; }
 .share-btn-copied { border-color: var(--accent) !important; color: var(--accent) !important; }
+.share-btn-loading { opacity: .7; cursor: wait; }
 
 /* Calendar button */
 .cal-btn { gap: 7px; min-width: 148px; }
