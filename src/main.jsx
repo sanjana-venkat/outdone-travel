@@ -551,7 +551,7 @@ function App() {
             <div className="partnership-notice-left">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
               <span>
-                <strong>We don't have your search history or past trips yet</strong> — so we need to ask. For now, a few quick questions and Gemini handles the rest. When the partnership happens, this whole page vanishes. Promise.
+                <strong>We don't have your search history or past trips yet</strong> — so we need to ask. A Google partnership would let us skip this entirely. For now, a few quick questions and Gemini handles the rest.
               </span>
             </div>
           </div>
@@ -1533,11 +1533,11 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 
 /* ── ACTION BAR ── */
 .action-bar {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  display: flex; flex-direction: column; gap: 12px;
   margin: 24px 0 52px;
 }
 .action-icons-row {
-  display: contents; /* children participate directly in action-bar flex row */
+  display: flex; align-items: center; gap: 10px;
 }
 .icon-btn {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1555,9 +1555,9 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 .cal-icon-btn-done  { border-color: var(--accent) !important; color: var(--accent) !important; }
 .cal-icon-btn-error { border-color: #c0392b !important; color: #c0392b !important; }
 
-/* Maps CTA: wraps its content, not full width on desktop */
+/* Maps CTA: content-width on desktop, full-width on mobile */
 .action-primary-cta {
-  width: auto; padding: 0 28px; gap: 8px;
+  width: fit-content; padding: 0 28px; gap: 8px;
 }
 
 @keyframes calSpin { to { transform: rotate(360deg); } }
