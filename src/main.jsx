@@ -160,6 +160,23 @@ function App() {
       .catch(() => console.warn("Could not load shared itinerary"));
   }, []);
 
+  // ── FAVICON + PAGE TITLE ─────────────────────────────────────────
+  useEffect(() => {
+    document.title = "Travel DNA — Mood-first travel planning";
+    const setFavicon = (href, type) => {
+      let el = document.querySelector(`link[rel~="icon"]`);
+      if (!el) { el = document.createElement("link"); el.rel = "icon"; document.head.appendChild(el); }
+      el.type = type; el.href = href;
+    };
+    // Inline the SVG as a data URI so it works even before /public is served
+    const svgMark = `<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="8" fill="%230d1a14"/><path d="M8 4 C8 10,24 10,24 16 C24 22,8 22,8 28" fill="none" stroke="%23339989" stroke-width="2.5" stroke-linecap="round"/><path d="M24 4 C24 10,8 10,8 16 C8 22,24 22,24 28" fill="none" stroke="%235EC4B5" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/><circle cx="16" cy="8.5" r="2" fill="%23339989"/><circle cx="16" cy="16" r="2" fill="%23339989"/><circle cx="16" cy="23.5" r="2" fill="%23339989"/></svg>`;
+    setFavicon(`data:image/svg+xml,${svgMark}`, "image/svg+xml");
+    // Apple touch icon — link to /apple-touch-icon.png if you've added it to /public
+    let apple = document.querySelector("link[rel='apple-touch-icon']");
+    if (!apple) { apple = document.createElement("link"); apple.rel = "apple-touch-icon"; apple.sizes = "180x180"; document.head.appendChild(apple); }
+    apple.href = "/apple-touch-icon.png";
+  }, []);
+
   useEffect(() => {
     let rafId;
     const moveGlow = (event) => {
@@ -399,27 +416,35 @@ function App() {
       <style>{css}</style>
 
       <nav className="navbar">
-        {/* Desktop: step pills */}
-        <div className="nav-steps nav-left nav-desktop">
-          {[{ label: "Setup", value: "setup" }, { label: "Mood", value: "mood" }, { label: "Result", value: "result" }].map((item, i) => {
-            const order = ["setup", "mood", "result"];
-            const active = step === item.value;
-            const done = order.indexOf(step) > i || step === "loading";
-            const disabled = item.value === "result" && !itinerary;
-            return (
-              <button type="button" className={active ? "active" : done ? "done" : ""} key={item.value} disabled={disabled} onClick={() => { if (!disabled) goTo(item.value); }}>
-                <i /> {item.label}
-              </button>
-            );
-          })}
+        {/* Desktop nav: logo mark + step pills */}
+        <div className="nav-left-group nav-desktop">
+          <svg className="nav-mark" width="24" height="24" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-label="Travel DNA">
+            <path d="M8 4 C8 10,24 10,24 16 C24 22,8 22,8 28" fill="none" stroke="#339989" strokeWidth="2.5" strokeLinecap="round"/>
+            <path d="M24 4 C24 10,8 10,8 16 C8 22,24 22,24 28" fill="none" stroke="#5EC4B5" strokeWidth="2.5" strokeLinecap="round" opacity="0.55"/>
+            <circle cx="16" cy="8.5" r="2" fill="#339989"/>
+            <circle cx="16" cy="16" r="2" fill="#339989"/>
+            <circle cx="16" cy="23.5" r="2" fill="#339989"/>
+          </svg>
+          <div className="nav-steps nav-left">
+            {[{ label: "Setup", value: "setup" }, { label: "Mood", value: "mood" }, { label: "Result", value: "result" }].map((item, i) => {
+              const order = ["setup", "mood", "result"];
+              const active = step === item.value;
+              const done = order.indexOf(step) > i || step === "loading";
+              const disabled = item.value === "result" && !itinerary;
+              return (
+                <button type="button" className={active ? "active" : done ? "done" : ""} key={item.value} disabled={disabled} onClick={() => { if (!disabled) goTo(item.value); }}>
+                  <i /> {item.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
         <div className="nav-actions nav-desktop">
           <button className="btn-accent nav-subscribe" onClick={() => setShowSubscribe(true)}>Subscribe for updates</button>
         </div>
 
-        {/* Mobile: subscribe + hamburger */}
+        {/* Mobile: hamburger LEFT, subscribe RIGHT */}
         <div className="nav-mobile">
-          <button className="btn-accent nav-subscribe" onClick={() => setShowSubscribe(true)}>Subscribe for updates</button>
           <button
             className={`hamburger${menuOpen ? " hamburger-open" : ""}`}
             onClick={() => setMenuOpen(o => !o)}
@@ -427,12 +452,24 @@ function App() {
           >
             <span /><span /><span />
           </button>
+          <button className="btn-accent nav-subscribe" onClick={() => setShowSubscribe(true)}>Subscribe for updates</button>
         </div>
 
-        {/* Mobile drawer */}
+        {/* Mobile sidebar drawer — slides in from the left */}
         {menuOpen && (
           <div className="mobile-drawer" onClick={() => setMenuOpen(false)}>
             <div className="mobile-drawer-inner" onClick={e => e.stopPropagation()}>
+              <div className="drawer-header">
+                <svg width="22" height="22" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 4 C8 10,24 10,24 16 C24 22,8 22,8 28" fill="none" stroke="#339989" strokeWidth="2.5" strokeLinecap="round"/>
+                  <path d="M24 4 C24 10,8 10,8 16 C8 22,24 22,24 28" fill="none" stroke="#5EC4B5" strokeWidth="2.5" strokeLinecap="round" opacity="0.55"/>
+                  <circle cx="16" cy="8.5" r="2" fill="#339989"/>
+                  <circle cx="16" cy="16" r="2" fill="#339989"/>
+                  <circle cx="16" cy="23.5" r="2" fill="#339989"/>
+                </svg>
+                <span className="drawer-title">Travel DNA</span>
+                <button className="drawer-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button>
+              </div>
               <p className="mobile-drawer-label">Navigation</p>
               {[{ label: "Setup", value: "setup" }, { label: "Mood", value: "mood" }, { label: "Result", value: "result" }].map((item, i) => {
                 const order = ["setup", "mood", "result"];
@@ -453,9 +490,11 @@ function App() {
                   </button>
                 );
               })}
-              <button className="btn-accent drawer-subscribe" onClick={() => { setShowSubscribe(true); setMenuOpen(false); }}>
-                Subscribe for updates
-              </button>
+              <div className="drawer-footer">
+                <button className="btn-accent drawer-subscribe" onClick={() => { setShowSubscribe(true); setMenuOpen(false); }}>
+                  Subscribe for updates
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -967,6 +1006,8 @@ button { cursor: pointer; }
 
 /* Desktop nav — hidden on mobile */
 .nav-desktop { display: flex; align-items: center; gap: 6px; }
+.nav-left-group { display: flex; align-items: center; gap: 12px; }
+.nav-mark { display: block; flex-shrink: 0; }
 .nav-steps { display: flex; align-items: center; gap: 6px; }
 .nav-steps i { display: none; }
 .nav-steps button {
@@ -1011,28 +1052,45 @@ button { cursor: pointer; }
 .hamburger-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
 .hamburger-open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
 
-/* Mobile drawer */
+/* Mobile sidebar drawer */
 .mobile-drawer {
   position: fixed; inset: 0; z-index: 998;
-  background: rgba(0,0,0,.32); backdrop-filter: blur(4px);
+  background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
   animation: drawerBgIn .2s ease both;
 }
 @keyframes drawerBgIn { from { opacity: 0; } to { opacity: 1; } }
 .mobile-drawer-inner {
-  position: absolute; top: 68px; right: 0; left: 0;
-  background: var(--bg); border-bottom: 1px solid var(--line-strong);
-  padding: 12px 20px 24px;
-  display: flex; flex-direction: column; gap: 4px;
-  animation: drawerSlideIn .25s var(--ease) both;
+  position: absolute; top: 0; left: 0; bottom: 0;
+  width: min(280px, 80vw);
+  background: var(--bg); border-right: 1px solid var(--line-strong);
+  display: flex; flex-direction: column;
+  animation: sidebarSlideIn .28s var(--ease) both;
+  overflow-y: auto;
 }
-@keyframes drawerSlideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-.mobile-drawer-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); padding: 4px 0 10px; margin: 0; }
+@keyframes sidebarSlideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+.drawer-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.drawer-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 17px; font-weight: 400; color: var(--ink);
+  letter-spacing: -.02em; flex: 1;
+}
+.drawer-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--line-strong); background: var(--surface-2);
+  color: var(--ink); font-size: 18px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.mobile-drawer-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); padding: 20px 20px 8px; margin: 0; }
 .drawer-item {
   display: flex; align-items: center; gap: 12px;
-  width: 100%; padding: 14px 16px;
-  background: transparent; border: none; border-radius: 12px;
+  width: 100%; padding: 14px 20px;
+  background: transparent; border: none;
   font-size: 15px; font-weight: 600; color: var(--ink-2);
-  text-align: left; transition: background .15s, color .15s;
+  text-align: left; transition: background .15s, color .15s; cursor: pointer;
 }
 .drawer-item:hover:not(:disabled) { background: var(--surface-2); color: var(--ink); }
 .drawer-item-active { color: var(--accent) !important; background: rgba(51,153,137,.07) !important; }
@@ -1045,7 +1103,8 @@ button { cursor: pointer; }
 .drawer-item-active .drawer-dot { background: var(--accent); border-color: var(--accent); }
 .drawer-item-done .drawer-dot { background: var(--ink); border-color: var(--ink); }
 .drawer-check { margin-left: auto; font-size: 11px; font-weight: 800; color: var(--accent); }
-.drawer-subscribe { margin-top: 12px; width: 100%; justify-content: center; min-height: 48px !important; font-size: 14px !important; }
+.drawer-footer { margin-top: auto; padding: 20px; border-top: 1px solid var(--line); }
+.drawer-subscribe { width: 100%; justify-content: center; min-height: 48px !important; font-size: 14px !important; }
 
 /* ── BUTTONS ── */
 .btn-outline, .btn-accent { border-radius: 999px; font-weight: 700; font-size: 13px; transition: opacity .15s, background .15s; }
@@ -1517,8 +1576,8 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
   .navbar { height: 68px !important; padding: 0 20px !important; }
 
   .screen { padding: 32px 20px; }
-  .action-bar { width: 100% !important; padding: 0 20px; margin-top: 20px; gap: 10px; }
-  .action-bar button, .action-bar a { width: 100% !important; justify-content: center !important; }
+  .action-bar { width: 100% !important; padding: 0 20px; margin-top: 20px; gap: 10px; box-sizing: border-box; }
+  .action-bar button, .action-bar a { width: 100% !important; justify-content: center !important; min-height: 52px !important; }
   .build-cta-row { justify-content: stretch; }
   .build-cta-row .btn-accent { width: 100%; justify-content: center; }
 
