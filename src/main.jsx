@@ -473,23 +473,26 @@ function App() {
               </div>
             </div>
 
-            {/* ll=3: destination map */}
+            {/* ll=3: destination map — 4 points connected by animated lines */}
             <div className={`ls${loadingLine === 3 ? " ls-active" : loadingLine > 3 ? " ls-done" : ""}`}>
               <div className="ls-map">
                 <div className="map-dest-label">{destination}</div>
                 <div className="map-sketch">
-                  <svg viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg" className="map-svg">
-                    <path d="M 40 80 Q 80 60 120 90 T 200 70 T 280 95 T 360 75" className="map-path mp1"/>
-                    <path d="M 60 120 Q 110 100 160 125 T 250 108 T 340 118" className="map-path mp2"/>
-                    <path d="M 80 150 Q 140 135 200 155 T 320 145" className="map-path mp3"/>
-                    <path d="M 100 50 L 100 170" className="map-path mp4"/>
-                    <path d="M 200 40 L 200 175" className="map-path mp5"/>
-                    <path d="M 300 55 L 300 168" className="map-path mp6"/>
-                    <circle className="map-dot md1" cx="120" cy="88" r="6"/>
-                    <circle className="map-dot md2" cx="200" cy="70" r="6"/>
-                    <circle className="map-dot md3" cx="300" cy="95" r="6"/>
-                    <circle className="map-dot md4" cx="160" cy="124" r="5"/>
-                    <circle className="map-dot md5" cx="260" cy="108" r="5"/>
+                  <svg viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg" className="map-svg">
+                    {/* Connecting lines between 4 points — draw in sequence */}
+                    <line className="map-line ml1" x1="90" y1="120" x2="180" y2="55"/>
+                    <line className="map-line ml2" x1="180" y1="55" x2="280" y2="90"/>
+                    <line className="map-line ml3" x1="280" y1="90" x2="340" y2="40"/>
+                    {/* 4 destination dots */}
+                    <circle className="map-dot md1" cx="90" cy="120" r="7"/>
+                    <circle className="map-dot md2" cx="180" cy="55" r="7"/>
+                    <circle className="map-dot md3" cx="280" cy="90" r="7"/>
+                    <circle className="map-dot md4" cx="340" cy="40" r="7"/>
+                    {/* Labels */}
+                    <text className="map-dot-lbl" x="90" y="138" textAnchor="middle">A</text>
+                    <text className="map-dot-lbl" x="180" y="73" textAnchor="middle">B</text>
+                    <text className="map-dot-lbl" x="280" y="108" textAnchor="middle">C</text>
+                    <text className="map-dot-lbl" x="340" y="58" textAnchor="middle">D</text>
                   </svg>
                 </div>
               </div>
@@ -585,7 +588,6 @@ function App() {
             <img src={itinerary?.heroImageUrl || selectedMoodObjects[0]?.img || moodVibes[0].img} alt="" />
             <div className="res-gradient" />
             <div className="res-content">
-              <span className="res-tag">{travelArchetype.name}</span>
               <h2>{itinerary?.destination || destination}</h2>
               <p>{itinerary?.dates || prettyDate(date)}</p>
               <p className="archetype-line">{travelArchetype.line}</p>
@@ -835,8 +837,8 @@ input::placeholder { color: var(--ink-3); }
 input[type="date"] { color-scheme: light; }
 .suggestions, .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .suggestion, .chip { padding: 8px 16px; background: transparent; border: 2px solid var(--gold); border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--gold); transition: background .15s, color .15s, border-color .15s; }
-.suggestion:hover, .chip:hover { background: var(--gold); color: var(--ink); border-color: var(--gold); }
-.suggestion.active, .chip.active { background: var(--gold); border-color: var(--gold); color: var(--ink); font-weight: 700; }
+.suggestion:hover, .chip:hover { background: var(--gold); color: #fff; border-color: var(--gold); }
+.suggestion.active, .chip.active { background: var(--gold); border-color: var(--gold); color: #fff; font-weight: 700; }
 .autocomplete-loading { display: inline-flex; align-items: center; padding: 8px 12px; color: var(--ink-3); font-size: 12px; font-weight: 700; }
 .field-block { display: grid; gap: 8px; }
 .pi-card { padding: 24px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line-strong); }
@@ -990,44 +992,51 @@ input[type="date"] { color-scheme: light; }
   60%,100% { opacity:1; transform:translateY(0); }
 }
 
-/* ── STAGE 3: Map ── */
-.ls-map { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+/* ── STAGE 3: Map — 4 points connected by animated straight lines ── */
+.ls-map { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
 .map-dest-label {
-  font-size: 13px; font-weight: 700; color: var(--ink-3);
+  font-size: 11px; font-weight: 700; color: var(--ink-3);
   text-transform: uppercase; letter-spacing: .08em;
 }
 .map-sketch {
-  width: 100%; border-radius: 16px;
+  width: 100%; border-radius: 14px;
   background: var(--surface); border: 1px solid var(--line-strong);
   padding: 8px; overflow: hidden;
 }
-.map-svg { width: 100%; height: 180px; }
-.map-path {
-  fill: none; stroke: var(--line-strong); stroke-width: 1.5;
-  stroke-dasharray: 400; stroke-dashoffset: 400;
-  animation: drawPath 1.8s var(--ease) forwards;
+.map-svg { width: 100%; height: 155px; }
+.map-line {
+  stroke: var(--accent); stroke-width: 2; stroke-linecap: round;
+  stroke-dasharray: 300; stroke-dashoffset: 300;
+  animation: drawLine 0.7s var(--ease) forwards;
+  opacity: 0.7;
 }
-.mp1 { animation-delay: .0s; }
-.mp2 { animation-delay: .2s; }
-.mp3 { animation-delay: .4s; }
-.mp4 { animation-delay: .15s; stroke: var(--line); }
-.mp5 { animation-delay: .25s; stroke: var(--line); }
-.mp6 { animation-delay: .35s; stroke: var(--line); }
-@keyframes drawPath { to { stroke-dashoffset: 0; } }
+.ml1 { animation-delay: 0.3s; }
+.ml2 { animation-delay: 1.1s; }
+.ml3 { animation-delay: 1.9s; }
+@keyframes drawLine { to { stroke-dashoffset: 0; } }
 .map-dot {
   fill: var(--accent); opacity: 0;
-  animation: dotPop .4s var(--ease) forwards;
+  animation: dotPop .35s var(--ease) forwards;
 }
-.md1 { animation-delay: .7s; }
-.md2 { animation-delay: .9s; }
-.md3 { animation-delay: 1.1s; }
-.md4 { animation-delay: 1.3s; }
-.md5 { animation-delay: 1.5s; }
+.md1 { animation-delay: 0.1s; }
+.md2 { animation-delay: 0.9s; }
+.md3 { animation-delay: 1.7s; }
+.md4 { animation-delay: 2.5s; }
 @keyframes dotPop {
-  0% { opacity:0; transform:scale(0); }
-  70%{ opacity:1; transform:scale(1.4); }
-  100%{ opacity:1; transform:scale(1); }
+  0%   { opacity:0; transform:scale(0); }
+  70%  { opacity:1; transform:scale(1.3); }
+  100% { opacity:1; transform:scale(1); }
 }
+.map-dot-lbl {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px; font-weight: 800;
+  fill: var(--ink); opacity: 0;
+  animation: dotPop .35s var(--ease) forwards;
+}
+.map-dot-lbl:nth-child(5) { animation-delay: 0.2s; }
+.map-dot-lbl:nth-child(6) { animation-delay: 1.0s; }
+.map-dot-lbl:nth-child(7) { animation-delay: 1.8s; }
+.map-dot-lbl:nth-child(8) { animation-delay: 2.6s; }
 
 /* ── STAGE 4: Places chips ── */
 .ls-places-chips {
@@ -1188,7 +1197,7 @@ input[type="date"] { color-scheme: light; }
 .res-content h2 { font-size: clamp(48px,6vw,84px); color: #fff; margin: 0 0 8px; font-weight: 900; letter-spacing: -.05em; text-shadow: 0 1px 2px rgba(0,0,0,.18); }
 .res-content > p { color: rgba(255,255,255,.86); font-size: 14px; font-weight: 500; }
 .res-summary { max-width: 720px; margin-top: 12px; color: rgba(255,255,255,.86) !important; }
-.archetype-line { color: var(--gold-bright) !important; font-size: 14px !important; font-weight: 900 !important; margin-top: 8px; }
+.archetype-line { color: #5EC4B5 !important; font-size: 15px !important; font-weight: 700 !important; margin-top: 8px; }
 .action-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 24px 0 52px; background: transparent !important; border: 0 !important; padding: 0 !important; }
 
 /* ── TIMELINE ── */
