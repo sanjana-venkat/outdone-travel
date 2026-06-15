@@ -85,7 +85,7 @@ const moodVibes = [
     tag: "History, architecture, depth",
     signal: "places with historical or artistic meaning — museums, temples, ancient ruins, galleries, heritage neighborhoods, local rituals or ceremonies, architecture worth understanding. Prioritize depth over breadth. One place understood fully beats three places rushed through.",
     icon: "▱",
-    img: "https://images.pexels.com/photos/1510595/pexels-photo-1510595.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/16226514/pexels-photo-16226514.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "culinary",
@@ -117,7 +117,7 @@ const moodVibes = [
     tag: "Hiking, cycling, kayaking, sports",
     signal: "movement-led day — hiking trails, cycling routes, morning runs, kayaking, swimming, walking tours of neighborhoods, paddleboarding, beach volleyball, water sports. The user wants to feel their body moving through a place, not sitting still.",
     icon: "⌁",
-    img: "https://images.pexels.com/photos/1598073/pexels-photo-1598073.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/917510/pexels-photo-917510.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "open",
@@ -125,7 +125,7 @@ const moodVibes = [
     tag: "Surprise me",
     signal: "no mood constraint — choose the best possible mix of experiences for this destination and date. Treat this as full creative freedom. Pick a variety: one cultural, one food, one scenic or active, one unexpected. Make it memorable without being forced into any single category.",
     icon: "⌁",
-    img: "https://images.pexels.com/photos/2070033/pexels-photo-2070033.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/105234/pexels-photo-105234.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "romantic",
