@@ -63,15 +63,78 @@ const fallbackDestinationSuggestions = [
 ];
 
 const moodVibes = [
-  { id: "adventurous", title: "Adventurous", tag: "Push the edge", signal: "hikes, movement, active experiences, discovery", icon: "△", img: "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "slow-easy", title: "Slow & easy", tag: "Breathe it in", signal: "few stops, long pauses, gentle transitions", icon: "〰", img: "https://images.pexels.com/photos/2868242/pexels-photo-2868242.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "cultural", title: "Cultural", tag: "Art, history, depth", signal: "museums, architecture, rituals, history, meaningful places", icon: "▱", img: "https://images.pexels.com/photos/1510595/pexels-photo-1510595.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "culinary", title: "Culinary", tag: "Eat like a local", signal: "food-led planning, neighborhood restaurants, local specialties", icon: "╯", img: "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "nature", title: "Into nature", tag: "Wild, open, free", signal: "nature, viewpoints, walks, parks, scenic routes", icon: "△", img: "https://images.pexels.com/photos/3408354/pexels-photo-3408354.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "social", title: "Social", tag: "Meet, mix, connect", signal: "lively areas, events, markets, group-friendly experiences", icon: "♧", img: "https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "active", title: "Active", tag: "Move and explore", signal: "walking, biking, hikes, lots of movement, active pacing", icon: "⌁", img: "https://images.pexels.com/photos/1578662/pexels-photo-1578662.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "open", title: "Open to anything", tag: "Let Gemini decide", signal: "surprise me, balanced plan, flexible recommendations", icon: "⌁", img: "https://images.pexels.com/photos/2070033/pexels-photo-2070033.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "romantic", title: "Romantic", tag: "Intentional, slow", signal: "golden hour, lanterns, views, beautiful dinner, partner-friendly", icon: "♡", img: "https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1400" }
+  {
+    id: "adventurous",
+    title: "Adventurous",
+    tag: "Thrill, risk, edge",
+    signal: "high-adrenaline experiences only — ziplines, cliff jumps, paragliding, bungee, white-water rafting, via ferrata, skydiving, anything with a safety briefing or waiver. Avoid gentle walks or casual hikes. The user wants their heart rate elevated and a story to tell.",
+    icon: "△",
+    img: "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "slow-scenic",
+    title: "Slow & scenic",
+    tag: "Unhurried, beautiful",
+    signal: "slow-paced activities in beautiful natural or semi-natural settings — boat rides, lakeside cafes, scenic viewpoints at golden hour, waterfront walks, picnics, a ferry across a bay, a quiet garden, watching the world from a hilltop. Minimal transit. Maximum stillness. Nothing rushed, nothing loud.",
+    icon: "〰",
+    img: "https://images.pexels.com/photos/1430676/pexels-photo-1430676.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "cultural",
+    title: "Cultural",
+    tag: "Art, history, depth",
+    signal: "places with historical or artistic meaning — museums, temples, ancient ruins, galleries, heritage neighborhoods, local rituals or ceremonies, architecture worth understanding. Prioritize depth over breadth. One place understood fully beats three places rushed through.",
+    icon: "▱",
+    img: "https://images.pexels.com/photos/1510595/pexels-photo-1510595.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "culinary",
+    title: "Culinary",
+    tag: "Eat like a local",
+    signal: "food-first planning — build the day around meals, markets, and food experiences. Local breakfast spots, street food tours, neighborhood lunch spots, food markets, a memorable dinner. Avoid tourist restaurants. Prioritize places locals actually eat. Respect dietary preference strictly.",
+    icon: "╯",
+    img: "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "offbeat",
+    title: "Offbeat",
+    tag: "Skip the tourist trail",
+    signal: "avoid all top-10 tourist attractions and mainstream spots. Find what locals actually do — underground venues, unusual museums, hidden neighborhoods, quirky local institutions, niche experiences a visitor would never find on TripAdvisor. If a stop would appear on a generic 'things to do in X' list, remove it and replace it with something more interesting.",
+    icon: "⊹",
+    img: "https://images.pexels.com/photos/1535162/pexels-photo-1535162.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "social",
+    title: "Social",
+    tag: "Meet, mix, connect",
+    signal: "group-friendly, lively environments — rooftop bars, night markets, live music venues, public squares with energy, cooking classes, tours where you meet people, communal dining. The atmosphere should buzz. Designed for someone who recharges around others.",
+    icon: "♧",
+    img: "https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "active",
+    title: "Active",
+    tag: "Move and explore",
+    signal: "movement-led day — hiking trails, cycling routes, morning runs, kayaking, swimming, walking tours of neighborhoods, paddleboarding, beach volleyball, water sports. The user wants to feel their body moving through a place, not sitting still.",
+    icon: "⌁",
+    img: "https://images.pexels.com/photos/1578662/pexels-photo-1578662.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "open",
+    title: "Open to anything",
+    tag: "Surprise me",
+    signal: "no mood constraint — choose the best possible mix of experiences for this destination and date. Treat this as full creative freedom. Pick a variety: one cultural, one food, one scenic or active, one unexpected. Make it memorable without being forced into any single category.",
+    icon: "⌁",
+    img: "https://images.pexels.com/photos/2070033/pexels-photo-2070033.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "romantic",
+    title: "Romantic",
+    tag: "Intentional, slow",
+    signal: "partner-focused itinerary — intimate settings, beautiful light, meaningful moments. Golden hour viewpoints, candlelit dinner, a walk through a lantern-lit street, a private beach, a rooftop with a view. Every stop should feel like it was chosen with someone specific in mind. Avoid anything loud, rushed, or group-oriented.",
+    icon: "♡",
+    img: "https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  }
 ];
 
 function PlacesCarousel({ moods, places }) {
@@ -133,7 +196,8 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
-  const [calendarState, setCalendarState] = useState("idle"); // idle | loading | done | error
+  const [calendarState, setCalendarState] = useState("idle");
+  const [customActivity, setCustomActivity] = useState("");
   const shellRef = useRef(null);
 
   function goTo(s) {
@@ -162,7 +226,7 @@ function App() {
 
   // ── FAVICON + PAGE TITLE ─────────────────────────────────────────
   useEffect(() => {
-    document.title = "Outdone — Mood-first travel planning";
+    document.title = "Travel DNA — Mood-first travel planning";
     const setFavicon = (href, type) => {
       let el = document.querySelector(`link[rel~="icon"]`);
       if (!el) { el = document.createElement("link"); el.rel = "icon"; document.head.appendChild(el); }
@@ -298,7 +362,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, selectedMoods: selectedMoodObjects, instruction: "Create a real, specific, mood-first day plan. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, selectedMoods: selectedMoodObjects, customActivity: customActivity.trim() || null, instruction: "Create a real, specific, mood-first day plan. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -346,8 +410,8 @@ function App() {
                 ).join("\n");
 
                 const event = {
-                  summary: `Outdone: ${destName}`,
-                  description: `${itinerary.summary || ""}\n\n${stopsText}\n\nGenerated by Outdone`,
+                  summary: `Travel DNA: ${destName}`,
+                  description: `${itinerary.summary || ""}\n\n${stopsText}\n\nGenerated by Travel DNA`,
                   location: destName,
                   start: { date: tripDate },
                   end:   { date: tripDate },
@@ -390,11 +454,11 @@ function App() {
     const ics = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//Outdone//EN",
+      "PRODID:-//Travel DNA//EN",
       "BEGIN:VEVENT",
       `DTSTART;VALUE=DATE:${fmt(tripDate)}`,
       `DTEND;VALUE=DATE:${fmt(tripDate)}`,
-      `SUMMARY:Outdone: ${destName}`,
+      `SUMMARY:Travel DNA: ${destName}`,
       `DESCRIPTION:${(itinerary.summary || "").replace(/,/g, "\\,")}\\n\\n${stopsText}`,
       `LOCATION:${destName}`,
       "END:VEVENT",
@@ -404,7 +468,7 @@ function App() {
     const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `outdone-${destName.replace(/\s+/g, "-").toLowerCase()}.ics`;
+    link.download = `travel-dna-${destName.replace(/\s+/g, "-").toLowerCase()}.ics`;
     link.click();
     URL.revokeObjectURL(link.href);
     setCalendarState("done");
@@ -418,7 +482,7 @@ function App() {
       <nav className="navbar">
         {/* Desktop nav: logo mark + step pills */}
         <div className="nav-left-group nav-desktop">
-          <svg className="nav-mark" width="24" height="24" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-label="Outdone">
+          <svg className="nav-mark" width="24" height="24" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-label="Travel DNA">
             <path d="M8 4 C8 10,24 10,24 16 C24 22,8 22,8 28" fill="none" stroke="#339989" strokeWidth="2.5" strokeLinecap="round"/>
             <path d="M24 4 C24 10,8 10,8 16 C8 22,24 22,24 28" fill="none" stroke="#5EC4B5" strokeWidth="2.5" strokeLinecap="round" opacity="0.55"/>
             <circle cx="16" cy="8.5" r="2" fill="#339989"/>
@@ -467,7 +531,7 @@ function App() {
                   <circle cx="16" cy="16" r="2" fill="#339989"/>
                   <circle cx="16" cy="23.5" r="2" fill="#339989"/>
                 </svg>
-                <span className="drawer-title">Outdone</span>
+                <span className="drawer-title">Travel DNA</span>
                 <button className="drawer-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button>
               </div>
               <p className="mobile-drawer-label">Navigation</p>
@@ -490,11 +554,6 @@ function App() {
                   </button>
                 );
               })}
-              <div className="drawer-footer">
-                <button className="btn-accent drawer-subscribe" onClick={() => { setShowSubscribe(true); setMenuOpen(false); }}>
-                  Subscribe for updates
-                </button>
-              </div>
             </div>
           </div>
         )}
@@ -605,6 +664,23 @@ function App() {
               </button>
             ))}
           </section>
+
+          {/* Custom activity input */}
+          <div className="custom-activity-wrap">
+            <label className="custom-activity-label" htmlFor="customActivity">
+              Want to customize further?
+            </label>
+            <input
+              id="customActivity"
+              className="custom-activity-input"
+              type="text"
+              value={customActivity}
+              onChange={e => setCustomActivity(e.target.value)}
+              placeholder="Tell us a specific activity you want — ziplining, a cooking class, sunset at a rooftop bar…"
+              maxLength={200}
+            />
+          </div>
+
           <section className="build-cta-row">
             <button className="btn-accent" onClick={generatePlan}>Build itinerary</button>
           </section>
@@ -614,7 +690,7 @@ function App() {
       {step === "loading" && (
         <main className="loading-screen on">
           <div className="loader-head">
-            <h2 className="loader-headline">Decoding your <span className="gem">Outdone</span></h2>
+            <h2 className="loader-headline">Decoding your <span className="gem">Travel DNA</span></h2>
             <p className="loader-sub">{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
           </div>
           <div className="loader-stage">
@@ -758,7 +834,7 @@ function App() {
       {step === "apiError" && (
         <main className="screen loading-screen on">
           <div className="api-error-card">
-            <p className="label">Outdone preview</p>
+            <p className="label">Travel DNA preview</p>
             <h2>Live planning is taking a short pause.</h2>
             <p>The prototype could not finish a fresh plan right now. Review your setup or try again in a moment.</p>
             <div className="error-actions">
@@ -799,7 +875,7 @@ function App() {
               {itinerary?.generatedBy === "fallback" && (
                 <div className="fallback-banner">
                   <span>Preview mode</span>
-                  <p>Live planning is temporarily capped, so Outdone is showing a designed preview while place details continue to enrich.</p>
+                  <p>Live planning is temporarily capped, so Travel DNA is showing a designed preview while place details continue to enrich.</p>
                   <button type="button" onClick={() => setShowSubscribe(true)}>Like this idea? Get updates</button>
                 </div>
               )}
@@ -835,7 +911,7 @@ function App() {
                     if (!id) throw new Error(error || "No ID returned");
                     const shareUrl = `${window.location.origin}${window.location.pathname}?i=${id}`;
                     if (navigator.share) {
-                      await navigator.share({ title: `Outdone — ${itinerary?.destination || destination}`, text: itinerary?.summary || "Check out this itinerary.", url: shareUrl });
+                      await navigator.share({ title: `Travel DNA — ${itinerary?.destination || destination}`, text: itinerary?.summary || "Check out this itinerary.", url: shareUrl });
                     } else {
                       await navigator.clipboard.writeText(shareUrl);
                       setShareCopied(true);
@@ -925,7 +1001,7 @@ function App() {
             <div className="spark">✦</div>
             <p className="label">Early access</p>
             <h2>Like this idea?</h2>
-            <p>Outdone is running in demo mode right now. Gemini API credits are limited, so fallback plans keep the experience alive while the product evolves.</p>
+            <p>Travel DNA is running in demo mode right now. Gemini API credits are limited, so fallback plans keep the experience alive while the product evolves.</p>
             <p>Subscribe to get updates when live personalization, better Google Places photos, saved preferences, and richer planning are ready.</p>
             <form className="subscribe-form" onSubmit={(event) => {
               event.preventDefault();
@@ -1046,10 +1122,10 @@ button { cursor: pointer; }
 .hamburger {
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   gap: 5px; width: 40px; height: 40px;
-  background: transparent; border: 1px solid var(--line-strong); border-radius: 10px;
-  padding: 0; cursor: pointer; transition: background .15s;
+  background: transparent; border: none; border-radius: 0;
+  padding: 0; cursor: pointer; transition: opacity .15s;
 }
-.hamburger:hover { background: var(--surface-2); }
+.hamburger:hover { background: transparent; opacity: .7; }
 .hamburger span {
   display: block; width: 18px; height: 1.5px;
   background: var(--ink); border-radius: 2px;
@@ -1232,6 +1308,41 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 .image-tile-content { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; }
 .image-tile-content strong { display: block; font-size: clamp(18px,1.8vw,24px); font-weight: 900; line-height: 1; letter-spacing: -.03em; color: #fff; }
 .image-tile-content p { margin: 6px 0 0; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; line-height: 1.3; }
+
+/* Custom activity input */
+.custom-activity-wrap {
+  margin-top: 28px;
+  max-width: 640px;
+  display: grid;
+  gap: 14px;
+}
+.custom-activity-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.custom-activity-input {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 24px;
+  min-height: 64px;
+  padding: 0 24px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  outline: none;
+  transition: border-color .15s, background .15s;
+  min-width: 0;
+}
+.custom-activity-input:focus {
+  border-color: rgba(0,0,0,.26);
+  background: var(--panel-3);
+}
+.custom-activity-input::placeholder { color: var(--ink-3); }
+
 .build-cta-row { margin: 34px 0 0; display: flex; justify-content: flex-end; }
 
 /* ── LOADING SCREEN ── */
