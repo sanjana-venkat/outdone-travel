@@ -101,7 +101,7 @@ const moodVibes = [
     tag: "Skip the tourist trail",
     signal: "avoid all top-10 tourist attractions and mainstream spots. Find what locals actually do — underground venues, unusual museums, hidden neighborhoods, quirky local institutions, niche experiences a visitor would never find on TripAdvisor. If a stop would appear on a generic 'things to do in X' list, remove it and replace it with something more interesting.",
     icon: "⊹",
-    img: "https://images.pexels.com/photos/1535162/pexels-photo-1535162.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/29285032/pexels-photo-29285032.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "social",
@@ -117,7 +117,7 @@ const moodVibes = [
     tag: "Hiking, cycling, kayaking, sports",
     signal: "movement-led day — hiking trails, cycling routes, morning runs, kayaking, swimming, walking tours of neighborhoods, paddleboarding, beach volleyball, water sports. The user wants to feel their body moving through a place, not sitting still.",
     icon: "⌁",
-    img: "https://images.pexels.com/photos/19478011/pexels-photo-19478011.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/1598073/pexels-photo-1598073.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "open",
