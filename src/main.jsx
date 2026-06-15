@@ -98,7 +98,7 @@ const moodVibes = [
   {
     id: "offbeat",
     title: "Offbeat",
-    tag: "Unexpected, quirky, rare finds",
+    tag: "Unexpected, quirky, secret garden, rare finds",
     signal: "find the weird, specific, memorable thing that most visitors never discover — a tiny museum dedicated to one obscure subject, a secret garden hidden behind an unmarked door, an eccentric local institution, a shop that sells only one thing, an underground venue, an alley mural that locals know. Not just 'avoid tourists' — actively seek the surprising and eccentric. If a stop doesn't make someone say 'I never would have found this', replace it.",
     icon: "⊹",
     img: "https://images.pexels.com/photos/29285032/pexels-photo-29285032.jpeg?auto=compress&cs=tinysrgb&w=1400"
