@@ -85,7 +85,7 @@ const moodVibes = [
     tag: "History, architecture, depth",
     signal: "places with historical or artistic meaning — museums, temples, ancient ruins, galleries, heritage neighborhoods, local rituals or ceremonies, architecture worth understanding. Prioritize depth over breadth. One place understood fully beats three places rushed through.",
     icon: "▱",
-    img: "https://images.pexels.com/photos/16226514/pexels-photo-16226514.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/17654167/pexels-photo-17654167.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "culinary",
@@ -109,7 +109,7 @@ const moodVibes = [
     tag: "Lively, group-friendly, energy",
     signal: "group-friendly, lively environments — rooftop bars, night markets, live music venues, public squares with energy, cooking classes, tours where you meet people, communal dining. The atmosphere should buzz. Designed for someone who recharges around others.",
     icon: "♧",
-    img: "https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/6760878/pexels-photo-6760878.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "active",
