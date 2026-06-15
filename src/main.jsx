@@ -85,7 +85,7 @@ const moodVibes = [
     tag: "History, architecture, depth",
     signal: "places with historical or artistic meaning — museums, temples, ancient ruins, galleries, heritage neighborhoods, local rituals or ceremonies, architecture worth understanding. Prioritize depth over breadth. One place understood fully beats three places rushed through.",
     icon: "▱",
-    img: "https://images.pexels.com/photos/17654167/pexels-photo-17654167.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/6673989/pexels-photo-6673989.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "culinary",
@@ -1092,26 +1092,19 @@ button { cursor: pointer; }
 .nav-desktop { display: flex; align-items: center; gap: 6px; }
 .nav-left-group { display: flex; align-items: center; gap: 12px; }
 .nav-mark { display: block; flex-shrink: 0; }
-.nav-steps { display: flex; align-items: center; gap: 6px; }
+.nav-steps { display: flex; align-items: center; gap: 4px; }
 .nav-steps i { display: none; }
 .nav-steps button {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 12px; border: none;
+  display: inline-flex; align-items: center;
+  padding: 6px 14px; border: none;
   border-radius: 999px; background: transparent;
   font-size: 13px; font-weight: 500; color: var(--ink-3);
   letter-spacing: -.01em; transition: background .15s, color .15s;
 }
-.nav-steps button::before {
-  content: "";
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--line-strong); flex-shrink: 0;
-  transition: background .2s;
-}
+.nav-steps button::before { display: none; }
 .nav-steps button:hover:not(:disabled) { background: var(--surface-2); color: var(--ink-2); }
-.nav-steps button.active { background: transparent; color: var(--accent); }
-.nav-steps button.active::before { background: var(--accent); }
+.nav-steps button.active { background: var(--ink); color: #fff; font-weight: 700; }
 .nav-steps button.done { color: var(--ink-2); }
-.nav-steps button.done::before { background: var(--ink); }
 .nav-steps button:disabled { opacity: .3; cursor: not-allowed; }
 
 /* Mobile nav — hidden on desktop */
@@ -1274,8 +1267,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .partnership-notice .profile-chip { align-self: flex-start; margin-top: 0; }
 .form-shell { max-width: 640px; border-radius: 0; background: transparent !important; border: 0 !important; padding: 0 !important; display: grid; gap: 28px; }
 label { display: grid; gap: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
-input { width: 100%; background: transparent; border: 1.5px solid var(--line-strong); border-radius: 24px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; transition: border-color .2s; }
-input:focus { border-color: var(--ink); background: transparent; }
+input { width: 100%; background: #fff; border: none; border-radius: 20px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1.5px rgba(0,0,0,.07); transition: box-shadow .2s; }
+input:focus { box-shadow: 0 2px 8px rgba(0,0,0,.1), 0 0 0 2px var(--ink); }
 input::placeholder { color: var(--ink-3); font-weight: 400; }
 input[type="date"] { color-scheme: light; }
 /* Date input: never overflow on narrow screens */
@@ -1325,23 +1318,24 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 }
 .custom-activity-input {
   width: 100%;
-  background: transparent;
-  border: 1.5px solid var(--line-strong);
-  border-radius: 24px;
+  background: #fff;
+  border: none;
+  border-radius: 20px;
   min-height: 64px;
   padding: 0 24px;
   font-size: 15px;
   font-weight: 500;
   color: var(--ink);
   outline: none;
-  transition: border-color .2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1.5px rgba(0,0,0,.07);
+  transition: box-shadow .2s;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .custom-activity-input:focus {
-  border-color: var(--ink);
+  box-shadow: 0 2px 8px rgba(0,0,0,.1), 0 0 0 2px var(--ink);
 }
 .custom-activity-input::placeholder { color: var(--ink-3); font-weight: 400; }
 
