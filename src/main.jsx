@@ -670,14 +670,14 @@ function App() {
             <label className="custom-activity-label" htmlFor="customActivity">
               Want to customize further?
             </label>
-            <textarea
+            <input
               id="customActivity"
               className="custom-activity-input"
+              type="text"
               value={customActivity}
               onChange={e => setCustomActivity(e.target.value)}
               placeholder="Tell us a specific activity you want — ziplining, a cooking class, sunset at a rooftop bar…"
               maxLength={200}
-              rows={2}
             />
           </div>
 
@@ -1312,7 +1312,7 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 /* Custom activity input */
 .custom-activity-wrap {
   margin-top: 48px;
-  max-width: 640px;
+  max-width: 960px;
   display: grid;
   gap: 14px;
 }
@@ -1328,16 +1328,17 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
   background: var(--panel-2);
   border: 1px solid var(--line-strong);
   border-radius: 24px;
-  min-height: 80px;
-  padding: 22px 24px;
+  min-height: 64px;
+  padding: 0 24px;
   font-size: 15px;
   font-weight: 500;
   color: var(--ink);
   outline: none;
   transition: border-color .15s, background .15s;
   min-width: 0;
-  resize: none;
-  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .custom-activity-input:focus {
   border-color: rgba(0,0,0,.26);
