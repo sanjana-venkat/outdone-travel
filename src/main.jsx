@@ -17,8 +17,8 @@ function getTravelArchetype(moods = []) {
   if (has("nature") && has("slow-easy")) return { name: "The Quiet Wanderer", line: "You travel to exhale. Open skies, slow mornings, and nothing on a schedule you didn't write yourself." };
   if (has("social") && has("active")) return { name: "The Energy Chaser", line: "You move fast and meet people doing the same. Cities feel alive to you — and you want to be in the middle of it." };
   if (has("cultural") && has("slow-easy")) return { name: "The Considered Traveler", line: "You'd rather understand one place deeply than skim ten. Depth over distance, always." };
-  if (has("open") && has("adventurous")) return { name: "The Unscripted", line: "Plans are a starting point for you — not a constraint. You follow what feels right and rarely regret it." };
-  if (has("open")) return { name: "The Open Compass", line: "You show up curious and let the place decide. The best trips you've taken were never fully planned." };
+  if (has("night-owl") && has("adventurous")) return { name: "The Electric Nomad", line: "Plans are a starting point for you — not a constraint. You follow what feels right and rarely regret it." };
+  if (has("night-owl")) return { name: "The Night Wanderer", line: "You come alive after dark. The best version of any city is the one that only exists after sunset." };
   if (has("romantic")) return { name: "The Slow Romantic", line: "You travel to feel something. Golden hour, good wine, and nowhere to be — that's the whole point." };
   if (has("adventurous")) return { name: "The Edge Seeker", line: "You measure a trip by what made your heart rate spike. Comfort is a baseline, not the goal." };
   if (has("culinary")) return { name: "The Flavor Pilgrim", line: "You plan trips around meals and discover everything else along the way. Eating well is non-negotiable." };
@@ -98,8 +98,8 @@ const moodVibes = [
   {
     id: "offbeat",
     title: "Offbeat",
-    tag: "Skip the tourist trail",
-    signal: "avoid all top-10 tourist attractions and mainstream spots. Find what locals actually do — underground venues, unusual museums, hidden neighborhoods, quirky local institutions, niche experiences a visitor would never find on TripAdvisor. If a stop would appear on a generic 'things to do in X' list, remove it and replace it with something more interesting.",
+    tag: "Unexpected, quirky, rare finds",
+    signal: "find the weird, specific, memorable thing that most visitors never discover — a tiny museum dedicated to one obscure subject, a secret garden hidden behind an unmarked door, an eccentric local institution, a shop that sells only one thing, an underground venue, an alley mural that locals know. Not just 'avoid tourists' — actively seek the surprising and eccentric. If a stop doesn't make someone say 'I never would have found this', replace it.",
     icon: "⊹",
     img: "https://images.pexels.com/photos/29285032/pexels-photo-29285032.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
@@ -120,12 +120,12 @@ const moodVibes = [
     img: "https://images.pexels.com/photos/917510/pexels-photo-917510.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
-    id: "open",
-    title: "Open to anything",
-    tag: "Surprise me",
-    signal: "no mood constraint — choose the best possible mix of experiences for this destination and date. Treat this as full creative freedom. Pick a variety: one cultural, one food, one scenic or active, one unexpected. Make it memorable without being forced into any single category.",
-    icon: "⌁",
-    img: "https://images.pexels.com/photos/105234/pexels-photo-105234.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    id: "night-owl",
+    title: "Night owl",
+    tag: "Live music, late nights, city alive",
+    signal: "evening and nighttime experiences only — plan the day to start late and peak after dark. Live music venues, jazz bars, rooftop bars at sunset, late dinner spots, night markets, dancing, the city at its most electric. Every stop should feel like something that only exists after 6pm. Designed for someone who comes alive at night.",
+    icon: "◑",
+    img: "https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "romantic",
