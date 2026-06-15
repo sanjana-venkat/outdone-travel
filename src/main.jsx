@@ -66,23 +66,23 @@ const moodVibes = [
   {
     id: "adventurous",
     title: "Adventurous",
-    tag: "Thrill, risk, edge",
+    tag: "Ziplines, cliff jumps, paragliding",
     signal: "high-adrenaline experiences only — ziplines, cliff jumps, paragliding, bungee, white-water rafting, via ferrata, skydiving, anything with a safety briefing or waiver. Avoid gentle walks or casual hikes. The user wants their heart rate elevated and a story to tell.",
     icon: "△",
-    img: "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/6454835/pexels-photo-6454835.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "slow-scenic",
     title: "Slow & scenic",
-    tag: "Unhurried, beautiful",
+    tag: "Boat rides, cafes, golden hour",
     signal: "slow-paced activities in beautiful natural or semi-natural settings — boat rides, lakeside cafes, scenic viewpoints at golden hour, waterfront walks, picnics, a ferry across a bay, a quiet garden, watching the world from a hilltop. Minimal transit. Maximum stillness. Nothing rushed, nothing loud.",
     icon: "〰",
-    img: "https://images.pexels.com/photos/1430676/pexels-photo-1430676.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/5366283/pexels-photo-5366283.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "cultural",
     title: "Cultural",
-    tag: "Art, history, depth",
+    tag: "History, architecture, depth",
     signal: "places with historical or artistic meaning — museums, temples, ancient ruins, galleries, heritage neighborhoods, local rituals or ceremonies, architecture worth understanding. Prioritize depth over breadth. One place understood fully beats three places rushed through.",
     icon: "▱",
     img: "https://images.pexels.com/photos/1510595/pexels-photo-1510595.jpeg?auto=compress&cs=tinysrgb&w=1400"
@@ -90,7 +90,7 @@ const moodVibes = [
   {
     id: "culinary",
     title: "Culinary",
-    tag: "Eat like a local",
+    tag: "Local spots, markets, food-first",
     signal: "food-first planning — build the day around meals, markets, and food experiences. Local breakfast spots, street food tours, neighborhood lunch spots, food markets, a memorable dinner. Avoid tourist restaurants. Prioritize places locals actually eat. Respect dietary preference strictly.",
     icon: "╯",
     img: "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=1400"
@@ -106,7 +106,7 @@ const moodVibes = [
   {
     id: "social",
     title: "Social",
-    tag: "Meet, mix, connect",
+    tag: "Lively, group-friendly, energy",
     signal: "group-friendly, lively environments — rooftop bars, night markets, live music venues, public squares with energy, cooking classes, tours where you meet people, communal dining. The atmosphere should buzz. Designed for someone who recharges around others.",
     icon: "♧",
     img: "https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=1400"
@@ -114,10 +114,10 @@ const moodVibes = [
   {
     id: "active",
     title: "Active",
-    tag: "Move and explore",
+    tag: "Hiking, cycling, kayaking, sports",
     signal: "movement-led day — hiking trails, cycling routes, morning runs, kayaking, swimming, walking tours of neighborhoods, paddleboarding, beach volleyball, water sports. The user wants to feel their body moving through a place, not sitting still.",
     icon: "⌁",
-    img: "https://images.pexels.com/photos/1578662/pexels-photo-1578662.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/19478011/pexels-photo-19478011.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "open",
@@ -130,10 +130,10 @@ const moodVibes = [
   {
     id: "romantic",
     title: "Romantic",
-    tag: "Intentional, slow",
+    tag: "Intimate, partner-focused",
     signal: "partner-focused itinerary — intimate settings, beautiful light, meaningful moments. Golden hour viewpoints, candlelit dinner, a walk through a lantern-lit street, a private beach, a rooftop with a view. Every stop should feel like it was chosen with someone specific in mind. Avoid anything loud, rushed, or group-oriented.",
     icon: "♡",
-    img: "https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/12165831/pexels-photo-12165831.jpeg?auto=compress&cs=tinysrgb&w=1400"
   }
 ];
 
@@ -670,14 +670,14 @@ function App() {
             <label className="custom-activity-label" htmlFor="customActivity">
               Want to customize further?
             </label>
-            <input
+            <textarea
               id="customActivity"
               className="custom-activity-input"
-              type="text"
               value={customActivity}
               onChange={e => setCustomActivity(e.target.value)}
               placeholder="Tell us a specific activity you want — ziplining, a cooking class, sunset at a rooftop bar…"
               maxLength={200}
+              rows={2}
             />
           </div>
 
@@ -1311,7 +1311,7 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 
 /* Custom activity input */
 .custom-activity-wrap {
-  margin-top: 28px;
+  margin-top: 48px;
   max-width: 640px;
   display: grid;
   gap: 14px;
@@ -1328,14 +1328,16 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
   background: var(--panel-2);
   border: 1px solid var(--line-strong);
   border-radius: 24px;
-  min-height: 64px;
-  padding: 0 24px;
+  min-height: 80px;
+  padding: 22px 24px;
   font-size: 15px;
   font-weight: 500;
   color: var(--ink);
   outline: none;
   transition: border-color .15s, background .15s;
   min-width: 0;
+  resize: none;
+  line-height: 1.5;
 }
 .custom-activity-input:focus {
   border-color: rgba(0,0,0,.26);
