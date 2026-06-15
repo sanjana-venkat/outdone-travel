@@ -109,7 +109,7 @@ const moodVibes = [
     tag: "Lively, group-friendly, energy",
     signal: "group-friendly, lively environments — rooftop bars, night markets, live music venues, public squares with energy, cooking classes, tours where you meet people, communal dining. The atmosphere should buzz. Designed for someone who recharges around others.",
     icon: "♧",
-    img: "https://images.pexels.com/photos/6760878/pexels-photo-6760878.jpeg?auto=compress&cs=tinysrgb&w=1400"
+    img: "https://images.pexels.com/photos/4349791/pexels-photo-4349791.jpeg?auto=compress&cs=tinysrgb&w=1400"
   },
   {
     id: "active",
