@@ -98,7 +98,7 @@ const moodVibes = [
   {
     id: "offbeat",
     title: "Offbeat",
-    tag: "Unexpected, quirky, secret garden, rare finds",
+    tag: "Unexpected, quirky, rare finds",
     signal: "find the weird, specific, memorable thing that most visitors never discover — a tiny museum dedicated to one obscure subject, a secret garden hidden behind an unmarked door, an eccentric local institution, a shop that sells only one thing, an underground venue, an alley mural that locals know. Not just 'avoid tourists' — actively seek the surprising and eccentric. If a stop doesn't make someone say 'I never would have found this', replace it.",
     icon: "⊹",
     img: "https://images.pexels.com/photos/29285032/pexels-photo-29285032.jpeg?auto=compress&cs=tinysrgb&w=1400"
@@ -1044,13 +1044,13 @@ html, body, #root {
 *, *::before, *::after { box-sizing: border-box; }
 
 :root {
-  --bg: #ECEAE3;
-  --surface: #E4E2DA;
-  --surface-2: #DAD8D0;
-  --surface-3: #D0CEC6;
-  --panel: #E3E1D9;
-  --panel-2: #D9D7CF;
-  --panel-3: #F5F4EF;
+  --bg: #F5F4F0;
+  --surface: #EDECEA;
+  --surface-2: #E4E2DE;
+  --surface-3: #D8D6D2;
+  --panel: #EDECEA;
+  --panel-2: #E4E2DE;
+  --panel-3: #FFFFFF;
   --line: rgba(0,0,0,.08);
   --line-strong: rgba(0,0,0,.14);
   --ink: #080808;
@@ -1274,9 +1274,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .partnership-notice .profile-chip { align-self: flex-start; margin-top: 0; }
 .form-shell { max-width: 640px; border-radius: 0; background: transparent !important; border: 0 !important; padding: 0 !important; display: grid; gap: 28px; }
 label { display: grid; gap: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
-input { width: 100%; background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: 24px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; transition: border-color .15s, background .15s; }
-input:focus { border-color: rgba(0,0,0,.26); background: var(--panel-3); }
-input::placeholder { color: var(--ink-3); }
+input { width: 100%; background: transparent; border: 1.5px solid var(--line-strong); border-radius: 24px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; transition: border-color .2s; }
+input:focus { border-color: var(--ink); background: transparent; }
+input::placeholder { color: var(--ink-3); font-weight: 400; }
 input[type="date"] { color-scheme: light; }
 /* Date input: never overflow on narrow screens */
 input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appearance: none; }
@@ -1325,8 +1325,8 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 }
 .custom-activity-input {
   width: 100%;
-  background: var(--panel-2);
-  border: 1px solid var(--line-strong);
+  background: transparent;
+  border: 1.5px solid var(--line-strong);
   border-radius: 24px;
   min-height: 64px;
   padding: 0 24px;
@@ -1334,17 +1334,16 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
   font-weight: 500;
   color: var(--ink);
   outline: none;
-  transition: border-color .15s, background .15s;
+  transition: border-color .2s;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .custom-activity-input:focus {
-  border-color: rgba(0,0,0,.26);
-  background: var(--panel-3);
+  border-color: var(--ink);
 }
-.custom-activity-input::placeholder { color: var(--ink-3); }
+.custom-activity-input::placeholder { color: var(--ink-3); font-weight: 400; }
 
 .build-cta-row { margin: 34px 0 0; display: flex; justify-content: flex-end; }
 
