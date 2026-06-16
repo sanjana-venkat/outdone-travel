@@ -907,10 +907,12 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .lp-google-wrap iframe { width: 100% !important; border-radius: 18px !important; }
   #googleSignIn { width: 100% !important; }
   .lp-google-wrap::before, .lp-google-wrap::after { display: none !important; content: none !important; }
-  .lp-ghost-btn { width: 100%; min-height: 50px; border-radius: 18px; font-size: 15px; font-weight: 700; }
+  .lp-ghost-btn { width: 100%; min-height: 44px; border-radius: 11px; font-size: 13px; font-weight: 600; justify-content: space-between; padding: 0 14px; }
   /* More space at bottom so white panel doesn't bleed to edge */
-  .lp-card-left { padding-bottom: max(48px, env(safe-area-inset-bottom, 24px)) !important; }
-  .lp-shell { padding-bottom: 24px !important; }
+  .lp-card-left { padding-bottom: max(64px, env(safe-area-inset-bottom, 40px)) !important; }
+  .lp-shell { padding-bottom: 32px !important; }
+  /* Card doesn't fill 100vh — leave breathing room at bottom */
+  .lp-card { height: calc(100vh - 40px) !important; }
 }
 
 /* ── HERO ── */
