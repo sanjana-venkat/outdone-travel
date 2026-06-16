@@ -2804,6 +2804,168 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   border-radius: 18px !important;
 }
 
+
+/* ===== CLEAN MOBILE WINDOW: no shade seam, unified white tile, exact desktop-style buttons ===== */
+@media (max-width: 760px) {
+  /* Remove black translucent shade/seam at the very top */
+  .lp-card::before,
+  .lp-card::after,
+  .lp-card-right::before,
+  .lp-card-right::after,
+  .lp-panel::before,
+  .lp-panel::after,
+  .lp-panel-image::before,
+  .lp-panel-image::after,
+  .lp-panel-overlay {
+    display: none !important;
+    content: none !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .lp-card {
+    border: 3px solid #ffffff !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+  }
+
+  .lp-card-right,
+  .lp-panel,
+  .lp-panel-image,
+  .lp-panel img {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Make image section and white section feel like one continuous object */
+  .lp-card-left {
+    background: #ffffff !important;
+    border: 0 !important;
+    border-top: 0 !important;
+    box-shadow: none !important;
+    margin-top: 0 !important;
+  }
+
+  .lp-card-left::before,
+  .lp-card-left::after {
+    display: none !important;
+    content: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Make the transition between image and content clean, not like a separate bottom sheet */
+  .lp-card-right {
+    margin-bottom: 0 !important;
+  }
+
+  .lp-card-left {
+    transform: translateY(0) !important;
+    border-radius: 0 !important;
+  }
+
+  /* Keep itinerary glass readable without turning the whole image dark */
+  .lp-itin-line {
+    background: rgba(255,255,255,.24) !important;
+    border: 1px solid rgba(255,255,255,.34) !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+    box-shadow: none !important;
+  }
+
+  .lp-itin-time {
+    color: #3CA394 !important;
+    font-weight: 900 !important;
+  }
+
+  .lp-itin-label {
+    color: #ffffff !important;
+    font-weight: 850 !important;
+  }
+
+  /* Exact desktop button proportions: rounded rectangles, same radius, no pill */
+  .lp-actions {
+    gap: 12px !important;
+  }
+
+  .lp-google-wrap,
+  .lp-ghost-btn {
+    height: 56px !important;
+    border-radius: 18px !important;
+    border: 1px solid #D9D4CA !important;
+    box-shadow: none !important;
+  }
+
+  .lp-google-wrap {
+    background: #F8F5EF !important;
+  }
+
+  .lp-ghost-btn {
+    background: #ffffff !important;
+    color: #080808 !important;
+    font-size: 16px !important;
+    font-weight: 750 !important;
+  }
+
+  .lp-google-wrap::before {
+    width: 42px !important;
+    height: 42px !important;
+    left: 8px !important;
+    top: 6px !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+  }
+
+  .lp-google-wrap::after {
+    content: "Continue with Google" !important;
+    font-size: 16px !important;
+    font-weight: 750 !important;
+    color: #080808 !important;
+    padding-left: 44px !important;
+  }
+
+  .lp-google-wrap:hover,
+  .lp-ghost-btn:hover {
+    background: #F8F5EF !important;
+    border-color: #D9D4CA !important;
+    color: #080808 !important;
+  }
+
+  /* Remove any inherited pill styles */
+  .lp-google-wrap *,
+  .lp-ghost-btn * {
+    border-radius: inherit !important;
+  }
+}
+
+/* Desktop preview itinerary also uses white translucent glass */
+.itinerary-line {
+  background: rgba(255,255,255,.24) !important;
+  border: 1px solid rgba(255,255,255,.34) !important;
+  backdrop-filter: blur(18px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+  box-shadow: none !important;
+}
+
+.itinerary-line b {
+  color: #3CA394 !important;
+  font-weight: 900 !important;
+}
+
+.itinerary-line span {
+  color: #ffffff !important;
+  font-weight: 850 !important;
+}
+
+/* Remove dark global overlay on preview image */
+.showreel-overlay {
+  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.20)) !important;
+}
+
 `;
 
 createRoot(document.getElementById("root")).render(<App />);
