@@ -2679,6 +2679,131 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 }
 
+
+/* ===== FINAL POLISH: single border + desktop translucent itinerary + desktop-matched mobile buttons ===== */
+
+/* Remove double-line artifacts caused by nested borders/outlines on mobile hero shell */
+@media (max-width: 760px) {
+  .lp-card {
+    border: 3px solid rgba(255,255,255,.96) !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .lp-card *,
+  .lp-card-right,
+  .lp-card-left,
+  .lp-panel,
+  .lp-panel-image,
+  .lp-panel img {
+    outline: 0 !important;
+  }
+
+  .lp-card-right,
+  .lp-panel,
+  .lp-panel-image {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .lp-card-right::before,
+  .lp-card-right::after,
+  .lp-panel::before,
+  .lp-panel::after,
+  .lp-panel-image::before,
+  .lp-panel-image::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  /* Keep the white content area part of the same window without extra border seams */
+  .lp-card-left {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Mobile buttons should match desktop system: rounded rectangles, not pills */
+  .lp-google-wrap,
+  .lp-ghost-btn {
+    height: 58px !important;
+    border-radius: 18px !important;
+    font-size: 16px !important;
+    font-weight: 750 !important;
+  }
+
+  .lp-google-wrap {
+    background: #F8F5EF !important;
+    border: 1px solid #D9D4CA !important;
+    box-shadow: none !important;
+  }
+
+  .lp-google-wrap::before {
+    left: 10px !important;
+    top: 7px !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 14px !important;
+  }
+
+  .lp-google-wrap::after {
+    font-size: 16px !important;
+    font-weight: 750 !important;
+    color: #080808 !important;
+  }
+
+  .lp-ghost-btn {
+    background: #FFFFFF !important;
+    border: 1px solid #D9D4CA !important;
+    color: #080808 !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Apply the same white translucent itinerary treatment to desktop hero preview */
+.itinerary-line,
+.lp-itin-line {
+  background: rgba(255,255,255,.24) !important;
+  border: 1px solid rgba(255,255,255,.34) !important;
+  backdrop-filter: blur(18px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+  box-shadow: none !important;
+}
+
+.itinerary-line b,
+.lp-itin-time {
+  color: #3CA394 !important;
+  font-weight: 900 !important;
+}
+
+.itinerary-line span,
+.lp-itin-label {
+  color: #FFFFFF !important;
+  font-weight: 850 !important;
+}
+
+/* Desktop showreel image can stay rich behind translucent glass */
+.showreel-overlay,
+.lp-panel-overlay {
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.28)),
+    linear-gradient(90deg, rgba(0,0,0,.16), rgba(0,0,0,.02)) !important;
+}
+
+/* Desktop button system override for any login buttons */
+.google-wrap,
+.lp-google-wrap {
+  border-radius: 18px !important;
+}
+
+.lp-ghost-btn,
+.google-connect-btn,
+.continue-guest-btn {
+  border-radius: 18px !important;
+}
+
 `;
 
 createRoot(document.getElementById("root")).render(<App />);
