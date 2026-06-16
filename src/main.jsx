@@ -324,7 +324,7 @@ function App() {
       {step === "login" && (
         <div className="lp-shell">
           <div className="lp-bg-outer">
-            <img src="https://images.pexels.com/photos/12165831/pexels-photo-12165831.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            <img src="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
             <div className="lp-bg-outer-dim" />
           </div>
           <div className="lp-card">
@@ -858,23 +858,50 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-card-right { position: relative; overflow: hidden; background: transparent; }
 .lp-panel-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.6) 0%, rgba(0,0,0,.1) 50%); }
 .lp-panel-itin { position: absolute; bottom: 24px; left: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; }
-.lp-itin-line { display: flex; align-items: center; gap: 16px; padding: 11px 16px; background: rgba(8,8,8,.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; opacity: 0; animation: lpLineIn .5s var(--ease) forwards; }
+.lp-itin-line { display: flex; align-items: center; gap: 16px; padding: 11px 16px; background: rgba(255,255,255,.18); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.35); border-radius: 14px; opacity: 0; animation: lpLineIn .5s var(--ease) forwards; }
 .lp-itin-1 { animation-delay: .8s; } .lp-itin-2 { animation-delay: 1.05s; } .lp-itin-3 { animation-delay: 1.3s; }
 @keyframes lpLineIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .lp-itin-time { font-size: 12px; font-weight: 800; color: var(--accent); min-width: 38px; font-variant-numeric: tabular-nums; }
-.lp-itin-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.92); }
+.lp-itin-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.3); }
 
-/* Mobile: single column, right panel hidden, auto height */
+/* Mobile: full-height border frame, card at bottom like a drawer */
 @media(max-width: 700px) {
-  .lp-shell { padding: 24px 16px; align-items: center; }
+  .lp-shell { 
+    padding: 0; 
+    align-items: flex-end;
+  }
+  /* The border "frame" — full-height outline covering the whole screen */
   .lp-card {
     grid-template-columns: 1fr;
-    height: auto; min-height: 0;
-    border-width: 4px; width: 100%;
+    height: 100vh;
+    width: 100%;
+    border-radius: 22px;
+    border-width: 5px;
+    border-color: rgba(255,255,255,.85);
+    /* Stack: white card at bottom, image fills top */
+    grid-template-rows: 1fr auto;
+    overflow: hidden;
   }
-  .lp-card-right { display: none; }
-  .lp-card-left { padding: 30px 22px 28px; gap: 16px; overflow: visible; }
-  .lp-h1 { font-size: 34px; }
+  /* Right panel becomes the top area showing the bg through */
+  .lp-card-right { 
+    display: block;
+    order: -1;
+    min-height: 0;
+  }
+  /* Show all 3 itin lines on mobile */
+  .lp-panel-itin { bottom: 16px; left: 16px; right: 16px; gap: 6px; }
+  .lp-itin-line { padding: 9px 14px; }
+  /* White card at bottom */
+  .lp-card-left { 
+    padding: 24px 22px 32px; 
+    gap: 14px; 
+    overflow: visible;
+    order: 1;
+    border-top: none;
+  }
+  .lp-h1 { font-size: clamp(28px, 7vw, 36px); }
+  .lp-sub { font-size: 13px; }
+  /* CTAs full width */
   .lp-google-wrap { width: 100%; }
   .lp-google-wrap > div { width: 100% !important; }
   .lp-google-wrap iframe { width: 100% !important; }
