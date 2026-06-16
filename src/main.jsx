@@ -17,8 +17,8 @@ function getTravelArchetype(moods = []) {
   if (has("nature") && has("slow-easy")) return { name: "The Quiet Wanderer", line: "You travel to exhale. Open skies, slow mornings, and nothing on a schedule you didn't write yourself." };
   if (has("social") && has("active")) return { name: "The Energy Chaser", line: "You move fast and meet people doing the same. Cities feel alive to you — and you want to be in the middle of it." };
   if (has("cultural") && has("slow-easy")) return { name: "The Considered Traveler", line: "You'd rather understand one place deeply than skim ten. Depth over distance, always." };
-  if (has("open") && has("adventurous")) return { name: "The Unscripted", line: "Plans are a starting point for you — not a constraint. You follow what feels right and rarely regret it." };
-  if (has("open")) return { name: "The Open Compass", line: "You show up curious and let the place decide. The best trips you've taken were never fully planned." };
+  if (has("night-owl") && has("adventurous")) return { name: "The Electric Nomad", line: "Plans are a starting point for you — not a constraint. You follow what feels right and rarely regret it." };
+  if (has("night-owl")) return { name: "The Night Wanderer", line: "You come alive after dark. The best version of any city is the one that only exists after sunset." };
   if (has("romantic")) return { name: "The Slow Romantic", line: "You travel to feel something. Golden hour, good wine, and nowhere to be — that's the whole point." };
   if (has("adventurous")) return { name: "The Edge Seeker", line: "You measure a trip by what made your heart rate spike. Comfort is a baseline, not the goal." };
   if (has("culinary")) return { name: "The Flavor Pilgrim", line: "You plan trips around meals and discover everything else along the way. Eating well is non-negotiable." };
@@ -63,15 +63,78 @@ const fallbackDestinationSuggestions = [
 ];
 
 const moodVibes = [
-  { id: "adventurous", title: "Adventurous", tag: "Push the edge", signal: "hikes, movement, active experiences, discovery", icon: "△", img: "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "slow-easy", title: "Slow & easy", tag: "Breathe it in", signal: "few stops, long pauses, gentle transitions", icon: "〰", img: "https://images.pexels.com/photos/2868242/pexels-photo-2868242.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "cultural", title: "Cultural", tag: "Art, history, depth", signal: "museums, architecture, rituals, history, meaningful places", icon: "▱", img: "https://images.pexels.com/photos/1510595/pexels-photo-1510595.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "culinary", title: "Culinary", tag: "Eat like a local", signal: "food-led planning, neighborhood restaurants, local specialties", icon: "╯", img: "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "nature", title: "Into nature", tag: "Wild, open, free", signal: "nature, viewpoints, walks, parks, scenic routes", icon: "△", img: "https://images.pexels.com/photos/3408354/pexels-photo-3408354.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "social", title: "Social", tag: "Meet, mix, connect", signal: "lively areas, events, markets, group-friendly experiences", icon: "♧", img: "https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "active", title: "Active", tag: "Move and explore", signal: "walking, biking, hikes, lots of movement, active pacing", icon: "⌁", img: "https://images.pexels.com/photos/1578662/pexels-photo-1578662.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "open", title: "Open to anything", tag: "Let Gemini decide", signal: "surprise me, balanced plan, flexible recommendations", icon: "⌁", img: "https://images.pexels.com/photos/2070033/pexels-photo-2070033.jpeg?auto=compress&cs=tinysrgb&w=1400" },
-  { id: "romantic", title: "Romantic", tag: "Intentional, slow", signal: "golden hour, lanterns, views, beautiful dinner, partner-friendly", icon: "♡", img: "https://images.pexels.com/photos/1024960/pexels-photo-1024960.jpeg?auto=compress&cs=tinysrgb&w=1400" }
+  {
+    id: "adventurous",
+    title: "Adventurous",
+    tag: "Ziplines, cliff jumps, paragliding",
+    signal: "high-adrenaline experiences only — ziplines, cliff jumps, paragliding, bungee, white-water rafting, via ferrata, skydiving, anything with a safety briefing or waiver. Avoid gentle walks or casual hikes. The user wants their heart rate elevated and a story to tell.",
+    icon: "△",
+    img: "https://images.pexels.com/photos/6454835/pexels-photo-6454835.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "slow-scenic",
+    title: "Slow & scenic",
+    tag: "Boat rides, cafes, golden hour",
+    signal: "slow-paced activities in beautiful natural or semi-natural settings — boat rides, lakeside cafes, scenic viewpoints at golden hour, waterfront walks, picnics, a ferry across a bay, a quiet garden, watching the world from a hilltop. Minimal transit. Maximum stillness. Nothing rushed, nothing loud.",
+    icon: "〰",
+    img: "https://images.pexels.com/photos/5366283/pexels-photo-5366283.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "cultural",
+    title: "Cultural",
+    tag: "History, architecture, depth",
+    signal: "places with historical or artistic meaning — museums, temples, ancient ruins, galleries, heritage neighborhoods, local rituals or ceremonies, architecture worth understanding. Prioritize depth over breadth. One place understood fully beats three places rushed through.",
+    icon: "▱",
+    img: "https://images.pexels.com/photos/6673989/pexels-photo-6673989.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "culinary",
+    title: "Culinary",
+    tag: "Local spots, markets, food-first",
+    signal: "food-first planning — build the day around meals, markets, and food experiences. Local breakfast spots, street food tours, neighborhood lunch spots, food markets, a memorable dinner. Avoid tourist restaurants. Prioritize places locals actually eat. Respect dietary preference strictly.",
+    icon: "╯",
+    img: "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "offbeat",
+    title: "Offbeat",
+    tag: "Unexpected, quirky, rare finds",
+    signal: "find the weird, specific, memorable thing that most visitors never discover — a tiny museum dedicated to one obscure subject, a secret garden hidden behind an unmarked door, an eccentric local institution, a shop that sells only one thing, an underground venue, an alley mural that locals know. Not just 'avoid tourists' — actively seek the surprising and eccentric. If a stop doesn't make someone say 'I never would have found this', replace it.",
+    icon: "⊹",
+    img: "https://images.pexels.com/photos/29285032/pexels-photo-29285032.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "social",
+    title: "Social",
+    tag: "Lively, group-friendly, energy",
+    signal: "group-friendly, lively environments — rooftop bars, night markets, live music venues, public squares with energy, cooking classes, tours where you meet people, communal dining. The atmosphere should buzz. Designed for someone who recharges around others.",
+    icon: "♧",
+    img: "https://images.pexels.com/photos/4349791/pexels-photo-4349791.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "active",
+    title: "Active",
+    tag: "Hiking, cycling, kayaking, sports",
+    signal: "movement-led day — hiking trails, cycling routes, morning runs, kayaking, swimming, walking tours of neighborhoods, paddleboarding, beach volleyball, water sports. The user wants to feel their body moving through a place, not sitting still.",
+    icon: "⌁",
+    img: "https://images.pexels.com/photos/917510/pexels-photo-917510.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "night-owl",
+    title: "Night owl",
+    tag: "Live music, late nights, city alive",
+    signal: "evening and nighttime experiences only — plan the day to start late and peak after dark. Live music venues, jazz bars, rooftop bars at sunset, late dinner spots, night markets, dancing, the city at its most electric. Every stop should feel like something that only exists after 6pm. Designed for someone who comes alive at night.",
+    icon: "◑",
+    img: "https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  },
+  {
+    id: "romantic",
+    title: "Romantic",
+    tag: "Intimate, partner-focused",
+    signal: "partner-focused itinerary — intimate settings, beautiful light, meaningful moments. Golden hour viewpoints, candlelit dinner, a walk through a lantern-lit street, a private beach, a rooftop with a view. Every stop should feel like it was chosen with someone specific in mind. Avoid anything loud, rushed, or group-oriented.",
+    icon: "♡",
+    img: "https://images.pexels.com/photos/12165831/pexels-photo-12165831.jpeg?auto=compress&cs=tinysrgb&w=1400"
+  }
 ];
 
 function PlacesCarousel({ moods, places }) {
@@ -133,7 +196,8 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
-  const [calendarState, setCalendarState] = useState("idle"); // idle | loading | done | error
+  const [calendarState, setCalendarState] = useState("idle");
+  const [customActivity, setCustomActivity] = useState("");
   const shellRef = useRef(null);
 
   function goTo(s) {
@@ -298,7 +362,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, selectedMoods: selectedMoodObjects, instruction: "Create a real, specific, mood-first day plan. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, selectedMoods: selectedMoodObjects, customActivity: customActivity.trim() || null, instruction: "Create a real, specific, mood-first day plan. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -490,11 +554,6 @@ function App() {
                   </button>
                 );
               })}
-              <div className="drawer-footer">
-                <button className="btn-accent drawer-subscribe" onClick={() => { setShowSubscribe(true); setMenuOpen(false); }}>
-                  Subscribe for updates
-                </button>
-              </div>
             </div>
           </div>
         )}
@@ -502,6 +561,12 @@ function App() {
 
       {step === "login" && (
         <main className="screen hero-screen on">
+          {/* Full-screen background — zooms out on load */}
+          <div className="hero-fullbg">
+            <img src={moodVibes[0].img} alt="" />
+            <div className="hero-fullbg-overlay" />
+          </div>
+
           <section className="hero-inner">
             <div className="hero-left">
               <div className="hero-pill">
@@ -540,7 +605,7 @@ function App() {
       {step === "setup" && (
         <main className="screen setup-screen on">
 
-          {/* Partnership notice — pinned to top */}
+          {/* Partnership notice */}
           <div className="partnership-notice">
             {user && (
               <div className="profile-chip">
@@ -561,27 +626,64 @@ function App() {
             <h2>Set the plan.</h2>
             <p>Tell us where, when, and what constraints matter.</p>
           </section>
-          <section className="form-shell glass-panel">
-            <label>
-              <span>Destination</span>
-              <input value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="City, neighborhood, or place" autoComplete="off" />
-            </label>
-            <div className="suggestions autocomplete-suggestions">
-              {destinationOptions.map((item) => (
-                <button type="button" key={item.placeId || item.label} className={destination === item.label ? "suggestion active" : "suggestion"} onClick={() => setDestination(item.label)}>
-                  {item.label}
-                </button>
-              ))}
-              {isAutocompleting && <div className="autocomplete-loading">Searching Google Maps…</div>}
+
+          {/* Valora-style horizontal search bar */}
+          <div className="setup-bar">
+            <div className="setup-bar-field setup-bar-destination">
+              <span className="setup-bar-label">WHERE</span>
+              <input
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                placeholder="City or place"
+                autoComplete="off"
+                className="setup-bar-input"
+              />
+              {destinationOptions.length > 0 && (
+                <div className="suggestions autocomplete-suggestions setup-bar-suggestions">
+                  {destinationOptions.map((item) => (
+                    <button type="button" key={item.placeId || item.label} className={destination === item.label ? "suggestion active" : "suggestion"} onClick={() => setDestination(item.label)}>
+                      {item.label}
+                    </button>
+                  ))}
+                  {isAutocompleting && <div className="autocomplete-loading">Searching…</div>}
+                </div>
+              )}
             </div>
-            <label>
-              <span>When</span>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </label>
-            <Select label="Dietary preference" value={diet} setValue={setDiet} options={["Vegetarian", "Vegan", "No restrictions", "Gluten-free"]} />
-            <Select label="Going with" value={planFor} setValue={setPlanFor} options={["Solo", "Date", "Friends", "Family", "Workday"]} />
-            <button className="btn-accent primary-wide" onClick={() => goTo("mood")}>Choose today's mood</button>
-          </section>
+
+            <div className="setup-bar-divider" />
+
+            <div className="setup-bar-field setup-bar-when">
+              <span className="setup-bar-label">WHEN</span>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="setup-bar-input" />
+            </div>
+
+            <div className="setup-bar-divider" />
+
+            <div className="setup-bar-field setup-bar-diet">
+              <span className="setup-bar-label">DIET</span>
+              <div className="setup-bar-chips">
+                {["Vegetarian", "Vegan", "No restrictions", "Gluten-free"].map(o => (
+                  <button key={o} type="button" className={diet === o ? "sb-chip active" : "sb-chip"} onClick={() => setDiet(o)}>{o}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="setup-bar-divider" />
+
+            <div className="setup-bar-field setup-bar-with">
+              <span className="setup-bar-label">WITH</span>
+              <div className="setup-bar-chips">
+                {["Solo", "Date", "Friends", "Family", "Workday"].map(o => (
+                  <button key={o} type="button" className={planFor === o ? "sb-chip active" : "sb-chip"} onClick={() => setPlanFor(o)}>{o}</button>
+                ))}
+              </div>
+            </div>
+
+            <button className="setup-bar-cta" onClick={() => goTo("mood")}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.75 9h10.5M9.75 4.5L14.25 9l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          </div>
+
         </main>
       )}
 
@@ -605,6 +707,23 @@ function App() {
               </button>
             ))}
           </section>
+
+          {/* Custom activity input */}
+          <div className="custom-activity-wrap">
+            <label className="custom-activity-label" htmlFor="customActivity">
+              Want to customize further?
+            </label>
+            <input
+              id="customActivity"
+              className="custom-activity-input"
+              type="text"
+              value={customActivity}
+              onChange={e => setCustomActivity(e.target.value)}
+              placeholder="Tell us a specific activity you want — ziplining, a cooking class, sunset at a rooftop bar…"
+              maxLength={200}
+            />
+          </div>
+
           <section className="build-cta-row">
             <button className="btn-accent" onClick={generatePlan}>Build itinerary</button>
           </section>
@@ -968,13 +1087,13 @@ html, body, #root {
 *, *::before, *::after { box-sizing: border-box; }
 
 :root {
-  --bg: #ECEAE3;
-  --surface: #E4E2DA;
-  --surface-2: #DAD8D0;
-  --surface-3: #D0CEC6;
-  --panel: #E3E1D9;
-  --panel-2: #D9D7CF;
-  --panel-3: #F5F4EF;
+  --bg: #F5F4F0;
+  --surface: #EDECEA;
+  --surface-2: #E4E2DE;
+  --surface-3: #D8D6D2;
+  --panel: #EDECEA;
+  --panel-2: #E4E2DE;
+  --panel-3: #FFFFFF;
   --line: rgba(0,0,0,.08);
   --line-strong: rgba(0,0,0,.14);
   --ink: #080808;
@@ -1016,26 +1135,19 @@ button { cursor: pointer; }
 .nav-desktop { display: flex; align-items: center; gap: 6px; }
 .nav-left-group { display: flex; align-items: center; gap: 12px; }
 .nav-mark { display: block; flex-shrink: 0; }
-.nav-steps { display: flex; align-items: center; gap: 6px; }
+.nav-steps { display: flex; align-items: center; gap: 4px; }
 .nav-steps i { display: none; }
 .nav-steps button {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 12px; border: none;
+  display: inline-flex; align-items: center;
+  padding: 6px 14px; border: none;
   border-radius: 999px; background: transparent;
   font-size: 13px; font-weight: 500; color: var(--ink-3);
   letter-spacing: -.01em; transition: background .15s, color .15s;
 }
-.nav-steps button::before {
-  content: "";
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--line-strong); flex-shrink: 0;
-  transition: background .2s;
-}
-.nav-steps button:hover:not(:disabled) { background: var(--surface-2); color: var(--ink-2); }
-.nav-steps button.active { background: transparent; color: var(--accent); }
-.nav-steps button.active::before { background: var(--accent); }
+.nav-steps button::before { display: none; }
+.nav-steps button:hover:not(:disabled) { background: rgba(0,0,0,.06); color: var(--ink-2); }
+.nav-steps button.active { background: rgba(0,0,0,.09); color: var(--ink); font-weight: 700; }
 .nav-steps button.done { color: var(--ink-2); }
-.nav-steps button.done::before { background: var(--ink); }
 .nav-steps button:disabled { opacity: .3; cursor: not-allowed; }
 
 /* Mobile nav — hidden on desktop */
@@ -1046,10 +1158,10 @@ button { cursor: pointer; }
 .hamburger {
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   gap: 5px; width: 40px; height: 40px;
-  background: transparent; border: 1px solid var(--line-strong); border-radius: 10px;
-  padding: 0; cursor: pointer; transition: background .15s;
+  background: transparent; border: none; border-radius: 0;
+  padding: 0; cursor: pointer; transition: opacity .15s;
 }
-.hamburger:hover { background: var(--surface-2); }
+.hamburger:hover { background: transparent; opacity: .7; }
 .hamburger span {
   display: block; width: 18px; height: 1.5px;
   background: var(--ink); border-radius: 2px;
@@ -1146,32 +1258,62 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .gem, h1 span { color: var(--accent) !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
 .glass-panel { background: var(--surface); border: 1px solid var(--line-strong); box-shadow: none; }
 
-/* ── HERO ── */
-.hero-screen { padding-top: clamp(64px,8vw,110px); }
-.hero-inner { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(360px,520px); gap: clamp(42px,7vw,96px); align-items: center; min-height: 68vh; }
-.hero-left { display: flex; flex-direction: column; gap: 28px; }
-.hero-pill { display: inline-flex; align-items: center; gap: 0; background: none; border: none; padding: 0; }
-.pulse { display: none; }
-.hero-pill span { font-size: 11px; font-weight: 700; color: var(--ink-3); letter-spacing: .1em; text-transform: uppercase; }
-.hero-left > p { max-width: 620px; font-size: clamp(17px,1.35vw,20px); line-height: 1.6; color: var(--ink-2); }
-.hero-cta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.google-wrap { min-height: 44px; display: inline-flex; align-items: center; border-radius: 999px; overflow: hidden; background: transparent; border: none; }
-.google-wrap iframe { border-radius: 999px !important; }
-#googleSignIn, #googleSignIn > div { border-radius: 999px !important; background: transparent !important; }
-.google-loading { color: var(--ink-3); font-size: 13px; font-weight: 700; padding: 0 16px; }
-.hero-cta > .btn-accent { background: transparent !important; color: var(--ink) !important; border: 1.5px solid var(--ink) !important; }
-.hero-cta > .btn-accent:hover { background: var(--ink) !important; color: #fff !important; opacity: 1 !important; }
+/* ── HERO — full screen zoom-out reveal ── */
+.hero-screen {
+  padding: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.hero-fullbg {
+  position: absolute; inset: 0;
+  animation: heroZoomOut 1.6s var(--ease) forwards;
+  will-change: transform;
+}
+@keyframes heroZoomOut {
+  from { transform: scale(1.12); }
+  to   { transform: scale(1); }
+}
+.hero-fullbg img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: brightness(.55) saturate(1.1);
+}
+.hero-fullbg-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,.1) 0%, rgba(0,0,0,.55) 100%);
+}
+.hero-inner {
+  position: relative; z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(320px,480px);
+  gap: clamp(42px,7vw,96px);
+  align-items: center;
+  min-height: 100vh;
+  padding: clamp(80px,10vw,140px) clamp(40px,6vw,100px);
+  animation: heroContentIn 1s var(--ease) .4s both;
+}
+@keyframes heroContentIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-left h1 { color: #fff !important; }
+.hero-left > p { color: rgba(255,255,255,.8) !important; }
+.hero-pill span { color: rgba(255,255,255,.6) !important; }
+.hero-cta > .btn-accent {
+  background: #fff !important;
+  color: var(--ink) !important;
+  border: none !important;
+}
+.hero-cta > .btn-accent:hover { background: rgba(255,255,255,.9) !important; }
 
-/* ── SHOWREEL ── */
-.hero-cards.itinerary-showreel { height: 500px !important; display: flex !important; align-items: center; justify-content: center; }
-.showreel-frame { position: relative; width: min(560px,100%); height: 440px; border-radius: 34px; overflow: hidden; border: 1px solid var(--line-strong); background: var(--surface); }
-.showreel-image-stack { position: absolute; inset: 0; }
-.reel-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.04); animation: reelFade 9s infinite; filter: brightness(.92) saturate(1.08); }
-.reel-img-1 { animation-delay: 0s; } .reel-img-2 { animation-delay: 3s; } .reel-img-3 { animation-delay: 6s; }
-@keyframes reelFade { 0% { opacity:0; transform:scale(1.04); } 8% { opacity:1; transform:scale(1); } 30% { opacity:1; transform:scale(1.025); } 38% { opacity:0; transform:scale(1.05); } 100% { opacity:0; transform:scale(1.05); } }
-.showreel-overlay { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.30)),linear-gradient(90deg,rgba(0,0,0,.18),rgba(0,0,0,.02)); }
-.showreel-copy { display: none !important; }
-.generation-chip { display: none !important; }
+/* Showreel */
+.hero-cards.itinerary-showreel { height: auto !important; }
+.showreel-frame { position: relative; width: min(480px,100%); height: 420px; border-radius: 28px; overflow: hidden; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); backdrop-filter: blur(6px); }
+.showreel-overlay { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.42)),linear-gradient(90deg,rgba(0,0,0,.12),rgba(0,0,0,.02)); }
 .itinerary-lines { position: absolute; left: 24px; right: 24px; bottom: 24px; z-index: 2; display: grid; gap: 8px; }
 .itinerary-line { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: center; min-height: 54px; padding: 10px 13px; border-radius: 18px; background: rgba(244,243,238,.92); border: 1px solid rgba(255,255,255,.62); opacity: 0; transform: translateY(12px); animation: lineBuild 9s infinite; }
 .line-1 { animation-delay:.55s; } .line-2 { animation-delay:1.25s; } .line-3 { animation-delay:1.95s; }
@@ -1179,8 +1321,141 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .itinerary-line b, .itinerary-line span { color: var(--ink) !important; font-size: 13px; font-weight: 700; }
 .itinerary-line b { color: var(--accent) !important; font-weight: 800; }
 
-/* ── SETUP ── */
-.setup-header, .mood-header { margin-bottom: 30px; max-width: 540px; }
+/* ── SETUP — Valora-style bar ── */
+.setup-screen { max-width: 1160px; }
+.setup-header { margin-bottom: 36px; max-width: 540px; }
+
+.setup-bar {
+  display: flex;
+  align-items: stretch;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.09);
+  overflow: visible;
+  position: relative;
+  min-height: 90px;
+}
+.setup-bar-field {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 18px 28px;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+.setup-bar-destination { flex: 1.6; }
+.setup-bar-when { flex: 1; }
+.setup-bar-diet { flex: 1.8; }
+.setup-bar-with { flex: 1.4; }
+
+.setup-bar-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+.setup-bar-input {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: var(--ink) !important;
+  width: 100%;
+}
+.setup-bar-input:focus { box-shadow: none !important; }
+.setup-bar-input::placeholder { color: var(--ink-3); font-weight: 400; }
+input[type="date"].setup-bar-input { font-size: 15px; }
+
+.setup-bar-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+.sb-chip {
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line-strong);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.sb-chip:hover { border-color: var(--ink); color: var(--ink); }
+.sb-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(51,153,137,.07); font-weight: 700; }
+
+.setup-bar-divider {
+  width: 1px;
+  background: var(--line);
+  margin: 16px 0;
+  flex-shrink: 0;
+}
+
+.setup-bar-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px;
+  width: 56px;
+  min-width: 56px;
+  border-radius: 16px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity .15s;
+  flex-shrink: 0;
+}
+.setup-bar-cta:hover { opacity: .85; }
+
+.setup-bar-suggestions {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.12);
+  z-index: 100;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.setup-bar-suggestions .suggestion {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background .1s;
+}
+.setup-bar-suggestions .suggestion:hover,
+.setup-bar-suggestions .suggestion.active { background: var(--surface); }
+
+/* Mobile: stack bar vertically */
+@media(max-width: 760px) {
+  .setup-bar { flex-direction: column; border-radius: 20px; min-height: 0; }
+  .setup-bar-divider { width: auto; height: 1px; margin: 0 16px; }
+  .setup-bar-field { padding: 16px 20px; }
+  .setup-bar-cta { width: auto; min-width: 0; margin: 12px; border-radius: 14px; min-height: 52px; }
+}
 
 /* Partnership notice banner */
 .partnership-notice {
@@ -1198,9 +1473,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .partnership-notice .profile-chip { align-self: flex-start; margin-top: 0; }
 .form-shell { max-width: 640px; border-radius: 0; background: transparent !important; border: 0 !important; padding: 0 !important; display: grid; gap: 28px; }
 label { display: grid; gap: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
-input { width: 100%; background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: 24px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; transition: border-color .15s, background .15s; }
-input:focus { border-color: rgba(0,0,0,.26); background: var(--panel-3); }
-input::placeholder { color: var(--ink-3); }
+input { width: 100%; background: #fff; border: none; border-radius: 20px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; box-shadow: 0 1px 6px rgba(0,0,0,.08); transition: box-shadow .2s; }
+input:focus { box-shadow: 0 2px 12px rgba(0,0,0,.13); }
+input::placeholder { color: var(--ink-3); font-weight: 400; }
 input[type="date"] { color-scheme: light; }
 /* Date input: never overflow on narrow screens */
 input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appearance: none; }
@@ -1232,6 +1507,44 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 .image-tile-content { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; }
 .image-tile-content strong { display: block; font-size: clamp(18px,1.8vw,24px); font-weight: 900; line-height: 1; letter-spacing: -.03em; color: #fff; }
 .image-tile-content p { margin: 6px 0 0; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; line-height: 1.3; }
+
+/* Custom activity input */
+.custom-activity-wrap {
+  margin-top: 48px;
+  max-width: 960px;
+  display: grid;
+  gap: 14px;
+}
+.custom-activity-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.custom-activity-input {
+  width: 100%;
+  background: #fff;
+  border: none;
+  border-radius: 20px;
+  min-height: 64px;
+  padding: 0 24px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  outline: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1.5px rgba(0,0,0,.07);
+  transition: box-shadow .2s;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.custom-activity-input:focus {
+  box-shadow: 0 2px 8px rgba(0,0,0,.1), 0 0 0 2px var(--ink);
+}
+.custom-activity-input::placeholder { color: var(--ink-3); font-weight: 400; }
+
 .build-cta-row { margin: 34px 0 0; display: flex; justify-content: flex-end; }
 
 /* ── LOADING SCREEN ── */
