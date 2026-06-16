@@ -476,7 +476,7 @@ function App() {
   }
 
   return (
-    <div className="app-shell" ref={shellRef}>
+    <div className={`app-shell${step === "login" ? " login-active" : ""}`} ref={shellRef}>
       <style>{css}</style>
 
       <nav className="navbar">
@@ -620,18 +620,11 @@ function App() {
         <main className="screen setup-screen on">
 
           {/* Partnership notice */}
-          <div className="partnership-notice">
-            {user && (
-              <div className="profile-chip">
-                <img src={user.picture} alt="" />
-                {user.name}
-              </div>
-            )}
-            <div className="partnership-notice-left">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-              <span>
-                <strong>We don't have your search history or past trips yet</strong> — so we need to ask. A Google partnership would let us skip this entirely. For now, a few quick questions and Gemini handles the rest.
-              </span>
+          <div className="partnership-box">
+            {user && <div className="profile-chip"><img src={user.picture} alt="" />{user.name}</div>}
+            <div className="partnership-box-inner">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,marginTop:1}}><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              <span><strong>We don't have your search history or past trips yet</strong> — so we need to ask. A Google partnership would let us skip this entirely. For now, a few quick questions and Gemini handles the rest.</span>
             </div>
           </div>
 
@@ -653,13 +646,14 @@ function App() {
                 autoComplete="off"
                 className="setup-card-input"
               />
-              {destinationOptions.length > 0 && (
+              {destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
                 <div className="setup-suggestions">
                   {destinationOptions.map((item) => (
                     <button
                       type="button"
                       key={item.placeId || item.label}
-                      className={destination === item.label ? "setup-sug active" : "setup-sug"}
+                      className="setup-sug"
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => { setDestination(item.label); setPlacePredictions([]); }}
                     >
                       {item.label}
@@ -1143,6 +1137,8 @@ button { cursor: pointer; }
   display: flex; align-items: center; justify-content: space-between;
   background: var(--bg);
 }
+.login-active .navbar { display: none; }
+.login-active { overflow: hidden; height: 100vh; }
 .navbar::before { display: none; }
 .nav-steps, .nav-actions, .error-actions { display: flex; align-items: center; gap: 6px; }
 
@@ -1273,10 +1269,22 @@ button { cursor: pointer; }
 
 /* ── SETUP — vertical stacked cards ── */
 .setup-screen { max-width: 680px; }
+/* Partnership notice box */
+.partnership-box {
+  max-width: 600px; background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: 16px;
+  padding: 14px 18px; margin-bottom: 4px;
+}
+.partnership-box-inner {
+  display: flex; align-items: flex-start; gap: 9px;
+  font-size: 13px; line-height: 1.6; color: var(--ink-3);
+}
+.partnership-box-inner strong { color: var(--ink-2); font-weight: 700; }
+
 .setup-header { margin-bottom: 32px; }
 
 .setup-stack {
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex; flex-direction: column; gap: 20px;
   max-width: 600px;
 }
 .setup-card {
@@ -1347,7 +1355,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-shell {
   width: 100%; height: 100vh;
   display: flex; align-items: center; justify-content: center;
-  padding: 20px;
+  padding: 16px;
   position: relative; overflow: hidden;
 }
 .lp-bg-outer { position: fixed; inset: 0; z-index: 0; }
@@ -1361,8 +1369,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-card {
   position: relative; z-index: 1;
   display: grid; grid-template-columns: 1fr 1.3fr;
-  width: min(920px, 100%);
-  height: min(520px, calc(100vh - 40px));
+  width: min(880px, 100%);
+  height: min(480px, calc(100vh - 32px));
   border-radius: 22px; overflow: hidden;
   border: 5px solid #fff; box-shadow: none;
   animation: lpCardIn .9s var(--ease) both;
@@ -1374,36 +1382,21 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 .lp-card-left {
   background: #fff;
-  padding: 28px 28px 22px;
-  display: flex; flex-direction: column; gap: 14px;
+  padding: 24px 26px 20px;
+  display: flex; flex-direction: column; gap: 12px;
   overflow: hidden;
 }
 .lp-panel-logo { display: none; }
 .lp-right-text { display: flex; flex-direction: column; }
-.lp-eyebrow {
-  font-size: 10px; font-weight: 700; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--ink-3); margin: 0 0 8px;
-}
-.lp-h1 {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(32px, 3.8vw, 48px);
-  font-weight: 400; line-height: .97;
-  letter-spacing: -.03em; color: var(--ink);
-  margin: 0 0 10px;
-}
+.lp-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 5px; }
+.lp-h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(26px, 3vw, 40px); font-weight: 400; line-height: .97; letter-spacing: -.03em; color: var(--ink); margin: 0 0 7px; }
 .lp-accent { color: var(--accent) !important; }
-.lp-sub { font-size: 13px; line-height: 1.55; color: var(--ink-3); margin: 0; }
-.lp-actions { display: flex; flex-direction: column; gap: 8px; }
-.lp-google-wrap { min-height: 40px; display: flex; align-items: center; }
-.lp-ghost-btn {
-  display: flex; align-items: center; justify-content: space-between;
-  min-height: 44px; padding: 0 16px;
-  background: transparent; border: 1.5px solid var(--line-strong);
-  border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--ink);
-  cursor: pointer; transition: all .18s; gap: 8px;
-}
+.lp-sub { font-size: 12px; line-height: 1.5; color: var(--ink-3); margin: 0; }
+.lp-actions { display: flex; flex-direction: column; gap: 6px; }
+.lp-google-wrap { min-height: 36px; display: flex; align-items: center; }
+.lp-ghost-btn { display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 14px; background: transparent; border: 1.5px solid var(--line-strong); border-radius: 11px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; transition: all .18s; gap: 8px; }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
-.lp-fine { font-size: 11px; color: var(--ink-3); line-height: 1.4; }
+.lp-fine { font-size: 10px; color: var(--ink-3); line-height: 1.4; }
 
 /* ── RIGHT: transparent window ── */
 .lp-card-right {
@@ -1466,41 +1459,16 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .image-tile-content strong { display: block; font-size: clamp(18px,1.8vw,24px); font-weight: 900; line-height: 1; letter-spacing: -.03em; color: #fff; }
 .image-tile-content p { margin: 6px 0 0; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; line-height: 1.3; }
 
-/* Custom activity input */
-.custom-activity-wrap {
-  margin-top: 48px;
-  max-width: 960px;
-  display: grid;
-  gap: 14px;
-}
-.custom-activity-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
+/* Custom activity — matches setup white card */
+.custom-activity-wrap { margin-top: 40px; max-width: 960px; display: grid; gap: 10px; }
+.custom-activity-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .custom-activity-input {
-  width: 100%;
-  background: #fff;
-  border: none;
-  border-radius: 20px;
-  min-height: 64px;
-  padding: 0 24px;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--ink);
-  outline: none;
-  box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1.5px rgba(0,0,0,.07);
-  transition: box-shadow .2s;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: 100%; background: #fff; border: none; border-radius: 20px;
+  min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500;
+  color: var(--ink); outline: none; box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  transition: box-shadow .2s; min-width: 0;
 }
-.custom-activity-input:focus {
-  box-shadow: 0 2px 8px rgba(0,0,0,.1), 0 0 0 2px var(--ink);
-}
+.custom-activity-input:focus { box-shadow: 0 2px 12px rgba(0,0,0,.12); }
 .custom-activity-input::placeholder { color: var(--ink-3); font-weight: 400; }
 
 .build-cta-row { margin: 34px 0 0; display: flex; justify-content: flex-end; }
