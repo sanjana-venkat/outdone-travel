@@ -3199,6 +3199,91 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 }
 
+
+/* ===== MOBILE EDGE FIX: remove inner vertical line + add bottom breathing room ===== */
+@media (max-width: 760px) {
+  /* Kill every inner border/outline that creates the double vertical line */
+  .lp-card-right,
+  .lp-card-right *,
+  .lp-panel,
+  .lp-panel *,
+  .lp-panel-image,
+  .lp-panel-image *,
+  .lp-image,
+  .lp-image *,
+  .lp-bg,
+  .lp-bg * {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-inline-start: 0 !important;
+    border-inline-end: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .lp-card-right::before,
+  .lp-card-right::after,
+  .lp-panel::before,
+  .lp-panel::after,
+  .lp-panel-image::before,
+  .lp-panel-image::after,
+  .lp-image::before,
+  .lp-image::after,
+  .lp-bg::before,
+  .lp-bg::after {
+    display: none !important;
+    content: none !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Keep only the outer white window border */
+  .lp-card {
+    border: 3px solid #ffffff !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: hidden !important;
+  }
+
+  /* Give the white content tile enough bottom breathing room */
+  .lp-card-left {
+    padding: 28px 28px calc(56px + env(safe-area-inset-bottom)) 28px !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .lp-actions {
+    margin-bottom: 0 !important;
+  }
+
+  /* Prevent bottom clipping/bleed against phone edge */
+  .lp-shell {
+    padding-bottom: 18px !important;
+    overflow: hidden !important;
+  }
+
+  .lp-card {
+    height: calc(100dvh - 26px) !important;
+  }
+}
+
+@media (max-width: 760px) and (max-height: 760px) {
+  .lp-card-left {
+    padding: 22px 24px calc(44px + env(safe-area-inset-bottom)) 24px !important;
+  }
+
+  .lp-shell {
+    padding-bottom: 16px !important;
+  }
+
+  .lp-card {
+    height: calc(100dvh - 24px) !important;
+  }
+}
+
 `;
 
 createRoot(document.getElementById("root")).render(<App />);
