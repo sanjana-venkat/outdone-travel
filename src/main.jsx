@@ -330,7 +330,7 @@ function App() {
                 <span>Powered by Gemini</span>
               </div>
               <h1>Today feels <span>different.</span></h1>
-              <p>The algorithm knows your past. You know your now. Build a day or a whole trip on how you actually feel now.</p>
+              <p>Because even the best recommendation system can't predict what you'll want today. Whether it's a single evening, a full day, or a whole trip.</p>
               <div className="hero-cta">
                 <div className="google-wrap">
                   <div id="googleSignIn" />
@@ -388,8 +388,8 @@ function App() {
             <div className="pi-card">
               <div className="spark">✦</div>
               <p className="label">Personal Intelligence Preview</p>
-              <h3>Soon, Google tells us. For now, you do.</h3>
-              <p>We're working on a direct integration with Gemini Personalization to magically retrieve your flights, dietary preferences, and travel patterns that skips these questions. For now, give us a quick feeler.</p>
+              <h3>No data needed. Just vibes.</h3>
+              <p>Most apps already know too much about you. We'd rather ask. Tell us what you're feeling today and we'll build around that.</p>
               {user ? (
                 <div className="profile-chip"><img src={user.picture} alt="" />Signed in as {user.name}</div>
               ) : null}
@@ -1345,6 +1345,24 @@ input[type="date"] { color-scheme: light; }
   .res-right { text-align: left; margin-top: 16px; }
   .s-photo { height: 200px; }
   .cimg { width: 160px; height: 108px; }
+  /* Sign-in buttons always visible, full width, stacked */
+  .hero-cta { flex-direction: column; align-items: stretch; gap: 10px; }
+  .hero-cta > .btn-accent { width: 100% !important; justify-content: center; }
+  .hero-cta > .google-wrap { width: 100% !important; min-width: 0 !important; }
+  .google-wrap { display: flex !important; width: 100% !important; }
+  .google-wrap > div { width: 100% !important; }
+  .google-wrap iframe { width: 100% !important; min-width: 0 !important; }
+  #googleSignIn { width: 100% !important; }
+  /* Shrink showreel so it doesn't push CTAs below fold */
+  .hero-cards.itinerary-showreel { height: 180px !important; }
+  .showreel-frame { height: 180px !important; border-radius: 14px; width: 100% !important; }
+  /* Hero padding tighter */
+  .hero-screen { padding-top: 24px !important; }
+  .hero-inner { display: flex !important; flex-direction: column !important; gap: 20px !important; }
+  .hero-left { order: 1; gap: 16px !important; }
+  .hero-cards { order: 2; }
+  h1 { font-size: 38px !important; }
+  .hero-left > p { font-size: 15px !important; }
 }
 `;
 
