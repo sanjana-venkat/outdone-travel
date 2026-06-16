@@ -299,7 +299,7 @@ function App() {
   }
 
   return (
-    <div className="app-shell" ref={shellRef}>
+    <div className={`app-shell${step === "login" ? " login-active" : ""}`} ref={shellRef}>
       <style>{css}</style>
 
       <nav className="navbar">
@@ -322,41 +322,49 @@ function App() {
       </nav>
 
       {step === "login" && (
-        <main className="screen hero-screen on">
-          <section className="hero-inner">
-            <div className="hero-left">
-              <div className="hero-pill">
-                <div className="pulse" />
-                <span>Powered by Gemini</span>
+        <div className="lp-shell">
+          <div className="lp-bg-outer">
+            <img src="https://images.pexels.com/photos/12165831/pexels-photo-12165831.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            <div className="lp-bg-outer-dim" />
+          </div>
+          <div className="lp-card">
+            <div className="lp-card-left">
+              <div className="lp-right-text">
+                <p className="lp-eyebrow">Powered by Gemini ✦</p>
+                <h1 className="lp-h1">Today feels<br/><span className="lp-accent">different.</span></h1>
+                <p className="lp-sub">Tell us how you feel — we build your entire day around it. Mood-first, always.</p>
               </div>
-              <h1>Today feels <span>different.</span></h1>
-              <p>Because even the best recommendation system can't predict what you'll want today. Whether it's a single evening, a full day, or a whole trip.</p>
-              <div className="hero-cta">
-                <div className="google-wrap">
+              <div className="lp-actions">
+                <div className="lp-google-wrap">
                   <div id="googleSignIn" />
-                  {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google sign in...</div>}
+                  {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google…</div>}
                 </div>
-                <button className="btn-accent" onClick={() => goTo("setup")}>Continue without sign in</button>
+                <button className="lp-ghost-btn" onClick={() => goTo("setup")}>
+                  Continue without sign in
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              </div>
+              <p className="lp-fine">No account needed. Sign in later to save itineraries.</p>
+            </div>
+            <div className="lp-card-right">
+              <div className="lp-panel-overlay" />
+              <div className="lp-panel-itin">
+                <div className="lp-itin-line lp-itin-1">
+                  <span className="lp-itin-time">08:30</span>
+                  <span className="lp-itin-label">Quiet temple morning</span>
+                </div>
+                <div className="lp-itin-line lp-itin-2">
+                  <span className="lp-itin-time">12:00</span>
+                  <span className="lp-itin-label">Vegetarian lunch nearby</span>
+                </div>
+                <div className="lp-itin-line lp-itin-3">
+                  <span className="lp-itin-time">17:30</span>
+                  <span className="lp-itin-label">Golden-hour walk</span>
+                </div>
               </div>
             </div>
-            <div className="hero-cards itinerary-showreel" aria-label="Itinerary preview animation">
-              <div className="showreel-frame">
-                <div className="showreel-image-stack">
-                  <img className="reel-img reel-img-1" src={moodVibes[8].img} alt="" />
-                  <img className="reel-img reel-img-2" src={moodVibes[2].img} alt="" />
-                  <img className="reel-img reel-img-3" src={moodVibes[3].img} alt="" />
-                </div>
-                <div className="showreel-overlay" />
-                <div className="itinerary-lines">
-                  <div className="itinerary-line line-1"><b>08:30</b><span>Quiet temple morning</span></div>
-                  <div className="itinerary-line line-2"><b>12:00</b><span>Vegetarian lunch nearby</span></div>
-                  <div className="itinerary-line line-3"><b>17:30</b><span>Golden-hour walk</span></div>
-                </div>
-
-              </div>
-            </div>
-          </section>
-        </main>
+          </div>
+        </div>
       )}
 
       {step === "setup" && (
@@ -740,6 +748,8 @@ button { cursor: pointer; }
   min-height: 100vh; display: flex; flex-direction: column; align-items: center;
   padding: 0 0 80px; background: var(--bg); overflow-x: hidden;
 }
+.login-active .navbar { display: none; }
+.login-active { overflow: hidden; height: 100vh; }
 .stars, .aurora { display: none !important; }
 
 /* ── NAVBAR ── */
@@ -809,6 +819,68 @@ h2 { font-size: clamp(36px,4.5vw,60px); font-weight: 400; line-height: 1.1; lett
 p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .gem, h1 span { color: var(--accent) !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
 .glass-panel { background: var(--surface); border: 1px solid var(--line-strong); box-shadow: none; }
+
+/* ══════════════════════════════════════════
+   LOGIN PAGE — floating card on vivid bg
+══════════════════════════════════════════ */
+.lp-shell {
+  width: 100%; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; position: relative; overflow: hidden;
+}
+.lp-bg-outer { position: fixed; inset: 0; z-index: 0; }
+.lp-bg-outer-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(.88) saturate(1.15); transform: scale(1.02); }
+.lp-bg-outer-dim { position: absolute; inset: 0; background: rgba(0,0,0,.08); }
+.lp-card {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1.3fr;
+  width: min(880px, 100%);
+  height: min(480px, calc(100vh - 32px));
+  border-radius: 22px; overflow: hidden;
+  border: 5px solid #fff;
+  animation: lpCardIn .9s var(--ease) both;
+}
+@keyframes lpCardIn { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.lp-card-left {
+  background: #fff; padding: 28px 28px 22px;
+  display: flex; flex-direction: column; gap: 14px; overflow: hidden;
+}
+.lp-right-text { display: flex; flex-direction: column; }
+.lp-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 6px; }
+.lp-h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(28px, 3vw, 42px); font-weight: 400; line-height: .97; letter-spacing: -.03em; color: var(--ink); margin: 0 0 8px; }
+.lp-accent { color: var(--accent) !important; }
+.lp-sub { font-size: 13px; line-height: 1.5; color: var(--ink-3); margin: 0; }
+.lp-actions { display: flex; flex-direction: column; gap: 8px; }
+.lp-google-wrap { min-height: 40px; display: flex; align-items: center; }
+.lp-ghost-btn { display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 16px; background: transparent; border: 1.5px solid var(--line-strong); border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; transition: all .18s; gap: 8px; }
+.lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
+.lp-fine { font-size: 10px; color: var(--ink-3); line-height: 1.4; margin: 0; }
+.lp-card-right { position: relative; overflow: hidden; background: transparent; }
+.lp-panel-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.6) 0%, rgba(0,0,0,.1) 50%); }
+.lp-panel-itin { position: absolute; bottom: 24px; left: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; }
+.lp-itin-line { display: flex; align-items: center; gap: 16px; padding: 11px 16px; background: rgba(8,8,8,.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; opacity: 0; animation: lpLineIn .5s var(--ease) forwards; }
+.lp-itin-1 { animation-delay: .8s; } .lp-itin-2 { animation-delay: 1.05s; } .lp-itin-3 { animation-delay: 1.3s; }
+@keyframes lpLineIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.lp-itin-time { font-size: 12px; font-weight: 800; color: var(--accent); min-width: 38px; font-variant-numeric: tabular-nums; }
+.lp-itin-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.92); }
+
+/* Mobile: single column, right panel hidden, auto height */
+@media(max-width: 700px) {
+  .lp-shell { padding: 24px 16px; align-items: center; }
+  .lp-card {
+    grid-template-columns: 1fr;
+    height: auto; min-height: 0;
+    border-width: 4px; width: 100%;
+  }
+  .lp-card-right { display: none; }
+  .lp-card-left { padding: 30px 22px 28px; gap: 16px; overflow: visible; }
+  .lp-h1 { font-size: 34px; }
+  .lp-google-wrap { width: 100%; }
+  .lp-google-wrap > div { width: 100% !important; }
+  .lp-google-wrap iframe { width: 100% !important; }
+  #googleSignIn { width: 100% !important; }
+  .lp-ghost-btn { width: 100%; min-height: 46px; }
+}
 
 /* ── HERO ── */
 .hero-screen { padding-top: clamp(64px,8vw,110px); }
