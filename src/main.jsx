@@ -2924,6 +2924,64 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .lp-card {
     height: calc(100dvh - 26px) !important;
   }
+
+  /* ── FINAL OVERRIDE: real Google iframe wins over all earlier fake button blocks ── */
+  .lp-google-wrap {
+    position: relative !important;
+    width: 100% !important;
+    min-height: 44px !important;
+    height: auto !important;
+    border: none !important;
+    background: transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  .lp-google-wrap::before,
+  .lp-google-wrap::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .lp-google-wrap > div,
+  #googleSignIn {
+    width: 100% !important;
+    opacity: 1 !important;
+    position: relative !important;
+    inset: auto !important;
+    height: auto !important;
+    z-index: auto !important;
+    cursor: auto !important;
+  }
+
+  .lp-google-wrap iframe {
+    width: 100% !important;
+    border-radius: 14px !important;
+    opacity: 1 !important;
+    position: relative !important;
+    inset: auto !important;
+  }
+
+  /* Ghost btn: exact desktop style */
+  .lp-ghost-btn {
+    width: 100% !important;
+    min-height: 42px !important;
+    border-radius: 11px !important;
+    border: 1.5px solid var(--line-strong) !important;
+    background: transparent !important;
+    color: var(--ink) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 14px !important;
+    gap: 8px !important;
+    box-shadow: none !important;
+    height: auto !important;
+  }
 }
 
 @media (max-width: 760px) and (max-height: 760px) {
