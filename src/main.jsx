@@ -563,7 +563,7 @@ function App() {
         <div className="lp-shell">
           {/* Dark full-screen background — same image, very dark */}
           <div className="lp-bg-outer">
-            <img src="https://images.pexels.com/photos/3593988/pexels-photo-3593988.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            <img src="https://images.pexels.com/photos/5226950/pexels-photo-5226950.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
             <div className="lp-bg-outer-dim" />
           </div>
 
@@ -717,20 +717,20 @@ function App() {
             ))}
           </section>
 
-          {/* Custom activity input */}
+          {/* Custom activity input — white card like setup */}
           <div className="custom-activity-wrap">
-            <label className="custom-activity-label" htmlFor="customActivity">
-              Want to customize further?
-            </label>
-            <input
-              id="customActivity"
-              className="custom-activity-input"
-              type="text"
-              value={customActivity}
-              onChange={e => setCustomActivity(e.target.value)}
-              placeholder="Tell us a specific activity you want — ziplining, a cooking class, sunset at a rooftop bar…"
-              maxLength={200}
-            />
+            <div className="setup-card custom-activity-card">
+              <span className="setup-card-label">WANT TO CUSTOMIZE FURTHER?</span>
+              <input
+                id="customActivity"
+                className="setup-card-input"
+                type="text"
+                value={customActivity}
+                onChange={e => setCustomActivity(e.target.value)}
+                placeholder="Tell us a specific activity you want — ziplining, a cooking class, sunset at a rooftop bar…"
+                maxLength={200}
+              />
+            </div>
           </div>
 
           <section className="build-cta-row">
@@ -1284,9 +1284,11 @@ button { cursor: pointer; }
 .setup-header { margin-bottom: 32px; }
 
 .setup-stack {
-  display: flex; flex-direction: column; gap: 20px;
+  display: flex; flex-direction: column; gap: 28px;
   max-width: 600px;
 }
+.custom-activity-wrap { margin-top: 48px; max-width: 960px; }
+.custom-activity-card { max-width: 100%; }
 .setup-card {
   background: #fff;
   border-radius: 20px;
