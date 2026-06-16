@@ -560,45 +560,86 @@ function App() {
       </nav>
 
       {step === "login" && (
-        <main className="screen hero-screen on">
-          {/* Full-screen background — zooms out on load */}
-          <div className="hero-fullbg">
-            <img src={moodVibes[0].img} alt="" />
-            <div className="hero-fullbg-overlay" />
+        <main className="login-page">
+          {/* Full-screen background */}
+          <div className="lp-bg">
+            <img src={moodVibes[0].img} alt="" className="lp-bg-img" />
+            <div className="lp-bg-overlay" />
           </div>
 
-          <section className="hero-inner">
-            <div className="hero-left">
-              <div className="hero-pill">
-                <div className="pulse" />
-                <span>Powered by Gemini</span>
-              </div>
-              <h1>Today feels <span>different.</span></h1>
-              <p>Because even the best recommendation system can't predict what you'll want today. Whether it's a single evening, a full day, or a whole trip.</p>
-              <div className="hero-cta">
-                <div className="google-wrap">
-                  <div id="googleSignIn" />
-                  {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google sign in...</div>}
-                </div>
-                <button className="btn-accent" onClick={() => goTo("setup")}>Continue without sign in</button>
+          {/* Left: headline + itinerary lines */}
+          <div className="lp-hero-content">
+            <div className="lp-left">
+              <p className="lp-eyebrow">Powered by Gemini ✦</p>
+              <h1 className="lp-h1">Today feels<br/><span className="lp-accent">different.</span></h1>
+              <p className="lp-sub">Mood-first travel planning. Tell us how you feel — we build your day around it.</p>
+              <div className="lp-itinerary">
+                <div className="lp-itin-line lp-itin-1"><span className="lp-itin-time">08:30</span><span className="lp-itin-label">Quiet temple morning</span></div>
+                <div className="lp-itin-line lp-itin-2"><span className="lp-itin-time">12:00</span><span className="lp-itin-label">Vegetarian lunch nearby</span></div>
+                <div className="lp-itin-line lp-itin-3"><span className="lp-itin-time">17:30</span><span className="lp-itin-label">Golden-hour walk</span></div>
               </div>
             </div>
-            <div className="hero-cards itinerary-showreel" aria-label="Itinerary preview animation">
-              <div className="showreel-frame">
-                <div className="showreel-image-stack">
-                  <img className="reel-img reel-img-1" src={moodVibes[8].img} alt="" />
-                  <img className="reel-img reel-img-2" src={moodVibes[2].img} alt="" />
-                  <img className="reel-img reel-img-3" src={moodVibes[3].img} alt="" />
+          </div>
+
+          {/* Right: floating form card overlapping image */}
+          <div className="lp-form-card">
+            <div className="lp-form-card-inner">
+              <p className="lp-form-eyebrow">Plan your day</p>
+              <h3 className="lp-form-title">Where to?</h3>
+              <div className="lp-fc-fields">
+                <div className="lp-fc-field">
+                  <span className="lp-fc-label">DESTINATION</span>
+                  <div className="lp-fc-input-wrap">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="lp-fc-icon"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.4"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.4"/></svg>
+                    <input value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="City, neighborhood, or place" autoComplete="off" className="lp-fc-input" />
+                  </div>
+                  {destinationOptions.length > 0 && (
+                    <div className="lp-fc-suggestions">
+                      {destinationOptions.map((item) => (
+                        <button type="button" key={item.placeId || item.label} className={destination === item.label ? "lp-fc-sug active" : "lp-fc-sug"} onClick={() => setDestination(item.label)}>{item.label}</button>
+                      ))}
+                      {isAutocompleting && <div className="autocomplete-loading">Searching…</div>}
+                    </div>
+                  )}
                 </div>
-                <div className="showreel-overlay" />
-                <div className="itinerary-lines">
-                  <div className="itinerary-line line-1"><b>08:30</b><span>Quiet temple morning</span></div>
-                  <div className="itinerary-line line-2"><b>12:00</b><span>Vegetarian lunch nearby</span></div>
-                  <div className="itinerary-line line-3"><b>17:30</b><span>Golden-hour walk</span></div>
+                <div className="lp-fc-field">
+                  <span className="lp-fc-label">DATE</span>
+                  <div className="lp-fc-input-wrap">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="lp-fc-icon"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M2 7h12M5 1v3M11 1v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                    <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="lp-fc-input" />
+                  </div>
+                </div>
+                <div className="lp-fc-row">
+                  <div className="lp-fc-field lp-fc-half">
+                    <span className="lp-fc-label">DIET</span>
+                    <div className="lp-fc-chips">
+                      {["Vegetarian","Vegan","No restrictions","Gluten-free"].map(o => (
+                        <button key={o} type="button" className={diet === o ? "lp-chip active" : "lp-chip"} onClick={() => setDiet(o)}>{o}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="lp-fc-field lp-fc-half">
+                    <span className="lp-fc-label">WITH</span>
+                    <div className="lp-fc-chips">
+                      {["Solo","Date","Friends","Family","Workday"].map(o => (
+                        <button key={o} type="button" className={planFor === o ? "lp-chip active" : "lp-chip"} onClick={() => setPlanFor(o)}>{o}</button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
+              <button className="lp-fc-cta" onClick={() => goTo("mood")}>
+                Choose your mood
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.75 9h10.5M9.75 4.5L14.25 9l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <div className="lp-fc-divider"><span>or</span></div>
+              <div className="lp-fc-google">
+                <div id="googleSignIn" />
+                {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google…</div>}
+                {!GOOGLE_CLIENT_ID && <button className="lp-fc-ghost" onClick={() => goTo("setup")}>Continue without sign in</button>}
+              </div>
             </div>
-          </section>
+          </div>
         </main>
       )}
 
@@ -1258,240 +1299,219 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .gem, h1 span { color: var(--accent) !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
 .glass-panel { background: var(--surface); border: 1px solid var(--line-strong); box-shadow: none; }
 
-/* ── HERO — full screen zoom-out reveal ── */
-.hero-screen {
-  padding: 0 !important;
-  max-width: none !important;
-  width: 100% !important;
-  min-height: 100vh;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+/* ══════════════════════════════════════════
+   LOGIN PAGE — two-section scroll experience
+══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   LOGIN PAGE — single-screen, form card overlaps hero
+══════════════════════════════════════════ */
+.login-page {
+  width: 100%; height: 100vh; min-height: 640px;
+  position: relative; overflow: hidden;
+  display: flex; align-items: stretch;
 }
-.hero-fullbg {
+
+/* Background image — zooms in on load */
+.lp-bg {
   position: absolute; inset: 0;
-  animation: heroZoomOut 1.6s var(--ease) forwards;
+  animation: lpBgZoom 2.2s var(--ease) forwards;
   will-change: transform;
 }
-@keyframes heroZoomOut {
-  from { transform: scale(1.12); }
+@keyframes lpBgZoom {
+  from { transform: scale(1.08); }
   to   { transform: scale(1); }
 }
-.hero-fullbg img {
-  width: 100%; height: 100%; object-fit: cover;
-  filter: brightness(.55) saturate(1.1);
-}
-.hero-fullbg-overlay {
+.lp-bg-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(.48) saturate(1.15); }
+.lp-bg-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,.1) 0%, rgba(0,0,0,.55) 100%);
+  background: linear-gradient(105deg, rgba(0,0,0,.72) 0%, rgba(0,0,0,.3) 55%, rgba(0,0,0,.15) 100%);
 }
-.hero-inner {
+
+/* Left: headline + itinerary lines */
+.lp-hero-content {
   position: relative; z-index: 2;
-  display: grid;
-  grid-template-columns: minmax(0,1fr) minmax(320px,480px);
-  gap: clamp(42px,7vw,96px);
-  align-items: center;
-  min-height: 100vh;
-  padding: clamp(80px,10vw,140px) clamp(40px,6vw,100px);
-  animation: heroContentIn 1s var(--ease) .4s both;
+  flex: 1;
+  display: flex; align-items: flex-end;
+  padding: clamp(48px,8vw,110px) clamp(40px,6vw,90px) clamp(48px,7vw,90px);
+  animation: lpContentIn 1s var(--ease) .4s both;
 }
-@keyframes heroContentIn {
-  from { opacity: 0; transform: translateY(20px); }
+@keyframes lpContentIn {
+  from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.hero-left h1 { color: #fff !important; }
-.hero-left > p { color: rgba(255,255,255,.8) !important; }
-.hero-pill span { color: rgba(255,255,255,.6) !important; }
-.hero-cta > .btn-accent {
-  background: #fff !important;
-  color: var(--ink) !important;
-  border: none !important;
+.lp-left { display: flex; flex-direction: column; gap: 0; max-width: 560px; }
+.lp-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: rgba(255,255,255,.5);
+  margin: 0 0 20px;
 }
-.hero-cta > .btn-accent:hover { background: rgba(255,255,255,.9) !important; }
-
-/* Showreel */
-.hero-cards.itinerary-showreel { height: auto !important; }
-.showreel-frame { position: relative; width: min(480px,100%); height: 420px; border-radius: 28px; overflow: hidden; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); backdrop-filter: blur(6px); }
-.showreel-overlay { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.42)),linear-gradient(90deg,rgba(0,0,0,.12),rgba(0,0,0,.02)); }
-.itinerary-lines { position: absolute; left: 24px; right: 24px; bottom: 24px; z-index: 2; display: grid; gap: 8px; }
-.itinerary-line { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: center; min-height: 54px; padding: 10px 13px; border-radius: 18px; background: rgba(244,243,238,.92); border: 1px solid rgba(255,255,255,.62); opacity: 0; transform: translateY(12px); animation: lineBuild 9s infinite; }
-.line-1 { animation-delay:.55s; } .line-2 { animation-delay:1.25s; } .line-3 { animation-delay:1.95s; }
-@keyframes lineBuild { 0%,4% { opacity:0; transform:translateY(12px); } 10%,74% { opacity:1; transform:translateY(0); } 82%,100% { opacity:0; transform:translateY(-6px); } }
-.itinerary-line b, .itinerary-line span { color: var(--ink) !important; font-size: 13px; font-weight: 700; }
-.itinerary-line b { color: var(--accent) !important; font-weight: 800; }
-
-/* ── SETUP — Valora-style bar ── */
-.setup-screen { max-width: 1160px; }
-.setup-header { margin-bottom: 36px; max-width: 540px; }
-
-.setup-bar {
-  display: flex;
-  align-items: stretch;
-  background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 4px 24px rgba(0,0,0,.09);
-  overflow: visible;
-  position: relative;
-  min-height: 90px;
+.lp-h1 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(54px,7.5vw,108px);
+  font-weight: 400; line-height: .98;
+  letter-spacing: -.03em; color: #fff;
+  margin: 0 0 22px;
 }
-.setup-bar-field {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-  padding: 18px 28px;
-  flex: 1;
-  min-width: 0;
-  position: relative;
+.lp-accent { color: var(--accent) !important; }
+.lp-sub {
+  font-size: clamp(15px,1.3vw,18px); line-height: 1.6;
+  color: rgba(255,255,255,.65); max-width: 420px; margin: 0 0 36px;
 }
-.setup-bar-destination { flex: 1.6; }
-.setup-bar-when { flex: 1; }
-.setup-bar-diet { flex: 1.8; }
-.setup-bar-with { flex: 1.4; }
 
-.setup-bar-label {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .12em;
-  color: var(--ink-3);
-  text-transform: uppercase;
+/* Floating itinerary lines on hero */
+.lp-itinerary { display: flex; flex-direction: column; gap: 10px; }
+.lp-itin-line {
+  display: flex; align-items: center; gap: 18px;
+  padding: 14px 20px;
+  background: rgba(255,255,255,.1);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 16px;
+  opacity: 0;
+  animation: lpLineIn .55s var(--ease) forwards;
 }
-.setup-bar-input {
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  color: var(--ink) !important;
+.lp-itin-1 { animation-delay: .9s; }
+.lp-itin-2 { animation-delay: 1.15s; }
+.lp-itin-3 { animation-delay: 1.4s; }
+@keyframes lpLineIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.lp-itin-time {
+  font-size: 13px; font-weight: 800; color: var(--accent);
+  min-width: 42px; font-variant-numeric: tabular-nums;
+}
+.lp-itin-label { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.9); }
+
+/* ── Floating form card — right side, overlaps image ── */
+.lp-form-card {
+  position: relative; z-index: 3;
+  width: clamp(360px, 30vw, 440px);
+  flex-shrink: 0;
+  display: flex; align-items: center;
+  padding: 24px 24px 24px 0;
+  animation: lpCardIn .9s var(--ease) .3s both;
+}
+@keyframes lpCardIn {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.lp-form-card-inner {
   width: 100%;
+  background: #fff;
+  border-radius: 28px;
+  padding: 32px 28px 28px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.22), 0 8px 24px rgba(0,0,0,.12);
+  display: flex; flex-direction: column; gap: 20px;
 }
-.setup-bar-input:focus { box-shadow: none !important; }
-.setup-bar-input::placeholder { color: var(--ink-3); font-weight: 400; }
-input[type="date"].setup-bar-input { font-size: 15px; }
 
-.setup-bar-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 2px;
+.lp-form-eyebrow {
+  font-size: 10px; font-weight: 800; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0;
 }
-.sb-chip {
-  padding: 4px 11px;
-  border-radius: 999px;
+.lp-form-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 28px; font-weight: 400; letter-spacing: -.02em;
+  color: var(--ink); margin: -8px 0 0;
+}
+
+/* Fields inside card */
+.lp-fc-fields { display: flex; flex-direction: column; gap: 16px; }
+.lp-fc-field { display: flex; flex-direction: column; gap: 6px; position: relative; }
+.lp-fc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.lp-fc-half {}
+
+.lp-fc-label {
+  font-size: 9.5px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.lp-fc-input-wrap {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); border-radius: 14px;
+  padding: 0 16px; min-height: 52px;
+  transition: background .15s;
+}
+.lp-fc-input-wrap:focus-within { background: var(--surface-2); }
+.lp-fc-icon { color: var(--ink-3); flex-shrink: 0; }
+.lp-fc-input {
+  flex: 1; background: transparent !important;
+  border: none !important; border-radius: 0 !important;
+  box-shadow: none !important; min-height: 0 !important;
+  padding: 0 !important; font-size: 14px !important;
+  font-weight: 600 !important; color: var(--ink) !important;
+}
+.lp-fc-input:focus { box-shadow: none !important; }
+.lp-fc-input::placeholder { color: var(--ink-3); font-weight: 400; }
+
+.lp-fc-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.lp-chip {
+  padding: 5px 12px; border-radius: 999px;
   border: 1.5px solid var(--line-strong);
-  background: transparent;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-3);
-  cursor: pointer;
-  transition: all .15s;
+  background: transparent; font-size: 11.5px; font-weight: 600;
+  color: var(--ink-3); cursor: pointer; transition: all .15s;
   white-space: nowrap;
 }
-.sb-chip:hover { border-color: var(--ink); color: var(--ink); }
-.sb-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(51,153,137,.07); font-weight: 700; }
-
-.setup-bar-divider {
-  width: 1px;
-  background: var(--line);
-  margin: 16px 0;
-  flex-shrink: 0;
+.lp-chip:hover { border-color: var(--ink-2); color: var(--ink); }
+.lp-chip.active {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(51,153,137,.08); font-weight: 700;
 }
 
-.setup-bar-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 12px;
-  width: 56px;
-  min-width: 56px;
-  border-radius: 16px;
-  background: var(--ink);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  transition: opacity .15s;
-  flex-shrink: 0;
+/* CTA button */
+.lp-fc-cta {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 54px; padding: 0 20px;
+  background: var(--ink); color: #fff;
+  border: none; border-radius: 16px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: opacity .15s; gap: 10px;
 }
-.setup-bar-cta:hover { opacity: .85; }
+.lp-fc-cta:hover { opacity: .88; }
 
-.setup-bar-suggestions {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.12);
-  z-index: 100;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+/* Divider */
+.lp-fc-divider {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--ink-3); font-size: 12px;
 }
-.setup-bar-suggestions .suggestion {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink);
-  cursor: pointer;
-  transition: background .1s;
-}
-.setup-bar-suggestions .suggestion:hover,
-.setup-bar-suggestions .suggestion.active { background: var(--surface); }
-
-/* Mobile: stack bar vertically */
-@media(max-width: 760px) {
-  .setup-bar { flex-direction: column; border-radius: 20px; min-height: 0; }
-  .setup-bar-divider { width: auto; height: 1px; margin: 0 16px; }
-  .setup-bar-field { padding: 16px 20px; }
-  .setup-bar-cta { width: auto; min-width: 0; margin: 12px; border-radius: 14px; min-height: 52px; }
+.lp-fc-divider::before, .lp-fc-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--line-strong);
 }
 
-/* Partnership notice banner */
-.partnership-notice {
-  display: flex; flex-direction: column; gap: 14px;
-  padding: 18px 20px; border-radius: 16px; margin-bottom: 28px;
-  background: var(--panel); border: 1px solid var(--line-strong);
-  max-width: 640px;
+/* Google sign in */
+.lp-fc-google { display: flex; justify-content: center; min-height: 44px; align-items: center; }
+.lp-fc-ghost {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 100%; min-height: 44px; padding: 0 20px;
+  background: transparent; border: 1.5px solid var(--line-strong);
+  border-radius: 14px; font-size: 13px; font-weight: 600;
+  color: var(--ink-2); cursor: pointer; transition: all .15s;
 }
-.partnership-notice-left {
-  display: flex; align-items: flex-start; gap: 10px;
-  font-size: 13px; line-height: 1.65; color: var(--ink-3);
+.lp-fc-ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+/* Suggestions dropdown */
+.lp-fc-suggestions {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: #fff; border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.14);
+  z-index: 200; padding: 6px;
+  display: flex; flex-direction: column; gap: 2px;
 }
-.partnership-notice-left svg { flex-shrink: 0; margin-top: 2px; color: var(--ink-3); }
-.partnership-notice-left strong { color: var(--ink-2); font-weight: 700; }
-.partnership-notice .profile-chip { align-self: flex-start; margin-top: 0; }
-.form-shell { max-width: 640px; border-radius: 0; background: transparent !important; border: 0 !important; padding: 0 !important; display: grid; gap: 28px; }
-label { display: grid; gap: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
-input { width: 100%; background: #fff; border: none; border-radius: 20px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; box-shadow: 0 1px 6px rgba(0,0,0,.08); transition: box-shadow .2s; }
-input:focus { box-shadow: 0 2px 12px rgba(0,0,0,.13); }
-input::placeholder { color: var(--ink-3); font-weight: 400; }
-input[type="date"] { color-scheme: light; }
-/* Date input: never overflow on narrow screens */
-input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appearance: none; }
-.suggestions, .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; justify-content: flex-start; }
-.suggestion, .chip { padding: 8px 16px; background: transparent; border: 2px solid var(--gold); border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--gold); transition: background .15s, color .15s, border-color .15s; text-align: left; }
-.suggestion:hover, .chip:hover { background: var(--gold); color: #fff; border-color: var(--gold); }
-.suggestion.active, .chip.active { background: var(--gold); border-color: var(--gold); color: #fff; font-weight: 700; }
-.autocomplete-loading { display: inline-flex; align-items: center; padding: 8px 12px; color: var(--ink-3); font-size: 12px; font-weight: 700; }
-.field-block { display: grid; gap: 8px; }
+.lp-fc-sug {
+  display: block; width: 100%; text-align: left;
+  padding: 9px 12px; border-radius: 9px;
+  border: none; background: transparent;
+  font-size: 13px; font-weight: 500; color: var(--ink);
+  cursor: pointer; transition: background .1s;
+}
+.lp-fc-sug:hover, .lp-fc-sug.active { background: var(--surface); }
 
-.profile-chip { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 7px 12px; border-radius: 10px; background: var(--surface-3); color: var(--ink-2); font-size: 12px; font-weight: 700; border: 1px solid var(--line-strong); }
-.profile-chip img { width: 22px; height: 22px; border-radius: 50%; }
-.primary-wide { width: fit-content; }
-
-@media(max-width: 760px) {
-  .primary-wide { width: 100%; justify-content: center; }
+/* Mobile */
+@media(max-width: 900px) {
+  .login-page { flex-direction: column; height: auto; min-height: 100vh; }
+  .lp-hero-content { align-items: flex-start; padding-bottom: 32px; min-height: 55vh; }
+  .lp-form-card { width: 100%; padding: 0 16px 32px; }
+  .lp-form-card-inner { border-radius: 24px; }
+  .lp-fc-row { grid-template-columns: 1fr; }
 }
 
 /* ── MOOD GRID ── */
