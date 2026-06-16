@@ -602,11 +602,10 @@ function App() {
               <p className="lp-fine">No account needed. Sign in later to save itineraries.</p>
             </div>
 
-            {/* RIGHT: image panel with itinerary */}
-            <div className="lp-card-right">
-              <img src="https://images.pexels.com/photos/2444429/pexels-photo-2444429.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-panel-img" />
-              <div className="lp-panel-overlay" />
 
+            {/* RIGHT: transparent — bg image shows through like a window */}
+            <div className="lp-card-right">
+              <div className="lp-panel-overlay" />
               <div className="lp-panel-itin">
                 <div className="lp-itin-line lp-itin-1">
                   <span className="lp-itin-time">08:30</span>
@@ -1252,23 +1251,103 @@ button { cursor: pointer; }
 .drawer-subscribe { width: 100%; justify-content: center; min-height: 48px !important; font-size: 14px !important; }
 
 /* ── BUTTONS ── */
-.btn-outline, .btn-accent { border-radius: 999px; font-weight: 700; font-size: 13px; transition: opacity .15s, background .15s; }
+.btn-outline, .btn-accent { border-radius: 14px; font-weight: 700; font-size: 14px; transition: opacity .15s, background .15s; }
 .btn-outline {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  min-height: 50px; padding: 0 24px;
-  background: transparent; border: 1.5px solid var(--ink); color: var(--ink); text-decoration: none;
+  min-height: 52px; padding: 0 24px;
+  background: transparent; border: 1.5px solid var(--line-strong); color: var(--ink); text-decoration: none;
 }
 .btn-outline:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 .btn-accent {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 50px; padding: 0 26px;
-  background: var(--ink); color: #fff; border: 1px solid var(--ink); font-weight: 800;
+  min-height: 52px; padding: 0 26px;
+  background: var(--ink); color: #fff; border: none; font-weight: 700;
 }
 .btn-accent:hover { opacity: .88; }
 .btn-accent:active { transform: scale(.98); }
 .btn-accent, .btn-outline { text-decoration: none !important; }
-.nav-subscribe { min-height: 44px !important; padding: 0 24px !important; font-size: 13px; background: var(--ink) !important; border: 1.5px solid var(--ink) !important; color: #fff !important; font-weight: 700 !important; }
-.nav-subscribe:hover { background: #222 !important; border-color: #222 !important; opacity: 1 !important; }
+.nav-subscribe { min-height: 44px !important; padding: 0 24px !important; font-size: 13px; background: var(--ink) !important; border: none !important; color: #fff !important; font-weight: 700 !important; border-radius: 12px !important; }
+.nav-subscribe:hover { opacity: .85 !important; }
+
+/* ── CHIPS (global) ── */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 8px 16px; border-radius: 999px;
+  border: 1.5px solid var(--line-strong);
+  background: transparent; font-size: 13px; font-weight: 600;
+  color: var(--ink-3); cursor: pointer; transition: all .15s;
+}
+.chip:hover { border-color: var(--ink); color: var(--ink); }
+.chip.active { border-color: var(--accent); color: var(--accent); background: rgba(51,153,137,.08); font-weight: 700; }
+
+/* ── SETUP — Valora bar ── */
+.setup-screen { max-width: 1160px; }
+.setup-header { margin-bottom: 36px; max-width: 540px; }
+
+.setup-bar {
+  display: flex; align-items: stretch;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.09);
+  position: relative; min-height: 96px;
+}
+.setup-bar-field {
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 5px; padding: 18px 28px; flex: 1; min-width: 0; position: relative;
+}
+.setup-bar-destination { flex: 1.6; }
+.setup-bar-when { flex: 1; }
+.setup-bar-diet { flex: 1.8; }
+.setup-bar-with { flex: 1.4; }
+.setup-bar-label {
+  font-size: 10px; font-weight: 800; letter-spacing: .12em;
+  color: var(--ink-3); text-transform: uppercase;
+}
+.setup-bar-input {
+  background: transparent !important; border: none !important;
+  border-radius: 0 !important; box-shadow: none !important;
+  min-height: 0 !important; padding: 0 !important;
+  font-size: 15px !important; font-weight: 600 !important; color: var(--ink) !important; width: 100%;
+}
+.setup-bar-input:focus { box-shadow: none !important; }
+.setup-bar-input::placeholder { color: var(--ink-3); font-weight: 400; }
+input[type="date"].setup-bar-input { font-size: 15px; }
+.setup-bar-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.sb-chip {
+  padding: 4px 11px; border-radius: 999px;
+  border: 1.5px solid var(--line-strong);
+  background: transparent; font-size: 12px; font-weight: 600;
+  color: var(--ink-3); cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.sb-chip:hover { border-color: var(--ink); color: var(--ink); }
+.sb-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(51,153,137,.07); font-weight: 700; }
+.setup-bar-divider { width: 1px; background: var(--line); margin: 16px 0; flex-shrink: 0; }
+.setup-bar-cta {
+  display: flex; align-items: center; justify-content: center;
+  margin: 12px; width: 60px; min-width: 60px;
+  border-radius: 16px; background: var(--ink); color: #fff;
+  border: none; cursor: pointer; transition: opacity .15s; flex-shrink: 0;
+}
+.setup-bar-cta:hover { opacity: .85; }
+.setup-bar-suggestions {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.12); z-index: 100; padding: 8px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.setup-bar-suggestions .suggestion {
+  display: block; width: 100%; text-align: left; padding: 10px 14px;
+  border-radius: 10px; border: none; background: transparent;
+  font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; transition: background .1s;
+}
+.setup-bar-suggestions .suggestion:hover,
+.setup-bar-suggestions .suggestion.active { background: var(--surface); }
+@media(max-width: 760px) {
+  .setup-bar { flex-direction: column; border-radius: 20px; min-height: 0; }
+  .setup-bar-divider { width: auto; height: 1px; margin: 0 16px; }
+  .setup-bar-field { padding: 16px 20px; }
+  .setup-bar-cta { width: auto; min-width: 0; margin: 12px; border-radius: 14px; min-height: 52px; }
+}
 
 /* ── SCREENS ── */
 .screen { display: block; width: 100%; max-width: 1160px; padding: clamp(40px,6vw,82px) clamp(20px,4vw,56px); animation: scIn .3s var(--ease) both; }
@@ -1289,9 +1368,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 /* Full-screen vivid background — beautiful, not dark */
 .lp-shell {
-  width: 100%; min-height: 100vh;
+  width: 100%; height: 100vh;
   display: flex; align-items: center; justify-content: center;
-  padding: 32px 24px;
+  padding: 28px 24px;
   position: relative; overflow: hidden;
 }
 .lp-bg-outer {
@@ -1307,20 +1386,18 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   background: rgba(0,0,0,.18);
 }
 
-/* The card — white border frame, feels like a window */
+/* The card — clean white window frame, no shadow */
 .lp-card {
   position: relative; z-index: 1;
   display: grid;
-  grid-template-columns: 1fr 1.1fr;
-  width: min(980px, 100%);
-  min-height: 600px;
-  border-radius: 32px;
+  grid-template-columns: 1fr 1.3fr;
+  width: min(1100px, 100%);
+  height: calc(100vh - 56px);
+  max-height: 760px;
+  border-radius: 28px;
   overflow: hidden;
-  border: 6px solid rgba(255,255,255,.92);
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.3),
-    0 32px 80px rgba(0,0,0,.4),
-    0 8px 24px rgba(0,0,0,.25);
+  border: 5px solid #fff;
+  box-shadow: none;
   animation: lpCardIn .9s var(--ease) both;
 }
 @keyframes lpCardIn {
@@ -1331,8 +1408,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 /* ── LEFT: white panel ── */
 .lp-card-left {
   background: #fff;
-  padding: 44px 40px 40px;
-  display: flex; flex-direction: column; gap: 28px;
+  padding: 40px 36px 36px;
+  display: flex; flex-direction: column; gap: 24px;
+  overflow: hidden;
 }
 .lp-panel-logo {
   display: flex; align-items: center; gap: 9px;
@@ -1367,22 +1445,15 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
 .lp-fine { font-size: 11.5px; color: var(--ink-3); line-height: 1.5; margin-top: -12px; }
 
-/* ── RIGHT: image panel — the "view through the window" ── */
+/* ── RIGHT: transparent window ── */
 .lp-card-right {
   position: relative; overflow: hidden;
+  background: transparent;
 }
-.lp-panel-img {
-  width: 100%; height: 100%; object-fit: cover;
-  filter: brightness(.82) saturate(1.2);
-  animation: lpImgZoom 2.4s var(--ease) both;
-}
-@keyframes lpImgZoom {
-  from { transform: scale(1.07); }
-  to   { transform: scale(1); }
-}
+.lp-panel-img { display: none; }
 .lp-panel-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,.65) 0%, rgba(0,0,0,.05) 50%, rgba(0,0,0,0) 100%);
+  background: linear-gradient(to top, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 50%);
 }
 
 /* Itinerary lines */
