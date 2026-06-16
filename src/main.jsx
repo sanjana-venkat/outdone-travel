@@ -205,7 +205,6 @@ function App() {
     setStep(s);
   }
 
-  // ── SHARED ITINERARY: restore from ?i=<id> on mount ─────────────
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("i");
@@ -224,7 +223,6 @@ function App() {
       .catch(() => console.warn("Could not load shared itinerary"));
   }, []);
 
-  // ── FAVICON + PAGE TITLE ─────────────────────────────────────────
   useEffect(() => {
     document.title = "Travel DNA — Mood-first travel planning";
     const setFavicon = (href, type) => {
@@ -232,10 +230,8 @@ function App() {
       if (!el) { el = document.createElement("link"); el.rel = "icon"; document.head.appendChild(el); }
       el.type = type; el.href = href;
     };
-    // Inline the SVG as a data URI so it works even before /public is served
     const svgMark = `<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="8" fill="%230d1a14"/><path d="M8 4 C8 10,24 10,24 16 C24 22,8 22,8 28" fill="none" stroke="%23339989" stroke-width="2.5" stroke-linecap="round"/><path d="M24 4 C24 10,8 10,8 16 C8 22,24 22,24 28" fill="none" stroke="%235EC4B5" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/><circle cx="16" cy="8.5" r="2" fill="%23339989"/><circle cx="16" cy="16" r="2" fill="%23339989"/><circle cx="16" cy="23.5" r="2" fill="%23339989"/></svg>`;
     setFavicon(`data:image/svg+xml,${svgMark}`, "image/svg+xml");
-    // Apple touch icon — link to /apple-touch-icon.png if you've added it to /public
     let apple = document.querySelector("link[rel='apple-touch-icon']");
     if (!apple) { apple = document.createElement("link"); apple.rel = "apple-touch-icon"; apple.sizes = "180x180"; document.head.appendChild(apple); }
     apple.href = "/apple-touch-icon.png";
@@ -383,18 +379,15 @@ function App() {
     }
   }
 
-  // ── ADD TO CALENDAR ──────────────────────────────────────────────
   async function addToCalendar() {
     if (!itinerary?.stops?.length) return;
     setCalendarState("loading");
 
-    const tripDate = date || getToday();         // "YYYY-MM-DD"
+    const tripDate = date || getToday();
     const destName = itinerary.destination || destination;
 
-    // If signed in with Google, use Google Calendar API via OAuth implicit flow
     if (user) {
       try {
-        // Request an OAuth access token via Google Identity Services
         await new Promise((resolve, reject) => {
           if (!window.google?.accounts?.oauth2) return reject(new Error("GIS not loaded"));
           const client = window.google.accounts.oauth2.initTokenClient({
@@ -404,7 +397,6 @@ function App() {
               if (tokenResponse.error) return reject(new Error(tokenResponse.error));
               try {
                 const accessToken = tokenResponse.access_token;
-                // Build one all-day event that lists every stop as a bullet in description
                 const stopsText = itinerary.stops.map((s, i) =>
                   `${String(i + 1).padStart(2, "0")}. ${s.time || ""} ${s.name}${s.address ? ` — ${s.address}` : ""}`
                 ).join("\n");
@@ -445,8 +437,7 @@ function App() {
       return;
     }
 
-    // Guest fallback: download an .ics file
-    const fmt = (d) => d.replace(/-/g, "");   // "20260611"
+    const fmt = (d) => d.replace(/-/g, "");
     const stopsText = itinerary.stops.map((s, i) =>
       `${String(i + 1).padStart(2, "0")}. ${s.time || ""} ${s.name}${s.address ? " — " + s.address : ""}`
     ).join("\\n");
@@ -480,7 +471,6 @@ function App() {
       <style>{css}</style>
 
       <nav className="navbar">
-        {/* Desktop nav: logo mark + step pills */}
         <div className="nav-left-group nav-desktop">
           <svg className="nav-mark" width="24" height="24" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-label="Travel DNA">
             <path d="M8 4 C8 10,24 10,24 16 C24 22,8 22,8 28" fill="none" stroke="#339989" strokeWidth="2.5" strokeLinecap="round"/>
@@ -507,7 +497,6 @@ function App() {
           <button className="btn-accent nav-subscribe" onClick={() => setShowSubscribe(true)}>Subscribe for updates</button>
         </div>
 
-        {/* Mobile: hamburger LEFT, subscribe RIGHT */}
         <div className="nav-mobile">
           <button
             className={`hamburger${menuOpen ? " hamburger-open" : ""}`}
@@ -519,7 +508,6 @@ function App() {
           <button className="btn-accent nav-subscribe" onClick={() => setShowSubscribe(true)}>Subscribe for updates</button>
         </div>
 
-        {/* Mobile sidebar drawer — slides in from the left */}
         {menuOpen && (
           <div className="mobile-drawer" onClick={() => setMenuOpen(false)}>
             <div className="mobile-drawer-inner" onClick={e => e.stopPropagation()}>
@@ -531,7 +519,6 @@ function App() {
                   <circle cx="16" cy="16" r="2" fill="#339989"/>
                   <circle cx="16" cy="23.5" r="2" fill="#339989"/>
                 </svg>
-                
                 <button className="drawer-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button>
               </div>
               <p className="mobile-drawer-label">Navigation</p>
@@ -561,16 +548,12 @@ function App() {
 
       {step === "login" && (
         <div className="lp-shell">
-          {/* Dark full-screen background — same image, very dark */}
           <div className="lp-bg-outer">
             <img src="https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
             <div className="lp-bg-outer-dim" />
           </div>
 
-          {/* Floating card */}
           <div className="lp-card">
-
-            {/* LEFT: white panel — text + actions */}
             <div className="lp-card-left">
               <div className="lp-right-text">
                 <p className="lp-eyebrow">Powered by Gemini ✦</p>
@@ -592,8 +575,6 @@ function App() {
               <p className="lp-fine">No account needed. Sign in later to save itineraries.</p>
             </div>
 
-
-            {/* RIGHT: transparent — bg image shows through like a window */}
             <div className="lp-card-right">
               <div className="lp-panel-overlay" />
               <div className="lp-panel-itin">
@@ -611,15 +592,12 @@ function App() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       )}
 
       {step === "setup" && (
         <main className="screen setup-screen on">
-
-          {/* Partnership notice */}
           <div className="partnership-box">
             {user && <div className="profile-chip"><img src={user.picture} alt="" />{user.name}</div>}
             <div className="partnership-box-inner">
@@ -635,8 +613,6 @@ function App() {
           </section>
 
           <div className="setup-stack">
-
-            {/* WHERE */}
             <div className="setup-card">
               <span className="setup-card-label">WHERE</span>
               <input
@@ -664,13 +640,11 @@ function App() {
               )}
             </div>
 
-            {/* WHEN */}
             <div className="setup-card">
               <span className="setup-card-label">WHEN</span>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="setup-card-input" />
             </div>
 
-            {/* DIET */}
             <div className="setup-card">
               <span className="setup-card-label">DIETARY PREFERENCE</span>
               <div className="chips">
@@ -680,7 +654,6 @@ function App() {
               </div>
             </div>
 
-            {/* WITH */}
             <div className="setup-card">
               <span className="setup-card-label">GOING WITH</span>
               <div className="chips">
@@ -692,7 +665,6 @@ function App() {
 
             <button className="btn-accent" onClick={() => goTo("mood")}>Choose today's mood →</button>
           </div>
-
         </main>
       )}
 
@@ -717,7 +689,6 @@ function App() {
             ))}
           </section>
 
-          {/* Custom activity input — white card like setup */}
           <div className="custom-activity-wrap">
             <div className="setup-card custom-activity-card">
               <span className="setup-card-label">WANT TO CUSTOMIZE FURTHER?</span>
@@ -899,31 +870,21 @@ function App() {
 
       {step === "result" && (
         <main className="result-screen on">
-          {/* ── RESULT HERO with frosted glass overlay ── */}
           <section className="res-hero">
-            {/* Background image — full bleed, slightly zoomed */}
             <img
               className="res-bg-img"
               src={itinerary?.heroImageUrl || selectedMoodObjects[0]?.img || moodVibes[0].img}
               alt=""
             />
-
-            {/* Frosted glass content panel */}
             <div className="res-glass-panel">
-              {/* Top row: archetype tag line + date */}
               <div className="res-glass-top">
                 <p className="archetype-line">{travelArchetype.line}</p>
                 <span className="res-date-tag">{itinerary?.dates || prettyDate(date)}</span>
               </div>
-
-              {/* Destination name — single line, ellipsis on overflow */}
               <h2 className="res-dest">{itinerary?.destination || destination}</h2>
-
-              {/* Summary */}
               {itinerary?.summary && (
                 <p className="res-summary">{itinerary.summary}</p>
               )}
-
               {itinerary?.generatedBy === "fallback" && (
                 <div className="fallback-banner">
                   <span>Preview mode</span>
@@ -935,18 +896,15 @@ function App() {
           </section>
 
           <section className="action-bar">
-            {/* Row 1: icon circle buttons */}
             <div className="action-icons-row">
               <button className="icon-btn" onClick={() => goTo("setup")} title="Edit setup">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 <span>Edit</span>
               </button>
-
               <button className="icon-btn" onClick={generatePlan} title="Regenerate">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0110.5-4M15 9a6 6 0 01-10.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M13 5h2.5V2.5M5 13H2.5V15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 <span>Redo</span>
               </button>
-
               <button
                 className={`icon-btn${shareCopied ? " icon-btn-active" : ""}${shareLoading ? " icon-btn-loading" : ""}`}
                 disabled={shareLoading}
@@ -983,7 +941,6 @@ function App() {
                 )}
                 <span>{shareLoading ? "Saving…" : shareCopied ? "Copied!" : "Share"}</span>
               </button>
-
               <button
                 className={`icon-btn cal-icon-btn-${calendarState}`}
                 onClick={addToCalendar}
@@ -1001,8 +958,6 @@ function App() {
                 </span>
               </button>
             </div>
-
-            {/* Row 2: primary CTA */}
             {tripMapsUrl && (
               <a className="btn-accent maps-trip-btn action-primary-cta" href={tripMapsUrl} target="_blank" rel="noreferrer">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
@@ -1142,7 +1097,6 @@ button { cursor: pointer; }
 .navbar::before { display: none; }
 .nav-steps, .nav-actions, .error-actions { display: flex; align-items: center; gap: 6px; }
 
-/* Desktop nav — hidden on mobile */
 .nav-desktop { display: flex; align-items: center; gap: 6px; }
 .nav-left-group { display: flex; align-items: center; gap: 12px; }
 .nav-mark { display: block; flex-shrink: 0; }
@@ -1161,11 +1115,9 @@ button { cursor: pointer; }
 .nav-steps button.done { color: var(--ink-2); }
 .nav-steps button:disabled { opacity: .3; cursor: not-allowed; }
 
-/* Mobile nav — hidden on desktop */
 .nav-mobile { display: none; width: 100%; align-items: center; justify-content: space-between; }
 .nav-logo { font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; font-weight: 400; color: var(--ink); letter-spacing: -.02em; }
 
-/* Hamburger button */
 .hamburger {
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   gap: 5px; width: 40px; height: 40px;
@@ -1183,7 +1135,6 @@ button { cursor: pointer; }
 .hamburger-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
 .hamburger-open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
 
-/* Mobile sidebar drawer */
 .mobile-drawer {
   position: fixed; inset: 0; z-index: 998;
   background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
@@ -1267,9 +1218,8 @@ button { cursor: pointer; }
 .chip:hover { border-color: var(--ink); color: var(--ink); }
 .chip.active { border-color: var(--accent); color: var(--accent); background: rgba(51,153,137,.08); font-weight: 700; }
 
-/* ── SETUP — vertical stacked cards ── */
+/* ── SETUP ── */
 .setup-screen { max-width: 680px; }
-/* Partnership notice box */
 .partnership-box {
   max-width: 600px; background: var(--surface);
   border: 1px solid var(--line-strong); border-radius: 16px;
@@ -1280,53 +1230,32 @@ button { cursor: pointer; }
   font-size: 13px; line-height: 1.6; color: var(--ink-3);
 }
 .partnership-box-inner strong { color: var(--ink-2); font-weight: 700; }
-
 .setup-header { margin-bottom: 32px; }
-
-.setup-stack {
-  display: flex; flex-direction: column; gap: 28px;
-  max-width: 600px;
-}
+.setup-stack { display: flex; flex-direction: column; gap: 28px; max-width: 600px; }
 .custom-activity-wrap { margin-top: 48px; max-width: 960px; }
 .custom-activity-card { max-width: 100%; }
 .setup-card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 20px 24px;
+  background: #fff; border-radius: 20px; padding: 20px 24px;
   display: flex; flex-direction: column; gap: 12px;
-  box-shadow: 0 1px 6px rgba(0,0,0,.08);
-  position: relative;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08); position: relative;
 }
-.setup-card-label {
-  font-size: 10px; font-weight: 800;
-  letter-spacing: .12em; text-transform: uppercase;
-  color: var(--ink-3);
-}
+.setup-card-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .setup-card-input {
-  background: transparent !important;
-  border: none !important; box-shadow: none !important;
-  border-radius: 0 !important; min-height: 0 !important;
-  padding: 0 !important; font-size: 16px !important;
-  font-weight: 600 !important; color: var(--ink) !important;
-  width: 100%;
+  background: transparent !important; border: none !important; box-shadow: none !important;
+  border-radius: 0 !important; min-height: 0 !important; padding: 0 !important;
+  font-size: 16px !important; font-weight: 600 !important; color: var(--ink) !important; width: 100%;
 }
 .setup-card-input:focus { box-shadow: none !important; }
 .setup-card-input::placeholder { color: var(--ink-3); font-weight: 400; }
 input[type="date"].setup-card-input { font-size: 15px !important; }
-
-/* Suggestions dropdown */
 .setup-suggestions {
   position: absolute; top: calc(100% + 6px); left: 0; right: 0;
-  background: #fff; border-radius: 16px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.13);
-  z-index: 200; padding: 6px;
-  display: flex; flex-direction: column; gap: 2px;
+  background: #fff; border-radius: 16px; box-shadow: 0 8px 28px rgba(0,0,0,.13);
+  z-index: 200; padding: 6px; display: flex; flex-direction: column; gap: 2px;
 }
 .setup-sug {
-  display: block; width: 100%; text-align: left;
-  padding: 10px 14px; border-radius: 10px;
-  border: none; background: transparent;
-  font-size: 14px; font-weight: 500; color: var(--ink);
+  display: block; width: 100%; text-align: left; padding: 10px 14px; border-radius: 10px;
+  border: none; background: transparent; font-size: 14px; font-weight: 500; color: var(--ink);
   cursor: pointer; transition: background .1s;
 }
 .setup-sug:hover, .setup-sug.active { background: var(--surface); }
@@ -1350,21 +1279,17 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .glass-panel { background: var(--surface); border: 1px solid var(--line-strong); box-shadow: none; }
 
 /* ══════════════════════════════════════════
-   LOGIN PAGE — window frame card on vivid bg
+   LOGIN PAGE
 ══════════════════════════════════════════ */
-
-/* Full-screen vivid background — beautiful, not dark */
 .lp-shell {
   width: 100%; height: 100vh;
   display: flex; align-items: center; justify-content: center;
-  padding: 16px;
-  position: relative; overflow: hidden;
+  padding: 16px; position: relative; overflow: hidden;
 }
 .lp-bg-outer { position: fixed; inset: 0; z-index: 0; }
 .lp-bg-outer-img {
   width: 100%; height: 100%; object-fit: cover;
-  filter: brightness(.92) saturate(1.2);
-  transform: scale(1.02);
+  filter: brightness(.92) saturate(1.2); transform: scale(1.02);
 }
 .lp-bg-outer-dim { position: absolute; inset: 0; background: rgba(0,0,0,.05); }
 
@@ -1383,10 +1308,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 }
 
 .lp-card-left {
-  background: #fff;
-  padding: 24px 26px 20px;
-  display: flex; flex-direction: column; gap: 12px;
-  overflow: hidden;
+  background: #fff; padding: 24px 26px 20px;
+  display: flex; flex-direction: column; gap: 12px; overflow: hidden;
 }
 .lp-panel-logo { display: none; }
 .lp-right-text { display: flex; flex-direction: column; }
@@ -1400,31 +1323,19 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
 .lp-fine { font-size: 10px; color: var(--ink-3); line-height: 1.4; }
 
-/* ── RIGHT: transparent window ── */
-.lp-card-right {
-  position: relative; overflow: hidden;
-  background: transparent;
-}
+.lp-card-right { position: relative; overflow: hidden; background: transparent; }
 .lp-panel-img { display: none; }
 .lp-panel-overlay {
   position: absolute; inset: 0;
   background: linear-gradient(to top, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 50%);
 }
-
-/* Itinerary lines */
-.lp-panel-itin {
-  position: absolute; bottom: 28px; left: 24px; right: 24px;
-  display: flex; flex-direction: column; gap: 8px;
-}
+.lp-panel-itin { position: absolute; bottom: 28px; left: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; }
 .lp-itin-line {
-  display: flex; align-items: center; gap: 18px;
-  padding: 12px 18px;
+  display: flex; align-items: center; gap: 18px; padding: 12px 18px;
   background: rgba(8,8,8,.42);
   -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,.13);
-  border-radius: 14px;
-  opacity: 0;
-  animation: lpLineIn .5s var(--ease) forwards;
+  border: 1px solid rgba(255,255,255,.13); border-radius: 14px;
+  opacity: 0; animation: lpLineIn .5s var(--ease) forwards;
 }
 .lp-itin-1 { animation-delay: .8s; }
 .lp-itin-2 { animation-delay: 1.05s; }
@@ -1433,10 +1344,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.lp-itin-time {
-  font-size: 12px; font-weight: 800; color: var(--accent);
-  min-width: 40px; font-variant-numeric: tabular-nums;
-}
+.lp-itin-time { font-size: 12px; font-weight: 800; color: var(--accent); min-width: 40px; font-variant-numeric: tabular-nums; }
 .lp-itin-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.92); }
 
 /* Mobile */
@@ -1445,7 +1353,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .lp-card { grid-template-columns: 1fr; grid-template-rows: auto 260px; border-width: 4px; }
   .lp-card-left { padding: 32px 24px 28px; gap: 20px; }
 }
-
 
 /* ── MOOD GRID ── */
 .mood-screen { max-width: 1240px; }
@@ -1461,7 +1368,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .image-tile-content strong { display: block; font-size: clamp(18px,1.8vw,24px); font-weight: 900; line-height: 1; letter-spacing: -.03em; color: #fff; }
 .image-tile-content p { margin: 6px 0 0; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; line-height: 1.3; }
 
-/* Custom activity — matches setup white card */
 .custom-activity-wrap { margin-top: 40px; max-width: 960px; display: grid; gap: 10px; }
 .custom-activity-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .custom-activity-input {
@@ -1472,39 +1378,23 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 }
 .custom-activity-input:focus { box-shadow: 0 2px 12px rgba(0,0,0,.12); }
 .custom-activity-input::placeholder { color: var(--ink-3); font-weight: 400; }
-
 .build-cta-row { margin: 34px 0 0; display: flex; justify-content: flex-end; }
 
 /* ── LOADING SCREEN ── */
 .loading-screen {
   width: 100%; min-height: calc(100vh - 68px);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 20px;
-  padding: 24px clamp(20px,4vw,56px) 32px;
-  animation: scIn .3s var(--ease) both;
-  overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 20px; padding: 24px clamp(20px,4vw,56px) 32px;
+  animation: scIn .3s var(--ease) both; overflow: hidden;
 }
-
-.loader-stage {
-  position: relative;
-  width: min(460px, 100%);
-  height: 200px;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
+.loader-stage { position: relative; width: min(460px, 100%); height: 200px; flex-shrink: 0; overflow: hidden; }
 .ls {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; pointer-events: none;
-  transition: opacity .6s var(--ease);
-  overflow: hidden;
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .6s var(--ease); overflow: hidden;
 }
 .ls.ls-active { opacity: 1; pointer-events: auto; }
 .ls.ls-done { opacity: 0; }
 
-/* Stage 0: Profile */
 .ls-profile { display: flex; flex-direction: column; align-items: center; gap: 18px; }
 .profile-ring-wrap { position: relative; width: 110px; height: 110px; }
 .profile-ring-svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
@@ -1514,14 +1404,10 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .profile-pic { position: absolute; inset: 8px; border-radius: 50%; object-fit: cover; width: calc(100% - 16px); height: calc(100% - 16px); }
 .profile-pic-fallback { position: absolute; inset: 8px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
 .profile-pic-fallback span { font-size: 32px; font-weight: 800; color: var(--ink-3); }
-
-/* Share button */
 .share-btn { gap: 7px; min-width: 100px; }
 .share-btn svg { flex-shrink: 0; }
 .share-btn-copied { border-color: var(--accent) !important; color: var(--accent) !important; }
 .share-btn-loading { opacity: .7; cursor: wait; }
-
-/* Calendar button */
 .cal-btn { gap: 7px; min-width: 148px; }
 .cal-btn svg { flex-shrink: 0; }
 .cal-btn-done  { border-color: var(--accent) !important; color: var(--accent) !important; }
@@ -1533,7 +1419,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .profile-name { font-size: 16px; font-weight: 700; color: var(--ink); margin: 0; line-height: 1.3; }
 .profile-email { font-size: 12px; color: var(--ink-3); margin: 3px 0 0; }
 
-/* Stage 1–2: Mood cards */
 .ls-moods { position: relative; width: 100%; height: 100%; overflow: hidden; }
 .lcard { position: absolute; border-radius: 18px; overflow: hidden; border: 1px solid var(--line-strong); }
 .lcard img { width: 100%; height: 100%; object-fit: cover; filter: brightness(.58) saturate(.8); }
@@ -1554,7 +1439,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lspill-4 { animation-delay: 1.3s; }
 @keyframes spillIn { 0% { opacity:0; transform:translateY(10px); } 60%,100% { opacity:1; transform:translateY(0); } }
 
-/* Stage 3: Map */
 .ls-map { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
 .map-dest-label { font-size: 11px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; }
 .map-sketch { width: 100%; border-radius: 14px; background: var(--surface); border: 1px solid var(--line-strong); padding: 8px; overflow: hidden; }
@@ -1570,7 +1454,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 @keyframes travelPulse { 0%,100% { r: 9; opacity: .6; } 50% { r: 13; opacity: .2; } }
 @keyframes travelRoute { 0% { cx: 80; cy: 118; } 28% { cx: 185; cy: 62; } 56% { cx: 275; cy: 85; } 84%,100% { cx: 345; cy: 42; } }
 
-/* Stage 4: Places chips */
 .ls-places-chips { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; padding: 0 8px; }
 .places-chips-label { font-size: 11px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; margin: 0; }
 .places-chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
@@ -1580,7 +1463,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .place-chip-name { font-size: 13px; font-weight: 600; color: var(--ink); }
 .place-chip-rating { font-size: 11px; font-weight: 800; color: var(--accent); }
 
-/* Carousel (kept) */
 .places-carousel { position: relative; width: min(340px, 100%); height: 220px; overflow: hidden; border-radius: 18px; }
 .pc-slide { position: absolute; inset: 0; border-radius: 18px; overflow: hidden; border: 1px solid var(--line-strong); opacity: 0; transition: opacity .5s var(--ease); }
 .pc-slide.pc-active { opacity: 1; z-index: 2; } .pc-slide.pc-prev { opacity: 0; z-index: 1; }
@@ -1595,7 +1477,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .pc-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--surface-3); transition: background .3s; }
 .pc-dot.pc-dot-active { background: var(--ink); }
 
-/* Stage 6: Wireframe */
 .wire-frame { width: min(400px,100%); border-radius: 12px; border: 1px solid var(--line-strong); background: var(--surface); padding: 9px; display: flex; flex-direction: column; gap: 5px; }
 .wire-meta { display: flex; flex-direction: column; gap: 5px; }
 .wire-tag { height: 9px; width: 55px; border-radius: 999px; }
@@ -1609,8 +1490,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .wire-img { width: 36px; height: 28px; border-radius: 6px; flex-shrink: 0; }
 .wire-tag, .wire-title, .wire-line, .wire-img {
   background-image: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
+  background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite;
 }
 @keyframes shimmer { 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
 .wire-gemini-badge { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: rgba(51,153,137,.08); border: 1px solid rgba(51,153,137,.2); font-size: 12px; font-weight: 600; color: var(--accent); }
@@ -1621,7 +1501,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .loader-head { display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(460px,100%); text-align: center; }
 .loader-headline { font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(26px,3vw,36px) !important; font-weight: 400 !important; letter-spacing: -.02em !important; line-height: 1.05 !important; margin: 0 !important; color: var(--ink) !important; }
 .loader-sub { font-size: 12px; font-weight: 500; color: var(--ink-3); margin: 0; line-height: 1.4; }
-
 .loader-list { display: flex; flex-direction: column; width: 100%; }
 .loader-item { display: flex; align-items: center; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--line); opacity: .3; transition: opacity .35s var(--ease); }
 .loader-item:last-child { border-bottom: none; }
@@ -1644,150 +1523,23 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 /* ══════════════════════════════════════════
    RESULT SCREEN
 ══════════════════════════════════════════ */
-.result-screen {
-  max-width: 1280px !important; width: 100% !important;
-  padding: 48px clamp(28px,6vw,80px) 80px !important;
-  margin: 0 auto;
-}
+.result-screen { max-width: 1280px !important; width: 100% !important; padding: 48px clamp(28px,6vw,80px) 80px !important; margin: 0 auto; }
+.res-hero { width: 100%; min-height: 480px; border-radius: 28px; overflow: hidden; position: relative; background: #0a120e; display: flex; align-items: flex-end; }
+.res-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: brightness(.75) saturate(1.15); animation: heroBgZoom 18s ease-in-out infinite alternate; will-change: transform; }
+@keyframes heroBgZoom { from { transform: scale(1); } to { transform: scale(1.06); } }
+.res-glass-panel { position: relative; z-index: 2; width: 100%; padding: clamp(28px,4vw,52px); background: rgba(8, 8, 8, 0.38); backdrop-filter: blur(22px) saturate(1.6); -webkit-backdrop-filter: blur(22px) saturate(1.6); border-top: 1px solid rgba(255,255,255,0.10); animation: glassPanelIn .9s cubic-bezier(.2,.8,.2,1) .15s both; }
+@keyframes glassPanelIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.res-glass-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.archetype-line { font-size: 14px !important; font-weight: 600 !important; color: #5EC4B5 !important; line-height: 1.5 !important; margin: 0 !important; max-width: 520px; opacity: 0; animation: textSlideUp .6s cubic-bezier(.2,.8,.2,1) .35s forwards; }
+.res-date-tag { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); white-space: nowrap; letter-spacing: .03em; padding-top: 2px; flex-shrink: 0; opacity: 0; animation: textFadeIn .5s ease .5s forwards; }
+.res-dest { font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(36px, 5.5vw, 72px); font-weight: 400; line-height: 1.0; letter-spacing: -0.03em; color: #ffffff; margin: 0 0 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-shadow: 0 2px 12px rgba(0,0,0,0.28); opacity: 0; animation: textSlideUp .7s cubic-bezier(.2,.8,.2,1) .55s forwards; }
+.res-summary { font-size: 15px !important; line-height: 1.65 !important; color: rgba(255,255,255,0.78) !important; max-width: 680px; margin: 0 !important; opacity: 0; animation: textSlideUp .6s cubic-bezier(.2,.8,.2,1) .75s forwards; }
+@keyframes textSlideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes textFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* ── Hero: full-bleed image + frosted glass panel ── */
-.res-hero {
-  width: 100%;
-  min-height: 480px;
-  border-radius: 28px;
-  overflow: hidden;
-  position: relative;
-  background: #0a120e;
-  display: flex;
-  align-items: flex-end;
-}
-
-/* Background image — fills the whole hero, subtle slow zoom */
-.res-bg-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 30%;
-  filter: brightness(.75) saturate(1.15);
-  animation: heroBgZoom 18s ease-in-out infinite alternate;
-  will-change: transform;
-}
-@keyframes heroBgZoom {
-  from { transform: scale(1); }
-  to   { transform: scale(1.06); }
-}
-
-/* Frosted glass panel — sits at the bottom of the hero */
-.res-glass-panel {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  padding: clamp(28px,4vw,52px);
-  /* Frosted glass */
-  background: rgba(8, 8, 8, 0.38);
-  backdrop-filter: blur(22px) saturate(1.6);
-  -webkit-backdrop-filter: blur(22px) saturate(1.6);
-  border-top: 1px solid rgba(255,255,255,0.10);
-  /* Animate in */
-  animation: glassPanelIn .9s cubic-bezier(.2,.8,.2,1) .15s both;
-}
-@keyframes glassPanelIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Top row inside glass panel */
-.res-glass-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-/* Archetype tagline */
-.archetype-line {
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  color: #5EC4B5 !important;
-  line-height: 1.5 !important;
-  margin: 0 !important;
-  max-width: 520px;
-  opacity: 0;
-  animation: textSlideUp .6s cubic-bezier(.2,.8,.2,1) .35s forwards;
-}
-
-/* Date tag */
-.res-date-tag {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.5);
-  white-space: nowrap;
-  letter-spacing: .03em;
-  padding-top: 2px;
-  flex-shrink: 0;
-  opacity: 0;
-  animation: textFadeIn .5s ease .5s forwards;
-}
-
-/* Destination headline — single line, ellipsis, never breaks */
-.res-dest {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(36px, 5.5vw, 72px);
-  font-weight: 400;
-  line-height: 1.0;
-  letter-spacing: -0.03em;
-  color: #ffffff;
-  margin: 0 0 14px;
-  /* No word-break, ellipsis if truly too long */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.28);
-  opacity: 0;
-  animation: textSlideUp .7s cubic-bezier(.2,.8,.2,1) .55s forwards;
-}
-
-/* Summary */
-.res-summary {
-  font-size: 15px !important;
-  line-height: 1.65 !important;
-  color: rgba(255,255,255,0.78) !important;
-  max-width: 680px;
-  margin: 0 !important;
-  opacity: 0;
-  animation: textSlideUp .6s cubic-bezier(.2,.8,.2,1) .75s forwards;
-}
-
-/* Shared text animations */
-@keyframes textSlideUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes textFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* ── ACTION BAR ── */
-.action-bar {
-  display: flex; flex-direction: column; gap: 12px;
-  margin: 24px 0 52px;
-}
-.action-icons-row {
-  display: flex; align-items: center; gap: 10px;
-}
-.icon-btn {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 6px; width: 72px; min-height: 72px;
-  background: transparent; border: 1.5px solid var(--line-strong);
-  border-radius: 20px; cursor: pointer; color: var(--ink-2);
-  font-size: 11px; font-weight: 700; letter-spacing: .02em;
-  transition: background .15s, border-color .15s, color .15s;
-}
+.action-bar { display: flex; flex-direction: column; gap: 12px; margin: 24px 0 52px; }
+.action-icons-row { display: flex; align-items: center; gap: 10px; }
+.icon-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 72px; min-height: 72px; background: transparent; border: 1.5px solid var(--line-strong); border-radius: 20px; cursor: pointer; color: var(--ink-2); font-size: 11px; font-weight: 700; letter-spacing: .02em; transition: background .15s, border-color .15s, color .15s; }
 .icon-btn:hover { background: var(--surface-2); border-color: var(--ink); color: var(--ink); }
 .icon-btn:disabled { opacity: .5; cursor: not-allowed; }
 .icon-btn svg { flex-shrink: 0; }
@@ -1795,32 +1547,18 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .icon-btn-loading { opacity: .7; cursor: wait; }
 .cal-icon-btn-done  { border-color: var(--accent) !important; color: var(--accent) !important; }
 .cal-icon-btn-error { border-color: #c0392b !important; color: #c0392b !important; }
-
-/* Maps CTA: content-width on desktop, full-width on mobile */
-.action-primary-cta {
-  width: fit-content; padding: 0 28px; gap: 8px;
-}
-
+.action-primary-cta { width: fit-content; padding: 0 28px; gap: 8px; }
 @keyframes calSpin { to { transform: rotate(360deg); } }
 .cal-spin { animation: calSpin .8s linear infinite; }
 
-/* ── TIMELINE ── */
 .timeline { max-width: 100% !important; margin: 0 auto; padding: 48px 0 90px !important; }
 .timeline > .label { margin-bottom: 40px; }
 .stop { display: flex; position: relative; margin-bottom: 44px; }
 .stop:not(:last-child)::after { content: ""; position: absolute; left: 4px; top: 22px; bottom: -44px; width: 1px; background: var(--line-strong); }
-
-.s-pin {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--surface-3); border: 2px solid var(--line-strong);
-  flex-shrink: 0; margin-right: 28px; margin-top: 10px;
-  position: sticky; top: 80px; align-self: flex-start;
-  transition: background .3s, border-color .3s;
-}
+.s-pin { width: 10px; height: 10px; border-radius: 50%; background: var(--surface-3); border: 2px solid var(--line-strong); flex-shrink: 0; margin-right: 28px; margin-top: 10px; position: sticky; top: 80px; align-self: flex-start; transition: background .3s, border-color .3s; }
 .s-pin-featured { background: var(--accent) !important; border-color: var(--accent) !important; }
 .stop:hover .s-pin, .stop:focus-within .s-pin { background: var(--accent); border-color: var(--accent); }
 .s-pin-index { display: none; }
-
 .s-body { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) minmax(300px,440px); column-gap: 40px; align-items: start; }
 .s-body > .s-cat, .s-body > h3, .s-body > h4, .s-body > p, .s-body > small, .s-body > .place-meta { grid-column: 1; }
 .s-body > .s-photo { grid-column: 2; grid-row: 1 / span 7; }
@@ -1830,25 +1568,21 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .s-body h4 { font-size: 22px; font-weight: 800; color: var(--ink); margin: 0 0 10px; letter-spacing: -.03em; }
 .s-body p { font-size: 14px; line-height: 1.68; color: var(--ink-2); margin-bottom: 14px; }
 .s-body small { display: block; color: var(--ink-3); font-size: 12px; line-height: 1.5; }
-
 .s-photo { border-radius: 16px; height: 220px; position: relative; overflow: hidden; margin-bottom: 8px; display: flex; align-items: end; padding: 14px; background: var(--surface-2); border: 1px solid var(--line-strong); }
 .s-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .4s var(--ease); }
 .s-photo:hover img { transform: scale(1.025); }
 .s-photo-ov { position: absolute; inset: 0; background: linear-gradient(to top,rgba(10,10,10,.72),transparent 56%); }
 .s-photo span { position: relative; z-index: 1; font-size: 11px; font-weight: 800; color: rgba(255,255,255,.9); background: rgba(10,10,10,.55); padding: 5px 10px; border-radius: 7px; }
-
 .place-meta { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0 14px; }
 .place-meta span, .place-meta a { display: inline-flex; align-items: center; min-height: 28px; padding: 5px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line-strong); color: var(--ink-2); font-size: 12px; font-weight: 600; text-decoration: none; }
 .place-meta a { color: var(--ink); font-weight: 700; }
 .place-meta .rating-pill { color: var(--accent); border-color: rgba(51,153,137,.3); background: rgba(51,153,137,.1); font-weight: 800; }
 .place-meta .demo-pill { color: var(--ink-3); }
-
 .fallback-banner { margin-top: 18px; width: min(760px,100%); border: 1px solid rgba(51,153,137,.25); background: rgba(51,153,137,.07); border-radius: 16px; padding: 16px 18px; }
 .fallback-banner span { display: inline-flex; color: var(--accent); font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
 .fallback-banner p { margin: 0 0 12px; font-size: 13px; line-height: 1.6; color: var(--ink-2); }
 .fallback-banner button { border: none; border-radius: 8px; padding: 8px 14px; background: var(--ink); color: var(--accent); font-size: 12px; font-weight: 800; }
 
-/* ── MODAL ── */
 .modal-backdrop { position: fixed; inset: 0; z-index: 500; display: grid; place-items: center; padding: 24px; background: rgba(10,10,10,.55); backdrop-filter: blur(8px); }
 .subscribe-modal { width: min(620px,100%); border-radius: 22px; padding: 34px; position: relative; background: var(--bg); border: 1px solid var(--line-strong); }
 .subscribe-modal h2 { margin-top: 6px; font-size: clamp(36px,5vw,56px); }
@@ -1858,35 +1592,23 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .subscribe-success { margin-top: 14px; border-radius: 12px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--line-strong); color: var(--ink-2); font-size: 13px; font-weight: 700; }
 
 /* ── RESPONSIVE ── */
-
-/* Switch nav to mobile at 760px */
 @media(max-width: 760px) {
   .nav-desktop { display: none !important; }
   .nav-mobile { display: flex !important; }
   .navbar { height: 68px !important; padding: 0 20px !important; }
-
   .screen { padding: 32px 20px; }
-  /* Action bar: column on mobile, icon row + full-width CTA */
   .action-bar { width: 100% !important; padding: 0 20px !important; margin: 20px 0 0 !important; gap: 12px; box-sizing: border-box; flex-direction: column; }
   .action-icons-row { display: flex !important; gap: 10px; width: 100%; }
   .icon-btn { flex: 1; min-width: 0; max-width: none; }
   .action-primary-cta { width: 100% !important; justify-content: center !important; min-height: 52px !important; padding: 0 24px !important; }
   .build-cta-row { justify-content: stretch; }
   .build-cta-row .btn-accent { width: 100%; justify-content: center; }
-
-  /* Result hero: full phone screen height */
   .result-screen { padding: 0 0 60px !important; }
-  .res-hero {
-    min-height: calc(100svh - 68px);
-    border-radius: 0;
-    align-items: flex-end;
-  }
+  .res-hero { min-height: calc(100svh - 68px); border-radius: 0; align-items: flex-end; }
   .res-glass-panel { padding: 24px 20px 32px; }
   .res-glass-top { flex-direction: column; gap: 6px; }
   .res-date-tag { align-self: flex-start; }
   .res-dest { font-size: clamp(28px, 8vw, 52px); }
-
-  /* Make action bar appear below hero with padding */
   .timeline { padding: 36px 20px 80px !important; }
 }
 
@@ -1907,7 +1629,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .s-photo { height: 200px; }
   h1 { font-size: 48px !important; }
   .showreel-frame { height: 320px; border-radius: 20px; }
-  /* Date input: shrink font so it never overflows on small phones */
   input[type="date"] { font-size: 13px; padding: 0 16px; min-height: 54px; }
 }
 
@@ -2048,7 +1769,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     text-overflow: ellipsis !important;
   }
 
-  /* White intro/sign-in tile is anchored to the bottom */
+  /* White intro/sign-in tile — CHANGE 1: more bottom space */
   .lp-card-left {
     order: 2 !important;
     flex: 0 0 auto !important;
@@ -2059,7 +1780,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     width: 100vw !important;
     max-height: 38dvh !important;
     min-height: 300px !important;
-    padding: 24px 22px max(18px, env(safe-area-inset-bottom)) !important;
+    padding: 24px 22px max(56px, env(safe-area-inset-bottom, 36px)) !important;
     background: #FFFFFF !important;
     color: #080808 !important;
     border-radius: 30px 30px 0 0 !important;
@@ -2115,74 +1836,44 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     gap: 10px !important;
   }
 
-  /* Make sign-in visible and controlled by us. Google iframe remains clickable but invisible. */
+  /* CHANGE 2: Show the real Google iframe — same as desktop */
   .lp-google-wrap {
     position: relative !important;
     width: 100% !important;
-    height: 52px !important;
-    min-height: 52px !important;
-    border-radius: 999px !important;
-    border: 1px solid rgba(0,0,0,.12) !important;
-    background: #F6F3ED !important;
+    min-height: 44px !important;
+    border: none !important;
+    background: transparent !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     box-shadow: none !important;
   }
 
-  .lp-google-wrap iframe,
-  .lp-google-wrap > div:not(.google-loading),
-  #googleSignIn,
-  #googleSignIn > div {
-    position: absolute !important;
-    inset: 0 !important;
+  .lp-google-wrap::before,
+  .lp-google-wrap::after { display: none !important; content: none !important; }
+
+  .lp-google-wrap > div,
+  #googleSignIn {
     width: 100% !important;
-    height: 100% !important;
-    opacity: 0 !important;
-    z-index: 3 !important;
-    cursor: pointer !important;
+    opacity: 1 !important;
+    position: relative !important;
+    inset: auto !important;
+    height: auto !important;
+    z-index: auto !important;
+    cursor: auto !important;
   }
 
-  .lp-google-wrap::before {
-    content: "G" !important;
-    position: absolute !important;
-    left: 8px !important;
-    top: 6px !important;
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 50% !important;
-    background: #FFFFFF !important;
-    border: 1px solid rgba(0,0,0,.08) !important;
-    color: #4285F4 !important;
-    font-family: Arial, sans-serif !important;
-    font-size: 24px !important;
-    font-weight: 900 !important;
-    display: grid !important;
-    place-items: center !important;
-    z-index: 1 !important;
-  }
-
-  .lp-google-wrap::after {
-    content: "Continue with Google" !important;
-    color: #080808 !important;
-    font-size: 15px !important;
-    font-weight: 800 !important;
-    letter-spacing: -.01em !important;
-    z-index: 1 !important;
-    pointer-events: none !important;
+  .lp-google-wrap iframe {
+    width: 100% !important;
+    border-radius: 14px !important;
   }
 
   .google-loading {
-    position: absolute !important;
-    inset: 0 !important;
-    display: grid !important;
-    place-items: center !important;
-    color: #080808 !important;
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    background: #F6F3ED !important;
-    z-index: 2 !important;
+    width: 100% !important;
+    text-align: center !important;
+    color: var(--ink-3) !important;
+    font-size: 13px !important;
+    padding: 10px 0 !important;
   }
 
   .lp-ghost-btn {
@@ -2297,7 +1988,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     box-shadow: none !important;
   }
 
-  /* Top image / itinerary window should be part of the same rounded rectangle */
   .lp-card-right {
     order: 1 !important;
     position: relative !important;
@@ -2360,7 +2050,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     text-overflow: ellipsis !important;
   }
 
-  /* Bottom tile is now the lower section of the SAME window, not a detached sheet */
   .lp-card-left {
     order: 2 !important;
     position: relative !important;
@@ -2495,7 +2184,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     display: none !important;
   }
 
-  /* Remove any login/header branding that remains */
   .lp-logo,
   .lp-brand,
   .lp-logo-text,
@@ -2546,7 +2234,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 /* ===== MOBILE FINAL POLISH: remove top seam, translucent itinerary, desktop-style CTAs, no drawer X ===== */
 @media (max-width: 760px) {
-  /* Remove the white horizontal seam at the top of the image window */
   .lp-card::before,
   .lp-card::after,
   .lp-card-right::before,
@@ -2577,7 +2264,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     outline: 0 !important;
   }
 
-  /* Add breathing room at the very bottom so buttons don't hit the phone edge */
   .lp-shell {
     padding-bottom: 14px !important;
   }
@@ -2590,7 +2276,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     padding-bottom: max(28px, env(safe-area-inset-bottom)) !important;
   }
 
-  /* Itinerary items: white translucent glass, not black blocks */
   .lp-itin-line {
     background: rgba(255,255,255,.22) !important;
     border: 1px solid rgba(255,255,255,.30) !important;
@@ -2609,7 +2294,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     font-weight: 850 !important;
   }
 
-  /* Buttons: rounded rectangles like desktop, not pill buttons */
   .lp-google-wrap,
   .lp-ghost-btn {
     border-radius: 22px !important;
@@ -2631,7 +2315,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     color: #080808 !important;
   }
 
-  /* Do not change the Google button visual beyond radius */
   .lp-google-wrap {
     background: #F8F5EF !important;
     border: 1px solid #d9d4ca !important;
@@ -2642,7 +2325,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     border-color: #d9d4ca !important;
   }
 
-  /* Hamburger drawer: remove X/close icon when expanded */
   .drawer-close,
   .menu-close,
   .hamburger-close,
@@ -2655,7 +2337,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     display: none !important;
   }
 
-  /* If the same hamburger icon morphs into X, prevent rotation/transform */
   .hamburger.open span,
   .hamburger.is-open span,
   .menu-toggle.open span,
@@ -2681,8 +2362,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 
 /* ===== FINAL POLISH: single border + desktop translucent itinerary + desktop-matched mobile buttons ===== */
-
-/* Remove double-line artifacts caused by nested borders/outlines on mobile hero shell */
 @media (max-width: 760px) {
   .lp-card {
     border: 3px solid rgba(255,255,255,.96) !important;
@@ -2717,7 +2396,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     content: none !important;
   }
 
-  /* Keep the white content area part of the same window without extra border seams */
   .lp-card-left {
     border-left: 0 !important;
     border-right: 0 !important;
@@ -2725,7 +2403,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     box-shadow: none !important;
   }
 
-  /* Mobile buttons should match desktop system: rounded rectangles, not pills */
   .lp-google-wrap,
   .lp-ghost-btn {
     height: 58px !important;
@@ -2762,7 +2439,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 }
 
-/* Apply the same white translucent itinerary treatment to desktop hero preview */
 .itinerary-line,
 .lp-itin-line {
   background: rgba(255,255,255,.24) !important;
@@ -2784,7 +2460,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   font-weight: 850 !important;
 }
 
-/* Desktop showreel image can stay rich behind translucent glass */
 .showreel-overlay,
 .lp-panel-overlay {
   background:
@@ -2792,7 +2467,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     linear-gradient(90deg, rgba(0,0,0,.16), rgba(0,0,0,.02)) !important;
 }
 
-/* Desktop button system override for any login buttons */
 .google-wrap,
 .lp-google-wrap {
   border-radius: 18px !important;
@@ -2807,7 +2481,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 /* ===== CLEAN MOBILE WINDOW: no shade seam, unified white tile, exact desktop-style buttons ===== */
 @media (max-width: 760px) {
-  /* Remove black translucent shade/seam at the very top */
   .lp-card::before,
   .lp-card::after,
   .lp-card-right::before,
@@ -2841,7 +2514,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     box-shadow: none !important;
   }
 
-  /* Make image section and white section feel like one continuous object */
   .lp-card-left {
     background: #ffffff !important;
     border: 0 !important;
@@ -2858,7 +2530,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     box-shadow: none !important;
   }
 
-  /* Make the transition between image and content clean, not like a separate bottom sheet */
   .lp-card-right {
     margin-bottom: 0 !important;
   }
@@ -2868,7 +2539,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     border-radius: 0 !important;
   }
 
-  /* Keep itinerary glass readable without turning the whole image dark */
   .lp-itin-line {
     background: rgba(255,255,255,.24) !important;
     border: 1px solid rgba(255,255,255,.34) !important;
@@ -2887,7 +2557,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     font-weight: 850 !important;
   }
 
-  /* Exact desktop button proportions: rounded rectangles, same radius, no pill */
   .lp-actions {
     gap: 12px !important;
   }
@@ -2935,14 +2604,12 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     color: #080808 !important;
   }
 
-  /* Remove any inherited pill styles */
   .lp-google-wrap *,
   .lp-ghost-btn * {
     border-radius: inherit !important;
   }
 }
 
-/* Desktop preview itinerary also uses white translucent glass */
 .itinerary-line {
   background: rgba(255,255,255,.24) !important;
   border: 1px solid rgba(255,255,255,.34) !important;
@@ -2961,7 +2628,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   font-weight: 850 !important;
 }
 
-/* Remove dark global overlay on preview image */
 .showreel-overlay {
   background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.20)) !important;
 }
@@ -2969,7 +2635,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 /* ===== EMERGENCY MOBILE RESTORE: image window visible + desktop button style ===== */
 @media (max-width: 760px) {
-  /* The shell/window must be transparent so the image stays visible */
   .lp-card {
     background: transparent !important;
     border: 3px solid #ffffff !important;
@@ -2979,7 +2644,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     outline: none !important;
   }
 
-  /* Restore the top image window */
   .lp-card-right {
     order: 1 !important;
     position: relative !important;
@@ -3023,7 +2687,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     filter: saturate(1.12) contrast(1.02) brightness(.98) !important;
   }
 
-  /* Remove only overlays/seams, not the image */
   .lp-card::before,
   .lp-card::after,
   .lp-card-right::before,
@@ -3040,7 +2703,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     box-shadow: none !important;
   }
 
-  /* Itinerary stays inside the visible image window */
   .lp-panel-itin {
     position: absolute !important;
     left: 24px !important;
@@ -3075,7 +2737,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     font-weight: 850 !important;
   }
 
-  /* Bottom content is the only white area */
   .lp-card-left {
     order: 2 !important;
     position: relative !important;
@@ -3094,7 +2755,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     content: none !important;
   }
 
-  /* Buttons match desktop rounded-rectangle system */
   .lp-actions {
     display: grid !important;
     gap: 12px !important;
@@ -3112,7 +2772,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     overflow: hidden !important;
   }
 
-  /* Hide Google's black iframe, keep it clickable */
   .lp-google-wrap iframe,
   .lp-google-wrap > div,
   #googleSignIn,
@@ -3202,7 +2861,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 /* ===== MOBILE EDGE FIX: remove inner vertical line + add bottom breathing room ===== */
 @media (max-width: 760px) {
-  /* Kill every inner border/outline that creates the double vertical line */
   .lp-card-right,
   .lp-card-right *,
   .lp-panel,
@@ -3239,7 +2897,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     background: transparent !important;
   }
 
-  /* Keep only the outer white window border */
   .lp-card {
     border: 3px solid #ffffff !important;
     outline: 0 !important;
@@ -3259,7 +2916,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     margin-bottom: 0 !important;
   }
 
-  /* Prevent bottom clipping/bleed against phone edge */
   .lp-shell {
     padding-bottom: 18px !important;
     overflow: hidden !important;
