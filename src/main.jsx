@@ -531,7 +531,7 @@ function App() {
                   <circle cx="16" cy="16" r="2" fill="#339989"/>
                   <circle cx="16" cy="23.5" r="2" fill="#339989"/>
                 </svg>
-                <span className="drawer-title">Travel DNA</span>
+                
                 <button className="drawer-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button>
               </div>
               <p className="mobile-drawer-label">Navigation</p>
@@ -2235,6 +2235,311 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
   .lp-itin-line {
     min-height: 54px !important;
+  }
+}
+
+
+/* ===== MOBILE LOGIN CONNECTED WINDOW FIX ===== */
+@media (max-width: 760px) {
+  .login-active {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .login-active .navbar,
+  .login-active .nav-mark,
+  .login-active .nav-logo,
+  .login-active .drawer-title {
+    display: none !important;
+  }
+
+  .lp-shell {
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    padding: 8px 12px 8px !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    background: #dcefeb !important;
+  }
+
+  .lp-bg-outer {
+    position: absolute !important;
+    inset: 0 !important;
+    opacity: 1 !important;
+  }
+
+  .lp-bg-outer-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    filter: saturate(1.12) contrast(1.02) brightness(.98) !important;
+  }
+
+  .lp-bg-outer-dim {
+    background: rgba(0, 0, 0, .06) !important;
+  }
+
+  .lp-card {
+    position: relative !important;
+    z-index: 2 !important;
+    width: 100% !important;
+    height: calc(100dvh - 16px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border: 4px solid rgba(255,255,255,.96) !important;
+    border-radius: 42px !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  /* Top image / itinerary window should be part of the same rounded rectangle */
+  .lp-card-right {
+    order: 1 !important;
+    position: relative !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: transparent !important;
+  }
+
+  .lp-card-right::before,
+  .lp-card-right::after {
+    display: none !important;
+  }
+
+  .lp-panel-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.32)) !important;
+    pointer-events: none !important;
+  }
+
+  .lp-panel-itin {
+    position: absolute !important;
+    left: 24px !important;
+    right: 24px !important;
+    bottom: 24px !important;
+    display: grid !important;
+    gap: 12px !important;
+    z-index: 2 !important;
+  }
+
+  .lp-itin-line {
+    min-height: 58px !important;
+    display: grid !important;
+    grid-template-columns: 82px 1fr !important;
+    align-items: center !important;
+    padding: 0 18px !important;
+    border-radius: 18px !important;
+    background: rgba(0,0,0,.45) !important;
+    border: 1px solid rgba(255,255,255,.16) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    box-shadow: none !important;
+  }
+
+  .lp-itin-time {
+    color: #3CA394 !important;
+    font-weight: 800 !important;
+    font-size: 15px !important;
+  }
+
+  .lp-itin-label {
+    color: #fff !important;
+    font-weight: 800 !important;
+    font-size: 15px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Bottom tile is now the lower section of the SAME window, not a detached sheet */
+  .lp-card-left {
+    order: 2 !important;
+    position: relative !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 28px 28px 22px !important;
+    background: #ffffff !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    border-top: 1px solid rgba(0,0,0,.08) !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .lp-right-text {
+    margin: 0 !important;
+  }
+
+  .lp-eyebrow {
+    margin: 0 0 12px !important;
+    color: #89877f !important;
+    font-size: 11px !important;
+    letter-spacing: .22em !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+  }
+
+  .lp-h1 {
+    margin: 0 !important;
+    font-family: "DM Serif Display", Georgia, serif !important;
+    font-size: clamp(50px, 14vw, 68px) !important;
+    line-height: .88 !important;
+    letter-spacing: -.06em !important;
+    color: #060606 !important;
+  }
+
+  .lp-accent {
+    color: #3CA394 !important;
+    -webkit-text-fill-color: #3CA394 !important;
+  }
+
+  .lp-sub {
+    margin: 18px 0 0 !important;
+    font-size: 16px !important;
+    line-height: 1.42 !important;
+    color: #8a877f !important;
+    max-width: 31ch !important;
+  }
+
+  .lp-actions {
+    margin-top: 24px !important;
+    display: grid !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .lp-google-wrap {
+    width: 100% !important;
+    height: 58px !important;
+    border-radius: 999px !important;
+    border: 1px solid #d9d4ca !important;
+    background: #f8f5ef !important;
+    overflow: hidden !important;
+    position: relative !important;
+    box-shadow: none !important;
+  }
+
+  .lp-google-wrap iframe,
+  .lp-google-wrap > div,
+  #googleSignIn,
+  #googleSignIn > div {
+    opacity: 0 !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 3 !important;
+  }
+
+  .lp-google-wrap::before {
+    content: "G" !important;
+    position: absolute !important;
+    left: 10px !important;
+    top: 7px !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    display: grid !important;
+    place-items: center !important;
+    background: #fff !important;
+    border: 1px solid rgba(0,0,0,.08) !important;
+    color: #4285F4 !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 26px !important;
+    font-weight: 800 !important;
+    z-index: 1 !important;
+  }
+
+  .lp-google-wrap::after {
+    content: "Continue with Google" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding-left: 44px !important;
+    color: #080808 !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+  }
+
+  .lp-ghost-btn {
+    height: 58px !important;
+    border-radius: 999px !important;
+    background: #fff !important;
+    border: 1px solid #dedbd4 !important;
+    color: #080808 !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    box-shadow: none !important;
+  }
+
+  .lp-fine {
+    display: none !important;
+  }
+
+  /* Remove any login/header branding that remains */
+  .lp-logo,
+  .lp-brand,
+  .lp-logo-text,
+  .login-logo,
+  .login-brand,
+  .drawer-header .drawer-title {
+    display: none !important;
+  }
+}
+
+/* Slightly shorter phones */
+@media (max-width: 760px) and (max-height: 760px) {
+  .lp-card-left {
+    padding: 22px 24px 18px !important;
+  }
+
+  .lp-h1 {
+    font-size: clamp(44px, 12.5vw, 58px) !important;
+  }
+
+  .lp-sub {
+    margin-top: 12px !important;
+    font-size: 14px !important;
+  }
+
+  .lp-actions {
+    margin-top: 18px !important;
+    gap: 10px !important;
+  }
+
+  .lp-google-wrap,
+  .lp-ghost-btn {
+    height: 52px !important;
+  }
+
+  .lp-panel-itin {
+    left: 20px !important;
+    right: 20px !important;
+    bottom: 18px !important;
+    gap: 10px !important;
+  }
+
+  .lp-itin-line {
+    min-height: 52px !important;
   }
 }
 
