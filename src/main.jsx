@@ -563,7 +563,7 @@ function App() {
         <div className="lp-shell">
           {/* Dark full-screen background — same image, very dark */}
           <div className="lp-bg-outer">
-            <img src="https://images.pexels.com/photos/5226950/pexels-photo-5226950.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            <img src="https://images.pexels.com/photos/3593988/pexels-photo-3593988.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
             <div className="lp-bg-outer-dim" />
           </div>
 
@@ -572,16 +572,6 @@ function App() {
 
             {/* LEFT: white panel — text + actions */}
             <div className="lp-card-left">
-              <div className="lp-panel-logo">
-                <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-                  <circle cx="16" cy="8" r="3" fill="var(--ink)" opacity=".85"/>
-                  <circle cx="10" cy="20" r="3" fill="var(--ink)" opacity=".85"/>
-                  <circle cx="22" cy="20" r="3" fill="var(--ink)" opacity=".85"/>
-                  <path d="M16 11 L10 17M16 11 L22 17" stroke="var(--ink)" strokeWidth="1.5" strokeLinecap="round" opacity=".4"/>
-                </svg>
-                <span>Outdone</span>
-              </div>
-
               <div className="lp-right-text">
                 <p className="lp-eyebrow">Powered by Gemini ✦</p>
                 <h1 className="lp-h1">Today feels<br/><span className="lp-accent">different.</span></h1>
@@ -651,21 +641,27 @@ function App() {
             <p>Tell us where, when, and what constraints matter.</p>
           </section>
 
-          {/* Valora-style horizontal search bar */}
-          <div className="setup-bar">
-            <div className="setup-bar-field setup-bar-destination">
-              <span className="setup-bar-label">WHERE</span>
+          <div className="setup-stack">
+
+            {/* WHERE */}
+            <div className="setup-card">
+              <span className="setup-card-label">WHERE</span>
               <input
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                placeholder="City or place"
+                placeholder="City, neighborhood, or place"
                 autoComplete="off"
-                className="setup-bar-input"
+                className="setup-card-input"
               />
               {destinationOptions.length > 0 && (
-                <div className="suggestions autocomplete-suggestions setup-bar-suggestions">
+                <div className="setup-suggestions">
                   {destinationOptions.map((item) => (
-                    <button type="button" key={item.placeId || item.label} className={destination === item.label ? "suggestion active" : "suggestion"} onClick={() => setDestination(item.label)}>
+                    <button
+                      type="button"
+                      key={item.placeId || item.label}
+                      className={destination === item.label ? "setup-sug active" : "setup-sug"}
+                      onClick={() => { setDestination(item.label); setPlacePredictions([]); }}
+                    >
                       {item.label}
                     </button>
                   ))}
@@ -674,38 +670,33 @@ function App() {
               )}
             </div>
 
-            <div className="setup-bar-divider" />
-
-            <div className="setup-bar-field setup-bar-when">
-              <span className="setup-bar-label">WHEN</span>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="setup-bar-input" />
+            {/* WHEN */}
+            <div className="setup-card">
+              <span className="setup-card-label">WHEN</span>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="setup-card-input" />
             </div>
 
-            <div className="setup-bar-divider" />
-
-            <div className="setup-bar-field setup-bar-diet">
-              <span className="setup-bar-label">DIET</span>
-              <div className="setup-bar-chips">
+            {/* DIET */}
+            <div className="setup-card">
+              <span className="setup-card-label">DIETARY PREFERENCE</span>
+              <div className="chips">
                 {["Vegetarian", "Vegan", "No restrictions", "Gluten-free"].map(o => (
-                  <button key={o} type="button" className={diet === o ? "sb-chip active" : "sb-chip"} onClick={() => setDiet(o)}>{o}</button>
+                  <button key={o} type="button" className={diet === o ? "chip active" : "chip"} onClick={() => setDiet(o)}>{o}</button>
                 ))}
               </div>
             </div>
 
-            <div className="setup-bar-divider" />
-
-            <div className="setup-bar-field setup-bar-with">
-              <span className="setup-bar-label">WITH</span>
-              <div className="setup-bar-chips">
+            {/* WITH */}
+            <div className="setup-card">
+              <span className="setup-card-label">GOING WITH</span>
+              <div className="chips">
                 {["Solo", "Date", "Friends", "Family", "Workday"].map(o => (
-                  <button key={o} type="button" className={planFor === o ? "sb-chip active" : "sb-chip"} onClick={() => setPlanFor(o)}>{o}</button>
+                  <button key={o} type="button" className={planFor === o ? "chip active" : "chip"} onClick={() => setPlanFor(o)}>{o}</button>
                 ))}
               </div>
             </div>
 
-            <button className="setup-bar-cta" onClick={() => goTo("mood")}>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.75 9h10.5M9.75 4.5L14.25 9l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
+            <button className="btn-accent" onClick={() => goTo("mood")}>Choose today's mood →</button>
           </div>
 
         </main>
@@ -1280,73 +1271,59 @@ button { cursor: pointer; }
 .chip:hover { border-color: var(--ink); color: var(--ink); }
 .chip.active { border-color: var(--accent); color: var(--accent); background: rgba(51,153,137,.08); font-weight: 700; }
 
-/* ── SETUP — Valora bar ── */
-.setup-screen { max-width: 1160px; }
-.setup-header { margin-bottom: 36px; max-width: 540px; }
+/* ── SETUP — vertical stacked cards ── */
+.setup-screen { max-width: 680px; }
+.setup-header { margin-bottom: 32px; }
 
-.setup-bar {
-  display: flex; align-items: stretch;
+.setup-stack {
+  display: flex; flex-direction: column; gap: 12px;
+  max-width: 600px;
+}
+.setup-card {
   background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 4px 24px rgba(0,0,0,.09);
-  position: relative; min-height: 96px;
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  position: relative;
 }
-.setup-bar-field {
-  display: flex; flex-direction: column; justify-content: center;
-  gap: 5px; padding: 18px 28px; flex: 1; min-width: 0; position: relative;
+.setup-card-label {
+  font-size: 10px; font-weight: 800;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-3);
 }
-.setup-bar-destination { flex: 1.6; }
-.setup-bar-when { flex: 1; }
-.setup-bar-diet { flex: 1.8; }
-.setup-bar-with { flex: 1.4; }
-.setup-bar-label {
-  font-size: 10px; font-weight: 800; letter-spacing: .12em;
-  color: var(--ink-3); text-transform: uppercase;
+.setup-card-input {
+  background: transparent !important;
+  border: none !important; box-shadow: none !important;
+  border-radius: 0 !important; min-height: 0 !important;
+  padding: 0 !important; font-size: 16px !important;
+  font-weight: 600 !important; color: var(--ink) !important;
+  width: 100%;
 }
-.setup-bar-input {
-  background: transparent !important; border: none !important;
-  border-radius: 0 !important; box-shadow: none !important;
-  min-height: 0 !important; padding: 0 !important;
-  font-size: 15px !important; font-weight: 600 !important; color: var(--ink) !important; width: 100%;
-}
-.setup-bar-input:focus { box-shadow: none !important; }
-.setup-bar-input::placeholder { color: var(--ink-3); font-weight: 400; }
-input[type="date"].setup-bar-input { font-size: 15px; }
-.setup-bar-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
-.sb-chip {
-  padding: 4px 11px; border-radius: 999px;
-  border: 1.5px solid var(--line-strong);
-  background: transparent; font-size: 12px; font-weight: 600;
-  color: var(--ink-3); cursor: pointer; transition: all .15s; white-space: nowrap;
-}
-.sb-chip:hover { border-color: var(--ink); color: var(--ink); }
-.sb-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(51,153,137,.07); font-weight: 700; }
-.setup-bar-divider { width: 1px; background: var(--line); margin: 16px 0; flex-shrink: 0; }
-.setup-bar-cta {
-  display: flex; align-items: center; justify-content: center;
-  margin: 12px; width: 60px; min-width: 60px;
-  border-radius: 16px; background: var(--ink); color: #fff;
-  border: none; cursor: pointer; transition: opacity .15s; flex-shrink: 0;
-}
-.setup-bar-cta:hover { opacity: .85; }
-.setup-bar-suggestions {
-  position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+.setup-card-input:focus { box-shadow: none !important; }
+.setup-card-input::placeholder { color: var(--ink-3); font-weight: 400; }
+input[type="date"].setup-card-input { font-size: 15px !important; }
+
+/* Suggestions dropdown */
+.setup-suggestions {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
   background: #fff; border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.12); z-index: 100; padding: 8px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.13);
+  z-index: 200; padding: 6px;
   display: flex; flex-direction: column; gap: 2px;
 }
-.setup-bar-suggestions .suggestion {
-  display: block; width: 100%; text-align: left; padding: 10px 14px;
-  border-radius: 10px; border: none; background: transparent;
-  font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; transition: background .1s;
+.setup-sug {
+  display: block; width: 100%; text-align: left;
+  padding: 10px 14px; border-radius: 10px;
+  border: none; background: transparent;
+  font-size: 14px; font-weight: 500; color: var(--ink);
+  cursor: pointer; transition: background .1s;
 }
-.setup-bar-suggestions .suggestion:hover,
-.setup-bar-suggestions .suggestion.active { background: var(--surface); }
+.setup-sug:hover, .setup-sug.active { background: var(--surface); }
+
 @media(max-width: 760px) {
-  .setup-bar { flex-direction: column; border-radius: 20px; min-height: 0; }
-  .setup-bar-divider { width: auto; height: 1px; margin: 0 16px; }
-  .setup-bar-field { padding: 16px 20px; }
-  .setup-bar-cta { width: auto; min-width: 0; margin: 12px; border-radius: 14px; min-height: 52px; }
+  .setup-stack { max-width: 100%; }
+  .setup-card { padding: 16px 18px; }
 }
 
 /* ── SCREENS ── */
@@ -1370,80 +1347,63 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-shell {
   width: 100%; height: 100vh;
   display: flex; align-items: center; justify-content: center;
-  padding: 28px 24px;
+  padding: 20px;
   position: relative; overflow: hidden;
 }
-.lp-bg-outer {
-  position: fixed; inset: 0; z-index: 0;
-}
+.lp-bg-outer { position: fixed; inset: 0; z-index: 0; }
 .lp-bg-outer-img {
   width: 100%; height: 100%; object-fit: cover;
   filter: brightness(.92) saturate(1.2);
   transform: scale(1.02);
 }
-.lp-bg-outer-dim {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,.05);
-}
+.lp-bg-outer-dim { position: absolute; inset: 0; background: rgba(0,0,0,.05); }
 
-/* The card — clean white window frame, no shadow */
 .lp-card {
   position: relative; z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr 1.3fr;
-  width: min(1000px, 100%);
-  height: calc(100vh - 48px);
-  max-height: 640px;
-  border-radius: 24px;
-  overflow: hidden;
-  border: 5px solid #fff;
-  box-shadow: none;
+  display: grid; grid-template-columns: 1fr 1.3fr;
+  width: min(920px, 100%);
+  height: min(520px, calc(100vh - 40px));
+  border-radius: 22px; overflow: hidden;
+  border: 5px solid #fff; box-shadow: none;
   animation: lpCardIn .9s var(--ease) both;
 }
 @keyframes lpCardIn {
-  from { opacity: 0; transform: translateY(20px) scale(.98); }
+  from { opacity: 0; transform: translateY(16px) scale(.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ── LEFT: white panel ── */
 .lp-card-left {
   background: #fff;
-  padding: 28px 30px 24px;
-  display: flex; flex-direction: column; gap: 16px;
+  padding: 28px 28px 22px;
+  display: flex; flex-direction: column; gap: 14px;
   overflow: hidden;
 }
-.lp-panel-logo {
-  display: flex; align-items: center; gap: 9px;
-  font-size: 15px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);
-}
+.lp-panel-logo { display: none; }
 .lp-right-text { display: flex; flex-direction: column; }
 .lp-eyebrow {
   font-size: 10px; font-weight: 700; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px;
+  text-transform: uppercase; color: var(--ink-3); margin: 0 0 8px;
 }
 .lp-h1 {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(34px, 4vw, 52px);
+  font-size: clamp(32px, 3.8vw, 48px);
   font-weight: 400; line-height: .97;
   letter-spacing: -.03em; color: var(--ink);
   margin: 0 0 10px;
 }
 .lp-accent { color: var(--accent) !important; }
-.lp-sub {
-  font-size: 13.5px; line-height: 1.6;
-  color: var(--ink-3); margin: 0;
-}
+.lp-sub { font-size: 13px; line-height: 1.55; color: var(--ink-3); margin: 0; }
 .lp-actions { display: flex; flex-direction: column; gap: 8px; }
-.lp-google-wrap { min-height: 42px; display: flex; align-items: center; }
+.lp-google-wrap { min-height: 40px; display: flex; align-items: center; }
 .lp-ghost-btn {
   display: flex; align-items: center; justify-content: space-between;
-  min-height: 46px; padding: 0 16px;
+  min-height: 44px; padding: 0 16px;
   background: transparent; border: 1.5px solid var(--line-strong);
-  border-radius: 14px; font-size: 13px; font-weight: 600; color: var(--ink);
+  border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--ink);
   cursor: pointer; transition: all .18s; gap: 8px;
 }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
-.lp-fine { font-size: 11px; color: var(--ink-3); line-height: 1.5; }
+.lp-fine { font-size: 11px; color: var(--ink-3); line-height: 1.4; }
 
 /* ── RIGHT: transparent window ── */
 .lp-card-right {
