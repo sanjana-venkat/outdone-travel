@@ -1284,14 +1284,14 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .glass-panel { background: var(--surface); border: 1px solid var(--line-strong); box-shadow: none; }
 
 /* ══════════════════════════════════════════
-   LOGIN PAGE — floating card on dark bg
+   LOGIN PAGE — window frame card on vivid bg
 ══════════════════════════════════════════ */
 
-/* Full-screen dark background */
+/* Full-screen vivid background — beautiful, not dark */
 .lp-shell {
   width: 100%; min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
-  padding: 40px 24px;
+  padding: 32px 24px;
   position: relative; overflow: hidden;
 }
 .lp-bg-outer {
@@ -1299,28 +1299,32 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 }
 .lp-bg-outer-img {
   width: 100%; height: 100%; object-fit: cover;
-  filter: brightness(.28) saturate(1.2) blur(2px);
-  transform: scale(1.04);
+  filter: brightness(.75) saturate(1.3);
+  transform: scale(1.02);
 }
 .lp-bg-outer-dim {
   position: absolute; inset: 0;
-  background: rgba(4,6,10,.55);
+  background: rgba(0,0,0,.18);
 }
 
-/* The floating card */
+/* The card — white border frame, feels like a window */
 .lp-card {
   position: relative; z-index: 1;
   display: grid;
-  grid-template-columns: 1fr 1.05fr;
-  width: min(960px, 100%);
-  min-height: 580px;
-  border-radius: 28px;
+  grid-template-columns: 1fr 1.1fr;
+  width: min(980px, 100%);
+  min-height: 600px;
+  border-radius: 32px;
   overflow: hidden;
-  box-shadow: 0 40px 100px rgba(0,0,0,.55), 0 8px 32px rgba(0,0,0,.3);
+  border: 6px solid rgba(255,255,255,.92);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.3),
+    0 32px 80px rgba(0,0,0,.4),
+    0 8px 24px rgba(0,0,0,.25);
   animation: lpCardIn .9s var(--ease) both;
 }
 @keyframes lpCardIn {
-  from { opacity: 0; transform: translateY(24px) scale(.98); }
+  from { opacity: 0; transform: translateY(20px) scale(.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -1334,17 +1338,17 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   display: flex; align-items: center; gap: 9px;
   font-size: 16px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);
 }
-.lp-right-text { display: flex; flex-direction: column; gap: 0; flex: 1; }
+.lp-right-text { display: flex; flex-direction: column; flex: 1; }
 .lp-eyebrow {
   font-size: 10px; font-weight: 700; letter-spacing: .14em;
   text-transform: uppercase; color: var(--ink-3); margin: 0 0 16px;
 }
 .lp-h1 {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(38px, 4.5vw, 60px);
-  font-weight: 400; line-height: .98;
+  font-size: clamp(38px, 4.5vw, 62px);
+  font-weight: 400; line-height: .97;
   letter-spacing: -.03em; color: var(--ink);
-  margin: 0 0 16px;
+  margin: 0 0 18px;
 }
 .lp-accent { color: var(--accent) !important; }
 .lp-sub {
@@ -1361,26 +1365,24 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   cursor: pointer; transition: all .18s; gap: 8px;
 }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
-.lp-fine {
-  font-size: 11.5px; color: var(--ink-3); line-height: 1.5; margin-top: -12px;
-}
+.lp-fine { font-size: 11.5px; color: var(--ink-3); line-height: 1.5; margin-top: -12px; }
 
-/* ── RIGHT: image panel ── */
+/* ── RIGHT: image panel — the "view through the window" ── */
 .lp-card-right {
   position: relative; overflow: hidden;
 }
 .lp-panel-img {
   width: 100%; height: 100%; object-fit: cover;
-  filter: brightness(.78) saturate(1.15);
-  animation: lpImgZoom 2s var(--ease) both;
+  filter: brightness(.82) saturate(1.2);
+  animation: lpImgZoom 2.4s var(--ease) both;
 }
 @keyframes lpImgZoom {
-  from { transform: scale(1.06); }
+  from { transform: scale(1.07); }
   to   { transform: scale(1); }
 }
 .lp-panel-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.08) 55%, rgba(0,0,0,0) 100%);
+  background: linear-gradient(to top, rgba(0,0,0,.65) 0%, rgba(0,0,0,.05) 50%, rgba(0,0,0,0) 100%);
 }
 
 /* Itinerary lines */
@@ -1391,16 +1393,16 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-itin-line {
   display: flex; align-items: center; gap: 18px;
   padding: 12px 18px;
-  background: rgba(8,8,8,.5);
-  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(8,8,8,.42);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.13);
   border-radius: 14px;
   opacity: 0;
   animation: lpLineIn .5s var(--ease) forwards;
 }
-.lp-itin-1 { animation-delay: .7s; }
-.lp-itin-2 { animation-delay: .95s; }
-.lp-itin-3 { animation-delay: 1.2s; }
+.lp-itin-1 { animation-delay: .8s; }
+.lp-itin-2 { animation-delay: 1.05s; }
+.lp-itin-3 { animation-delay: 1.3s; }
 @keyframes lpLineIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -1409,11 +1411,12 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   font-size: 12px; font-weight: 800; color: var(--accent);
   min-width: 40px; font-variant-numeric: tabular-nums;
 }
-.lp-itin-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.9); }
+.lp-itin-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.92); }
 
 /* Mobile */
 @media(max-width: 700px) {
-  .lp-card { grid-template-columns: 1fr; grid-template-rows: auto 260px; }
+  .lp-shell { padding: 20px 16px; }
+  .lp-card { grid-template-columns: 1fr; grid-template-rows: auto 260px; border-width: 4px; }
   .lp-card-left { padding: 32px 24px 28px; gap: 20px; }
 }
 
