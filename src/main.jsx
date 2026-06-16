@@ -476,7 +476,7 @@ function App() {
   }
 
   return (
-    <div className="app-shell" ref={shellRef}>
+    <div className={`app-shell${step === "login" ? " login-active" : ""}`} ref={shellRef}>
       <style>{css}</style>
 
       <nav className="navbar">
@@ -560,58 +560,71 @@ function App() {
       </nav>
 
       {step === "login" && (
-        <main className="screen hero-screen on">
-          <section className="hero-inner">
-            <div className="hero-left">
-              <div className="hero-pill">
-                <div className="pulse" />
-                <span>Powered by Gemini</span>
+        <div className="lp-shell">
+          {/* Dark full-screen background — same image, very dark */}
+          <div className="lp-bg-outer">
+            <img src="https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            <div className="lp-bg-outer-dim" />
+          </div>
+
+          {/* Floating card */}
+          <div className="lp-card">
+
+            {/* LEFT: white panel — text + actions */}
+            <div className="lp-card-left">
+              <div className="lp-right-text">
+                <p className="lp-eyebrow">Powered by Gemini ✦</p>
+                <h1 className="lp-h1">Today feels<br/><span className="lp-accent">different.</span></h1>
+                <p className="lp-sub">Tell us how you feel — we build your entire day around it. Mood-first, always.</p>
               </div>
-              <h1>Today feels <span>different.</span></h1>
-              <p>Because even the best recommendation system can't predict what you'll want today. Whether it's a single evening, a full day, or a whole trip.</p>
-              <div className="hero-cta">
-                <div className="google-wrap">
+
+              <div className="lp-actions">
+                <div className="lp-google-wrap">
                   <div id="googleSignIn" />
-                  {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google sign in...</div>}
+                  {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google…</div>}
                 </div>
-                <button className="btn-accent" onClick={() => goTo("setup")}>Continue without sign in</button>
+                <button className="lp-ghost-btn" onClick={() => goTo("setup")}>
+                  Continue without sign in
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              </div>
+
+              <p className="lp-fine">No account needed. Sign in later to save itineraries.</p>
+            </div>
+
+
+            {/* RIGHT: transparent — bg image shows through like a window */}
+            <div className="lp-card-right">
+              <div className="lp-panel-overlay" />
+              <div className="lp-panel-itin">
+                <div className="lp-itin-line lp-itin-1">
+                  <span className="lp-itin-time">08:30</span>
+                  <span className="lp-itin-label">Quiet temple morning</span>
+                </div>
+                <div className="lp-itin-line lp-itin-2">
+                  <span className="lp-itin-time">12:00</span>
+                  <span className="lp-itin-label">Vegetarian lunch nearby</span>
+                </div>
+                <div className="lp-itin-line lp-itin-3">
+                  <span className="lp-itin-time">17:30</span>
+                  <span className="lp-itin-label">Golden-hour walk</span>
+                </div>
               </div>
             </div>
-            <div className="hero-cards itinerary-showreel" aria-label="Itinerary preview animation">
-              <div className="showreel-frame">
-                <div className="showreel-image-stack">
-                  <img className="reel-img reel-img-1" src={moodVibes[8].img} alt="" />
-                  <img className="reel-img reel-img-2" src={moodVibes[2].img} alt="" />
-                  <img className="reel-img reel-img-3" src={moodVibes[3].img} alt="" />
-                </div>
-                <div className="showreel-overlay" />
-                <div className="itinerary-lines">
-                  <div className="itinerary-line line-1"><b>08:30</b><span>Quiet temple morning</span></div>
-                  <div className="itinerary-line line-2"><b>12:00</b><span>Vegetarian lunch nearby</span></div>
-                  <div className="itinerary-line line-3"><b>17:30</b><span>Golden-hour walk</span></div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </main>
+
+          </div>
+        </div>
       )}
 
       {step === "setup" && (
         <main className="screen setup-screen on">
 
-          {/* Partnership notice — pinned to top */}
-          <div className="partnership-notice">
-            {user && (
-              <div className="profile-chip">
-                <img src={user.picture} alt="" />
-                {user.name}
-              </div>
-            )}
-            <div className="partnership-notice-left">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-              <span>
-                <strong>We don't have your search history or past trips yet</strong> — so we need to ask. A Google partnership would let us skip this entirely. For now, a few quick questions and Gemini handles the rest.
-              </span>
+          {/* Partnership notice */}
+          <div className="partnership-box">
+            {user && <div className="profile-chip"><img src={user.picture} alt="" />{user.name}</div>}
+            <div className="partnership-box-inner">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,marginTop:1}}><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              <span><strong>We don't have your search history or past trips yet</strong> — so we need to ask. A Google partnership would let us skip this entirely. For now, a few quick questions and Gemini handles the rest.</span>
             </div>
           </div>
 
@@ -620,27 +633,66 @@ function App() {
             <h2>Set the plan.</h2>
             <p>Tell us where, when, and what constraints matter.</p>
           </section>
-          <section className="form-shell glass-panel">
-            <label>
-              <span>Destination</span>
-              <input value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="City, neighborhood, or place" autoComplete="off" />
-            </label>
-            <div className="suggestions autocomplete-suggestions">
-              {destinationOptions.map((item) => (
-                <button type="button" key={item.placeId || item.label} className={destination === item.label ? "suggestion active" : "suggestion"} onClick={() => setDestination(item.label)}>
-                  {item.label}
-                </button>
-              ))}
-              {isAutocompleting && <div className="autocomplete-loading">Searching Google Maps…</div>}
+
+          <div className="setup-stack">
+
+            {/* WHERE */}
+            <div className="setup-card">
+              <span className="setup-card-label">WHERE</span>
+              <input
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                placeholder="City, neighborhood, or place"
+                autoComplete="off"
+                className="setup-card-input"
+              />
+              {destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
+                <div className="setup-suggestions">
+                  {destinationOptions.map((item) => (
+                    <button
+                      type="button"
+                      key={item.placeId || item.label}
+                      className="setup-sug"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setDestination(item.label); setPlacePredictions([]); }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                  {isAutocompleting && <div className="autocomplete-loading">Searching…</div>}
+                </div>
+              )}
             </div>
-            <label>
-              <span>When</span>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </label>
-            <Select label="Dietary preference" value={diet} setValue={setDiet} options={["Vegetarian", "Vegan", "No restrictions", "Gluten-free"]} />
-            <Select label="Going with" value={planFor} setValue={setPlanFor} options={["Solo", "Date", "Friends", "Family", "Workday"]} />
-            <button className="btn-accent primary-wide" onClick={() => goTo("mood")}>Choose today's mood</button>
-          </section>
+
+            {/* WHEN */}
+            <div className="setup-card">
+              <span className="setup-card-label">WHEN</span>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="setup-card-input" />
+            </div>
+
+            {/* DIET */}
+            <div className="setup-card">
+              <span className="setup-card-label">DIETARY PREFERENCE</span>
+              <div className="chips">
+                {["Vegetarian", "Vegan", "No restrictions", "Gluten-free"].map(o => (
+                  <button key={o} type="button" className={diet === o ? "chip active" : "chip"} onClick={() => setDiet(o)}>{o}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* WITH */}
+            <div className="setup-card">
+              <span className="setup-card-label">GOING WITH</span>
+              <div className="chips">
+                {["Solo", "Date", "Friends", "Family", "Workday"].map(o => (
+                  <button key={o} type="button" className={planFor === o ? "chip active" : "chip"} onClick={() => setPlanFor(o)}>{o}</button>
+                ))}
+              </div>
+            </div>
+
+            <button className="btn-accent" onClick={() => goTo("mood")}>Choose today's mood →</button>
+          </div>
+
         </main>
       )}
 
@@ -665,20 +717,20 @@ function App() {
             ))}
           </section>
 
-          {/* Custom activity input */}
+          {/* Custom activity input — white card like setup */}
           <div className="custom-activity-wrap">
-            <label className="custom-activity-label" htmlFor="customActivity">
-              Want to customize further?
-            </label>
-            <input
-              id="customActivity"
-              className="custom-activity-input"
-              type="text"
-              value={customActivity}
-              onChange={e => setCustomActivity(e.target.value)}
-              placeholder="Tell us a specific activity you want — ziplining, a cooking class, sunset at a rooftop bar…"
-              maxLength={200}
-            />
+            <div className="setup-card custom-activity-card">
+              <span className="setup-card-label">WANT TO CUSTOMIZE FURTHER?</span>
+              <input
+                id="customActivity"
+                className="setup-card-input"
+                type="text"
+                value={customActivity}
+                onChange={e => setCustomActivity(e.target.value)}
+                placeholder="Tell us a specific activity you want — ziplining, a cooking class, sunset at a rooftop bar…"
+                maxLength={200}
+              />
+            </div>
           </div>
 
           <section className="build-cta-row">
@@ -1085,6 +1137,8 @@ button { cursor: pointer; }
   display: flex; align-items: center; justify-content: space-between;
   background: var(--bg);
 }
+.login-active .navbar { display: none; }
+.login-active { overflow: hidden; height: 100vh; }
 .navbar::before { display: none; }
 .nav-steps, .nav-actions, .error-actions { display: flex; align-items: center; gap: 6px; }
 
@@ -1102,8 +1156,8 @@ button { cursor: pointer; }
   letter-spacing: -.01em; transition: background .15s, color .15s;
 }
 .nav-steps button::before { display: none; }
-.nav-steps button:hover:not(:disabled) { background: var(--surface-2); color: var(--ink-2); }
-.nav-steps button.active { background: var(--ink); color: #fff; font-weight: 700; }
+.nav-steps button:hover:not(:disabled) { background: rgba(0,0,0,.06); color: var(--ink-2); }
+.nav-steps button.active { background: rgba(0,0,0,.09); color: var(--ink); font-weight: 700; }
 .nav-steps button.done { color: var(--ink-2); }
 .nav-steps button:disabled { opacity: .3; cursor: not-allowed; }
 
@@ -1184,23 +1238,103 @@ button { cursor: pointer; }
 .drawer-subscribe { width: 100%; justify-content: center; min-height: 48px !important; font-size: 14px !important; }
 
 /* ── BUTTONS ── */
-.btn-outline, .btn-accent { border-radius: 999px; font-weight: 700; font-size: 13px; transition: opacity .15s, background .15s; }
+.btn-outline, .btn-accent { border-radius: 14px; font-weight: 700; font-size: 14px; transition: opacity .15s, background .15s; }
 .btn-outline {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  min-height: 50px; padding: 0 24px;
-  background: transparent; border: 1.5px solid var(--ink); color: var(--ink); text-decoration: none;
+  min-height: 52px; padding: 0 24px;
+  background: transparent; border: 1.5px solid var(--line-strong); color: var(--ink); text-decoration: none;
 }
 .btn-outline:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 .btn-accent {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 50px; padding: 0 26px;
-  background: var(--ink); color: #fff; border: 1px solid var(--ink); font-weight: 800;
+  min-height: 52px; padding: 0 26px;
+  background: var(--ink); color: #fff; border: none; font-weight: 700;
 }
 .btn-accent:hover { opacity: .88; }
 .btn-accent:active { transform: scale(.98); }
 .btn-accent, .btn-outline { text-decoration: none !important; }
-.nav-subscribe { min-height: 44px !important; padding: 0 24px !important; font-size: 13px; background: var(--ink) !important; border: 1.5px solid var(--ink) !important; color: #fff !important; font-weight: 700 !important; }
-.nav-subscribe:hover { background: #222 !important; border-color: #222 !important; opacity: 1 !important; }
+.nav-subscribe { min-height: 44px !important; padding: 0 24px !important; font-size: 13px; background: var(--ink) !important; border: none !important; color: #fff !important; font-weight: 700 !important; border-radius: 12px !important; }
+.nav-subscribe:hover { opacity: .85 !important; }
+
+/* ── CHIPS (global) ── */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 8px 16px; border-radius: 999px;
+  border: 1.5px solid var(--line-strong);
+  background: transparent; font-size: 13px; font-weight: 600;
+  color: var(--ink-3); cursor: pointer; transition: all .15s;
+}
+.chip:hover { border-color: var(--ink); color: var(--ink); }
+.chip.active { border-color: var(--accent); color: var(--accent); background: rgba(51,153,137,.08); font-weight: 700; }
+
+/* ── SETUP — vertical stacked cards ── */
+.setup-screen { max-width: 680px; }
+/* Partnership notice box */
+.partnership-box {
+  max-width: 600px; background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: 16px;
+  padding: 14px 18px; margin-bottom: 4px;
+}
+.partnership-box-inner {
+  display: flex; align-items: flex-start; gap: 9px;
+  font-size: 13px; line-height: 1.6; color: var(--ink-3);
+}
+.partnership-box-inner strong { color: var(--ink-2); font-weight: 700; }
+
+.setup-header { margin-bottom: 32px; }
+
+.setup-stack {
+  display: flex; flex-direction: column; gap: 28px;
+  max-width: 600px;
+}
+.custom-activity-wrap { margin-top: 48px; max-width: 960px; }
+.custom-activity-card { max-width: 100%; }
+.setup-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  position: relative;
+}
+.setup-card-label {
+  font-size: 10px; font-weight: 800;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.setup-card-input {
+  background: transparent !important;
+  border: none !important; box-shadow: none !important;
+  border-radius: 0 !important; min-height: 0 !important;
+  padding: 0 !important; font-size: 16px !important;
+  font-weight: 600 !important; color: var(--ink) !important;
+  width: 100%;
+}
+.setup-card-input:focus { box-shadow: none !important; }
+.setup-card-input::placeholder { color: var(--ink-3); font-weight: 400; }
+input[type="date"].setup-card-input { font-size: 15px !important; }
+
+/* Suggestions dropdown */
+.setup-suggestions {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.13);
+  z-index: 200; padding: 6px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.setup-sug {
+  display: block; width: 100%; text-align: left;
+  padding: 10px 14px; border-radius: 10px;
+  border: none; background: transparent;
+  font-size: 14px; font-weight: 500; color: var(--ink);
+  cursor: pointer; transition: background .1s;
+}
+.setup-sug:hover, .setup-sug.active { background: var(--surface); }
+
+@media(max-width: 760px) {
+  .setup-stack { max-width: 100%; }
+  .setup-card { padding: 16px 18px; }
+}
 
 /* ── SCREENS ── */
 .screen { display: block; width: 100%; max-width: 1160px; padding: clamp(40px,6vw,82px) clamp(20px,4vw,56px); animation: scIn .3s var(--ease) both; }
@@ -1215,78 +1349,103 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .gem, h1 span { color: var(--accent) !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
 .glass-panel { background: var(--surface); border: 1px solid var(--line-strong); box-shadow: none; }
 
-/* ── HERO ── */
-.hero-screen { padding-top: clamp(64px,8vw,110px); }
-.hero-inner { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(360px,520px); gap: clamp(42px,7vw,96px); align-items: center; min-height: 68vh; }
-.hero-left { display: flex; flex-direction: column; gap: 28px; }
-.hero-pill { display: inline-flex; align-items: center; gap: 0; background: none; border: none; padding: 0; }
-.pulse { display: none; }
-.hero-pill span { font-size: 11px; font-weight: 700; color: var(--ink-3); letter-spacing: .1em; text-transform: uppercase; }
-.hero-left > p { max-width: 620px; font-size: clamp(17px,1.35vw,20px); line-height: 1.6; color: var(--ink-2); }
-.hero-cta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.google-wrap { min-height: 44px; display: inline-flex; align-items: center; border-radius: 999px; overflow: hidden; background: transparent; border: none; }
-.google-wrap iframe { border-radius: 999px !important; }
-#googleSignIn, #googleSignIn > div { border-radius: 999px !important; background: transparent !important; }
-.google-loading { color: var(--ink-3); font-size: 13px; font-weight: 700; padding: 0 16px; }
-.hero-cta > .btn-accent { background: transparent !important; color: var(--ink) !important; border: 1.5px solid var(--ink) !important; }
-.hero-cta > .btn-accent:hover { background: var(--ink) !important; color: #fff !important; opacity: 1 !important; }
+/* ══════════════════════════════════════════
+   LOGIN PAGE — window frame card on vivid bg
+══════════════════════════════════════════ */
 
-/* ── SHOWREEL ── */
-.hero-cards.itinerary-showreel { height: 500px !important; display: flex !important; align-items: center; justify-content: center; }
-.showreel-frame { position: relative; width: min(560px,100%); height: 440px; border-radius: 34px; overflow: hidden; border: 1px solid var(--line-strong); background: var(--surface); }
-.showreel-image-stack { position: absolute; inset: 0; }
-.reel-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.04); animation: reelFade 9s infinite; filter: brightness(.92) saturate(1.08); }
-.reel-img-1 { animation-delay: 0s; } .reel-img-2 { animation-delay: 3s; } .reel-img-3 { animation-delay: 6s; }
-@keyframes reelFade { 0% { opacity:0; transform:scale(1.04); } 8% { opacity:1; transform:scale(1); } 30% { opacity:1; transform:scale(1.025); } 38% { opacity:0; transform:scale(1.05); } 100% { opacity:0; transform:scale(1.05); } }
-.showreel-overlay { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.30)),linear-gradient(90deg,rgba(0,0,0,.18),rgba(0,0,0,.02)); }
-.showreel-copy { display: none !important; }
-.generation-chip { display: none !important; }
-.itinerary-lines { position: absolute; left: 24px; right: 24px; bottom: 24px; z-index: 2; display: grid; gap: 8px; }
-.itinerary-line { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: center; min-height: 54px; padding: 10px 13px; border-radius: 18px; background: rgba(244,243,238,.92); border: 1px solid rgba(255,255,255,.62); opacity: 0; transform: translateY(12px); animation: lineBuild 9s infinite; }
-.line-1 { animation-delay:.55s; } .line-2 { animation-delay:1.25s; } .line-3 { animation-delay:1.95s; }
-@keyframes lineBuild { 0%,4% { opacity:0; transform:translateY(12px); } 10%,74% { opacity:1; transform:translateY(0); } 82%,100% { opacity:0; transform:translateY(-6px); } }
-.itinerary-line b, .itinerary-line span { color: var(--ink) !important; font-size: 13px; font-weight: 700; }
-.itinerary-line b { color: var(--accent) !important; font-weight: 800; }
-
-/* ── SETUP ── */
-.setup-header, .mood-header { margin-bottom: 30px; max-width: 540px; }
-
-/* Partnership notice banner */
-.partnership-notice {
-  display: flex; flex-direction: column; gap: 14px;
-  padding: 18px 20px; border-radius: 16px; margin-bottom: 28px;
-  background: var(--panel); border: 1px solid var(--line-strong);
-  max-width: 640px;
+/* Full-screen vivid background — beautiful, not dark */
+.lp-shell {
+  width: 100%; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  position: relative; overflow: hidden;
 }
-.partnership-notice-left {
-  display: flex; align-items: flex-start; gap: 10px;
-  font-size: 13px; line-height: 1.65; color: var(--ink-3);
+.lp-bg-outer { position: fixed; inset: 0; z-index: 0; }
+.lp-bg-outer-img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: brightness(.92) saturate(1.2);
+  transform: scale(1.02);
 }
-.partnership-notice-left svg { flex-shrink: 0; margin-top: 2px; color: var(--ink-3); }
-.partnership-notice-left strong { color: var(--ink-2); font-weight: 700; }
-.partnership-notice .profile-chip { align-self: flex-start; margin-top: 0; }
-.form-shell { max-width: 640px; border-radius: 0; background: transparent !important; border: 0 !important; padding: 0 !important; display: grid; gap: 28px; }
-label { display: grid; gap: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
-input { width: 100%; background: #fff; border: none; border-radius: 20px; min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500; color: var(--ink); outline: none; box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1.5px rgba(0,0,0,.07); transition: box-shadow .2s; }
-input:focus { box-shadow: 0 2px 8px rgba(0,0,0,.1), 0 0 0 2px var(--ink); }
-input::placeholder { color: var(--ink-3); font-weight: 400; }
-input[type="date"] { color-scheme: light; }
-/* Date input: never overflow on narrow screens */
-input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appearance: none; }
-.suggestions, .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; justify-content: flex-start; }
-.suggestion, .chip { padding: 8px 16px; background: transparent; border: 2px solid var(--gold); border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--gold); transition: background .15s, color .15s, border-color .15s; text-align: left; }
-.suggestion:hover, .chip:hover { background: var(--gold); color: #fff; border-color: var(--gold); }
-.suggestion.active, .chip.active { background: var(--gold); border-color: var(--gold); color: #fff; font-weight: 700; }
-.autocomplete-loading { display: inline-flex; align-items: center; padding: 8px 12px; color: var(--ink-3); font-size: 12px; font-weight: 700; }
-.field-block { display: grid; gap: 8px; }
+.lp-bg-outer-dim { position: absolute; inset: 0; background: rgba(0,0,0,.05); }
 
-.profile-chip { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 7px 12px; border-radius: 10px; background: var(--surface-3); color: var(--ink-2); font-size: 12px; font-weight: 700; border: 1px solid var(--line-strong); }
-.profile-chip img { width: 22px; height: 22px; border-radius: 50%; }
-.primary-wide { width: fit-content; }
-
-@media(max-width: 760px) {
-  .primary-wide { width: 100%; justify-content: center; }
+.lp-card {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1.3fr;
+  width: min(880px, 100%);
+  height: min(480px, calc(100vh - 32px));
+  border-radius: 22px; overflow: hidden;
+  border: 5px solid #fff; box-shadow: none;
+  animation: lpCardIn .9s var(--ease) both;
 }
+@keyframes lpCardIn {
+  from { opacity: 0; transform: translateY(16px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.lp-card-left {
+  background: #fff;
+  padding: 24px 26px 20px;
+  display: flex; flex-direction: column; gap: 12px;
+  overflow: hidden;
+}
+.lp-panel-logo { display: none; }
+.lp-right-text { display: flex; flex-direction: column; }
+.lp-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 5px; }
+.lp-h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(26px, 3vw, 40px); font-weight: 400; line-height: .97; letter-spacing: -.03em; color: var(--ink); margin: 0 0 7px; }
+.lp-accent { color: var(--accent) !important; }
+.lp-sub { font-size: 12px; line-height: 1.5; color: var(--ink-3); margin: 0; }
+.lp-actions { display: flex; flex-direction: column; gap: 6px; }
+.lp-google-wrap { min-height: 36px; display: flex; align-items: center; }
+.lp-ghost-btn { display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 14px; background: transparent; border: 1.5px solid var(--line-strong); border-radius: 11px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; transition: all .18s; gap: 8px; }
+.lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
+.lp-fine { font-size: 10px; color: var(--ink-3); line-height: 1.4; }
+
+/* ── RIGHT: transparent window ── */
+.lp-card-right {
+  position: relative; overflow: hidden;
+  background: transparent;
+}
+.lp-panel-img { display: none; }
+.lp-panel-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 50%);
+}
+
+/* Itinerary lines */
+.lp-panel-itin {
+  position: absolute; bottom: 28px; left: 24px; right: 24px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.lp-itin-line {
+  display: flex; align-items: center; gap: 18px;
+  padding: 12px 18px;
+  background: rgba(8,8,8,.42);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 14px;
+  opacity: 0;
+  animation: lpLineIn .5s var(--ease) forwards;
+}
+.lp-itin-1 { animation-delay: .8s; }
+.lp-itin-2 { animation-delay: 1.05s; }
+.lp-itin-3 { animation-delay: 1.3s; }
+@keyframes lpLineIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.lp-itin-time {
+  font-size: 12px; font-weight: 800; color: var(--accent);
+  min-width: 40px; font-variant-numeric: tabular-nums;
+}
+.lp-itin-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.92); }
+
+/* Mobile */
+@media(max-width: 700px) {
+  .lp-shell { padding: 20px 16px; }
+  .lp-card { grid-template-columns: 1fr; grid-template-rows: auto 260px; border-width: 4px; }
+  .lp-card-left { padding: 32px 24px 28px; gap: 20px; }
+}
+
 
 /* ── MOOD GRID ── */
 .mood-screen { max-width: 1240px; }
@@ -1302,41 +1461,16 @@ input[type="date"] { min-width: 0; width: 100%; appearance: none; -webkit-appear
 .image-tile-content strong { display: block; font-size: clamp(18px,1.8vw,24px); font-weight: 900; line-height: 1; letter-spacing: -.03em; color: #fff; }
 .image-tile-content p { margin: 6px 0 0; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; line-height: 1.3; }
 
-/* Custom activity input */
-.custom-activity-wrap {
-  margin-top: 48px;
-  max-width: 960px;
-  display: grid;
-  gap: 14px;
-}
-.custom-activity-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
+/* Custom activity — matches setup white card */
+.custom-activity-wrap { margin-top: 40px; max-width: 960px; display: grid; gap: 10px; }
+.custom-activity-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .custom-activity-input {
-  width: 100%;
-  background: #fff;
-  border: none;
-  border-radius: 20px;
-  min-height: 64px;
-  padding: 0 24px;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--ink);
-  outline: none;
-  box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1.5px rgba(0,0,0,.07);
-  transition: box-shadow .2s;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: 100%; background: #fff; border: none; border-radius: 20px;
+  min-height: 64px; padding: 0 24px; font-size: 15px; font-weight: 500;
+  color: var(--ink); outline: none; box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  transition: box-shadow .2s; min-width: 0;
 }
-.custom-activity-input:focus {
-  box-shadow: 0 2px 8px rgba(0,0,0,.1), 0 0 0 2px var(--ink);
-}
+.custom-activity-input:focus { box-shadow: 0 2px 12px rgba(0,0,0,.12); }
 .custom-activity-input::placeholder { color: var(--ink-3); font-weight: 400; }
 
 .build-cta-row { margin: 34px 0 0; display: flex; justify-content: flex-end; }
