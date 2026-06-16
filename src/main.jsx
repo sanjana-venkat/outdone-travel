@@ -2543,6 +2543,142 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 }
 
+
+/* ===== MOBILE FINAL POLISH: remove top seam, translucent itinerary, desktop-style CTAs, no drawer X ===== */
+@media (max-width: 760px) {
+  /* Remove the white horizontal seam at the top of the image window */
+  .lp-card::before,
+  .lp-card::after,
+  .lp-card-right::before,
+  .lp-card-right::after,
+  .lp-panel::before,
+  .lp-panel::after,
+  .lp-panel-image::before,
+  .lp-panel-image::after {
+    display: none !important;
+    content: none !important;
+    border: 0 !important;
+  }
+
+  .lp-card {
+    border-top-color: rgba(255,255,255,.96) !important;
+    background-clip: padding-box !important;
+  }
+
+  .lp-card-right {
+    border-top: 0 !important;
+    outline: 0 !important;
+  }
+
+  .lp-panel,
+  .lp-panel-image,
+  .lp-panel img {
+    border-top: 0 !important;
+    outline: 0 !important;
+  }
+
+  /* Add breathing room at the very bottom so buttons don't hit the phone edge */
+  .lp-shell {
+    padding-bottom: 14px !important;
+  }
+
+  .lp-card {
+    height: calc(100dvh - 22px) !important;
+  }
+
+  .lp-card-left {
+    padding-bottom: max(28px, env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Itinerary items: white translucent glass, not black blocks */
+  .lp-itin-line {
+    background: rgba(255,255,255,.22) !important;
+    border: 1px solid rgba(255,255,255,.30) !important;
+    border-radius: 18px !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+  }
+
+  .lp-itin-time {
+    color: #3CA394 !important;
+    font-weight: 900 !important;
+  }
+
+  .lp-itin-label {
+    color: #FFFFFF !important;
+    font-weight: 850 !important;
+  }
+
+  /* Buttons: rounded rectangles like desktop, not pill buttons */
+  .lp-google-wrap,
+  .lp-ghost-btn {
+    border-radius: 22px !important;
+    height: 58px !important;
+  }
+
+  .lp-google-wrap::before {
+    border-radius: 16px !important;
+  }
+
+  .lp-ghost-btn {
+    background: #ffffff !important;
+    border: 1px solid #dedbd4 !important;
+    color: #080808 !important;
+  }
+
+  .lp-ghost-btn:hover {
+    background: #F6F3ED !important;
+    color: #080808 !important;
+  }
+
+  /* Do not change the Google button visual beyond radius */
+  .lp-google-wrap {
+    background: #F8F5EF !important;
+    border: 1px solid #d9d4ca !important;
+  }
+
+  .lp-google-wrap:hover {
+    background: #F8F5EF !important;
+    border-color: #d9d4ca !important;
+  }
+
+  /* Hamburger drawer: remove X/close icon when expanded */
+  .drawer-close,
+  .menu-close,
+  .hamburger-close,
+  .mobile-menu-close,
+  .drawer-header button,
+  .drawer button[aria-label="Close"],
+  .mobile-drawer button[aria-label="Close"],
+  .menu-panel button[aria-label="Close"],
+  .mobile-menu button[aria-label="Close"] {
+    display: none !important;
+  }
+
+  /* If the same hamburger icon morphs into X, prevent rotation/transform */
+  .hamburger.open span,
+  .hamburger.is-open span,
+  .menu-toggle.open span,
+  .menu-toggle.is-open span {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+@media (max-width: 760px) and (max-height: 760px) {
+  .lp-shell {
+    padding-bottom: 12px !important;
+  }
+
+  .lp-card {
+    height: calc(100dvh - 20px) !important;
+  }
+
+  .lp-card-left {
+    padding-bottom: max(22px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
 `;
 
 createRoot(document.getElementById("root")).render(<App />);
