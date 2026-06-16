@@ -2966,6 +2966,239 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.20)) !important;
 }
 
+
+/* ===== EMERGENCY MOBILE RESTORE: image window visible + desktop button style ===== */
+@media (max-width: 760px) {
+  /* The shell/window must be transparent so the image stays visible */
+  .lp-card {
+    background: transparent !important;
+    border: 3px solid #ffffff !important;
+    border-radius: 42px !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
+  /* Restore the top image window */
+  .lp-card-right {
+    order: 1 !important;
+    position: relative !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .lp-card-right,
+  .lp-card-right * {
+    visibility: visible !important;
+  }
+
+  .lp-panel,
+  .lp-panel-image {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  .lp-panel img,
+  .lp-panel-image img,
+  .lp-bg,
+  .lp-bg img,
+  .lp-image,
+  .lp-image img {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    filter: saturate(1.12) contrast(1.02) brightness(.98) !important;
+  }
+
+  /* Remove only overlays/seams, not the image */
+  .lp-card::before,
+  .lp-card::after,
+  .lp-card-right::before,
+  .lp-card-right::after,
+  .lp-panel::before,
+  .lp-panel::after,
+  .lp-panel-image::before,
+  .lp-panel-image::after,
+  .lp-panel-overlay {
+    display: none !important;
+    content: none !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Itinerary stays inside the visible image window */
+  .lp-panel-itin {
+    position: absolute !important;
+    left: 24px !important;
+    right: 24px !important;
+    bottom: 24px !important;
+    z-index: 5 !important;
+    display: grid !important;
+    gap: 12px !important;
+  }
+
+  .lp-itin-line {
+    min-height: 58px !important;
+    display: grid !important;
+    grid-template-columns: 82px 1fr !important;
+    align-items: center !important;
+    padding: 0 18px !important;
+    border-radius: 18px !important;
+    background: rgba(255,255,255,.24) !important;
+    border: 1px solid rgba(255,255,255,.34) !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+    box-shadow: none !important;
+  }
+
+  .lp-itin-time {
+    color: #3CA394 !important;
+    font-weight: 900 !important;
+  }
+
+  .lp-itin-label {
+    color: #ffffff !important;
+    font-weight: 850 !important;
+  }
+
+  /* Bottom content is the only white area */
+  .lp-card-left {
+    order: 2 !important;
+    position: relative !important;
+    flex: 0 0 auto !important;
+    background: #ffffff !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 28px 28px max(28px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .lp-card-left::before,
+  .lp-card-left::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  /* Buttons match desktop rounded-rectangle system */
+  .lp-actions {
+    display: grid !important;
+    gap: 12px !important;
+    margin-top: 24px !important;
+  }
+
+  .lp-google-wrap,
+  .lp-ghost-btn {
+    width: 100% !important;
+    height: 56px !important;
+    border-radius: 18px !important;
+    border: 1px solid #D9D4CA !important;
+    background: #F8F5EF !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  /* Hide Google's black iframe, keep it clickable */
+  .lp-google-wrap iframe,
+  .lp-google-wrap > div,
+  #googleSignIn,
+  #googleSignIn > div {
+    opacity: 0 !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 3 !important;
+  }
+
+  .lp-google-wrap::before {
+    content: "G" !important;
+    position: absolute !important;
+    left: 8px !important;
+    top: 6px !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 14px !important;
+    display: grid !important;
+    place-items: center !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0,0,0,.08) !important;
+    color: #4285F4 !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 26px !important;
+    font-weight: 800 !important;
+    z-index: 1 !important;
+  }
+
+  .lp-google-wrap::after {
+    content: "Continue with Google" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding-left: 42px !important;
+    color: #080808 !important;
+    font-size: 16px !important;
+    font-weight: 750 !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+  }
+
+  .lp-ghost-btn {
+    background: #ffffff !important;
+    color: #080808 !important;
+    font-size: 16px !important;
+    font-weight: 750 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .lp-google-wrap:hover,
+  .lp-ghost-btn:hover {
+    background: #F8F5EF !important;
+    border-color: #D9D4CA !important;
+    color: #080808 !important;
+  }
+}
+
+@media (max-width: 760px) and (max-height: 760px) {
+  .lp-card-left {
+    padding: 22px 24px max(22px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .lp-panel-itin {
+    left: 20px !important;
+    right: 20px !important;
+    bottom: 18px !important;
+    gap: 10px !important;
+  }
+
+  .lp-itin-line {
+    min-height: 52px !important;
+  }
+
+  .lp-google-wrap,
+  .lp-ghost-btn {
+    height: 52px !important;
+  }
+}
+
 `;
 
 createRoot(document.getElementById("root")).render(<App />);
