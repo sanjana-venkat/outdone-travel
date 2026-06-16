@@ -330,7 +330,7 @@ function App() {
                 <span>Powered by Gemini</span>
               </div>
               <h1>Today feels <span>different.</span></h1>
-              <p>Because even the best recommendation system can't predict what you'll want today. Whether it's a single evening, a full day, or a whole trip.</p>
+              <p>The algorithm knows your past. You know your now. Build a day or a whole trip on how you actually feel now.</p>
               <div className="hero-cta">
                 <div className="google-wrap">
                   <div id="googleSignIn" />
@@ -388,8 +388,8 @@ function App() {
             <div className="pi-card">
               <div className="spark">✦</div>
               <p className="label">Personal Intelligence Preview</p>
-              <h3>We don't have full access to your Google Personal Intelligence yet.</h3>
-              <p>We're working on it. Soon, we'll skip these questions with your Google data. For now, give us a quick feeler.</p>
+              <h3>Soon, Google tells us. For now, you do.</h3>
+              <p>We're working on a direct integration with Gemini Personalization to magically retrieve your flights, dietary preferences, and travel patterns that skips these questions. For now, give us a quick feeler.</p>
               {user ? (
                 <div className="profile-chip"><img src={user.picture} alt="" />Signed in as {user.name}</div>
               ) : null}
