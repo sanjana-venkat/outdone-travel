@@ -563,7 +563,7 @@ function App() {
         <div className="lp-shell">
           {/* Dark full-screen background — same image, very dark */}
           <div className="lp-bg-outer">
-            <img src="https://images.pexels.com/photos/5226950/pexels-photo-5226950.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            <img src="https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
             <div className="lp-bg-outer-dim" />
           </div>
 
