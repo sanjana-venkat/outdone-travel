@@ -563,7 +563,7 @@ function App() {
         <div className="lp-shell">
           {/* Dark full-screen background — same image, very dark */}
           <div className="lp-bg-outer">
-            <img src="https://images.pexels.com/photos/2444429/pexels-photo-2444429.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            <img src="https://images.pexels.com/photos/5226950/pexels-photo-5226950.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
             <div className="lp-bg-outer-dim" />
           </div>
 
@@ -1378,12 +1378,12 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 }
 .lp-bg-outer-img {
   width: 100%; height: 100%; object-fit: cover;
-  filter: brightness(.75) saturate(1.3);
+  filter: brightness(.92) saturate(1.2);
   transform: scale(1.02);
 }
 .lp-bg-outer-dim {
   position: absolute; inset: 0;
-  background: rgba(0,0,0,.18);
+  background: rgba(0,0,0,.05);
 }
 
 /* The card — clean white window frame, no shadow */
@@ -1391,10 +1391,10 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   position: relative; z-index: 1;
   display: grid;
   grid-template-columns: 1fr 1.3fr;
-  width: min(1100px, 100%);
-  height: calc(100vh - 56px);
-  max-height: 760px;
-  border-radius: 28px;
+  width: min(1000px, 100%);
+  height: calc(100vh - 48px);
+  max-height: 640px;
+  border-radius: 24px;
   overflow: hidden;
   border: 5px solid #fff;
   box-shadow: none;
@@ -1408,42 +1408,42 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 /* ── LEFT: white panel ── */
 .lp-card-left {
   background: #fff;
-  padding: 40px 36px 36px;
-  display: flex; flex-direction: column; gap: 24px;
+  padding: 28px 30px 24px;
+  display: flex; flex-direction: column; gap: 16px;
   overflow: hidden;
 }
 .lp-panel-logo {
   display: flex; align-items: center; gap: 9px;
-  font-size: 16px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);
+  font-size: 15px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);
 }
-.lp-right-text { display: flex; flex-direction: column; flex: 1; }
+.lp-right-text { display: flex; flex-direction: column; }
 .lp-eyebrow {
   font-size: 10px; font-weight: 700; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--ink-3); margin: 0 0 16px;
+  text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px;
 }
 .lp-h1 {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(38px, 4.5vw, 62px);
+  font-size: clamp(34px, 4vw, 52px);
   font-weight: 400; line-height: .97;
   letter-spacing: -.03em; color: var(--ink);
-  margin: 0 0 18px;
+  margin: 0 0 10px;
 }
 .lp-accent { color: var(--accent) !important; }
 .lp-sub {
-  font-size: 14.5px; line-height: 1.65;
+  font-size: 13.5px; line-height: 1.6;
   color: var(--ink-3); margin: 0;
 }
-.lp-actions { display: flex; flex-direction: column; gap: 10px; }
-.lp-google-wrap { min-height: 46px; display: flex; align-items: center; }
+.lp-actions { display: flex; flex-direction: column; gap: 8px; }
+.lp-google-wrap { min-height: 42px; display: flex; align-items: center; }
 .lp-ghost-btn {
   display: flex; align-items: center; justify-content: space-between;
-  min-height: 50px; padding: 0 18px;
+  min-height: 46px; padding: 0 16px;
   background: transparent; border: 1.5px solid var(--line-strong);
-  border-radius: 14px; font-size: 13.5px; font-weight: 600; color: var(--ink);
+  border-radius: 14px; font-size: 13px; font-weight: 600; color: var(--ink);
   cursor: pointer; transition: all .18s; gap: 8px;
 }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
-.lp-fine { font-size: 11.5px; color: var(--ink-3); line-height: 1.5; margin-top: -12px; }
+.lp-fine { font-size: 11px; color: var(--ink-3); line-height: 1.5; }
 
 /* ── RIGHT: transparent window ── */
 .lp-card-right {
