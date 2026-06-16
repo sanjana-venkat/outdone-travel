@@ -560,87 +560,71 @@ function App() {
       </nav>
 
       {step === "login" && (
-        <main className="login-page">
-          {/* Full-screen background */}
-          <div className="lp-bg">
-            <img src={moodVibes[0].img} alt="" className="lp-bg-img" />
-            <div className="lp-bg-overlay" />
+        <div className="lp-shell">
+          {/* Dark full-screen background — same image, very dark */}
+          <div className="lp-bg-outer">
+            <img src="https://images.pexels.com/photos/2444429/pexels-photo-2444429.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            <div className="lp-bg-outer-dim" />
           </div>
 
-          {/* Left: headline + itinerary lines */}
-          <div className="lp-hero-content">
-            <div className="lp-left">
-              <p className="lp-eyebrow">Powered by Gemini ✦</p>
-              <h1 className="lp-h1">Today feels<br/><span className="lp-accent">different.</span></h1>
-              <p className="lp-sub">Mood-first travel planning. Tell us how you feel — we build your day around it.</p>
-              <div className="lp-itinerary">
-                <div className="lp-itin-line lp-itin-1"><span className="lp-itin-time">08:30</span><span className="lp-itin-label">Quiet temple morning</span></div>
-                <div className="lp-itin-line lp-itin-2"><span className="lp-itin-time">12:00</span><span className="lp-itin-label">Vegetarian lunch nearby</span></div>
-                <div className="lp-itin-line lp-itin-3"><span className="lp-itin-time">17:30</span><span className="lp-itin-label">Golden-hour walk</span></div>
-              </div>
-            </div>
-          </div>
+          {/* Floating card */}
+          <div className="lp-card">
 
-          {/* Right: floating form card overlapping image */}
-          <div className="lp-form-card">
-            <div className="lp-form-card-inner">
-              <p className="lp-form-eyebrow">Plan your day</p>
-              <h3 className="lp-form-title">Where to?</h3>
-              <div className="lp-fc-fields">
-                <div className="lp-fc-field">
-                  <span className="lp-fc-label">DESTINATION</span>
-                  <div className="lp-fc-input-wrap">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="lp-fc-icon"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.4"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.4"/></svg>
-                    <input value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="City, neighborhood, or place" autoComplete="off" className="lp-fc-input" />
-                  </div>
-                  {destinationOptions.length > 0 && (
-                    <div className="lp-fc-suggestions">
-                      {destinationOptions.map((item) => (
-                        <button type="button" key={item.placeId || item.label} className={destination === item.label ? "lp-fc-sug active" : "lp-fc-sug"} onClick={() => setDestination(item.label)}>{item.label}</button>
-                      ))}
-                      {isAutocompleting && <div className="autocomplete-loading">Searching…</div>}
-                    </div>
-                  )}
-                </div>
-                <div className="lp-fc-field">
-                  <span className="lp-fc-label">DATE</span>
-                  <div className="lp-fc-input-wrap">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="lp-fc-icon"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M2 7h12M5 1v3M11 1v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                    <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="lp-fc-input" />
-                  </div>
-                </div>
-                <div className="lp-fc-row">
-                  <div className="lp-fc-field lp-fc-half">
-                    <span className="lp-fc-label">DIET</span>
-                    <div className="lp-fc-chips">
-                      {["Vegetarian","Vegan","No restrictions","Gluten-free"].map(o => (
-                        <button key={o} type="button" className={diet === o ? "lp-chip active" : "lp-chip"} onClick={() => setDiet(o)}>{o}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="lp-fc-field lp-fc-half">
-                    <span className="lp-fc-label">WITH</span>
-                    <div className="lp-fc-chips">
-                      {["Solo","Date","Friends","Family","Workday"].map(o => (
-                        <button key={o} type="button" className={planFor === o ? "lp-chip active" : "lp-chip"} onClick={() => setPlanFor(o)}>{o}</button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+            {/* LEFT: white panel — text + actions */}
+            <div className="lp-card-left">
+              <div className="lp-panel-logo">
+                <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="8" r="3" fill="var(--ink)" opacity=".85"/>
+                  <circle cx="10" cy="20" r="3" fill="var(--ink)" opacity=".85"/>
+                  <circle cx="22" cy="20" r="3" fill="var(--ink)" opacity=".85"/>
+                  <path d="M16 11 L10 17M16 11 L22 17" stroke="var(--ink)" strokeWidth="1.5" strokeLinecap="round" opacity=".4"/>
+                </svg>
+                <span>Outdone</span>
               </div>
-              <button className="lp-fc-cta" onClick={() => goTo("mood")}>
-                Choose your mood
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.75 9h10.5M9.75 4.5L14.25 9l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              <div className="lp-fc-divider"><span>or</span></div>
-              <div className="lp-fc-google">
-                <div id="googleSignIn" />
-                {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google…</div>}
-                {!GOOGLE_CLIENT_ID && <button className="lp-fc-ghost" onClick={() => goTo("setup")}>Continue without sign in</button>}
+
+              <div className="lp-right-text">
+                <p className="lp-eyebrow">Powered by Gemini ✦</p>
+                <h1 className="lp-h1">Today feels<br/><span className="lp-accent">different.</span></h1>
+                <p className="lp-sub">Tell us how you feel — we build your entire day around it. Mood-first, always.</p>
+              </div>
+
+              <div className="lp-actions">
+                <div className="lp-google-wrap">
+                  <div id="googleSignIn" />
+                  {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google…</div>}
+                </div>
+                <button className="lp-ghost-btn" onClick={() => goTo("setup")}>
+                  Continue without sign in
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              </div>
+
+              <p className="lp-fine">No account needed. Sign in later to save itineraries.</p>
+            </div>
+
+            {/* RIGHT: image panel with itinerary */}
+            <div className="lp-card-right">
+              <img src="https://images.pexels.com/photos/2444429/pexels-photo-2444429.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-panel-img" />
+              <div className="lp-panel-overlay" />
+
+              <div className="lp-panel-itin">
+                <div className="lp-itin-line lp-itin-1">
+                  <span className="lp-itin-time">08:30</span>
+                  <span className="lp-itin-label">Quiet temple morning</span>
+                </div>
+                <div className="lp-itin-line lp-itin-2">
+                  <span className="lp-itin-time">12:00</span>
+                  <span className="lp-itin-label">Vegetarian lunch nearby</span>
+                </div>
+                <div className="lp-itin-line lp-itin-3">
+                  <span className="lp-itin-time">17:30</span>
+                  <span className="lp-itin-label">Golden-hour walk</span>
+                </div>
               </div>
             </div>
+
           </div>
-        </main>
+        </div>
       )}
 
       {step === "setup" && (
@@ -1300,219 +1284,139 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .glass-panel { background: var(--surface); border: 1px solid var(--line-strong); box-shadow: none; }
 
 /* ══════════════════════════════════════════
-   LOGIN PAGE — two-section scroll experience
+   LOGIN PAGE — floating card on dark bg
 ══════════════════════════════════════════ */
-/* ══════════════════════════════════════════
-   LOGIN PAGE — single-screen, form card overlaps hero
-══════════════════════════════════════════ */
-.login-page {
-  width: 100%; height: 100vh; min-height: 640px;
+
+/* Full-screen dark background */
+.lp-shell {
+  width: 100%; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 24px;
   position: relative; overflow: hidden;
-  display: flex; align-items: stretch;
+}
+.lp-bg-outer {
+  position: fixed; inset: 0; z-index: 0;
+}
+.lp-bg-outer-img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: brightness(.28) saturate(1.2) blur(2px);
+  transform: scale(1.04);
+}
+.lp-bg-outer-dim {
+  position: absolute; inset: 0;
+  background: rgba(4,6,10,.55);
 }
 
-/* Background image — zooms in on load */
-.lp-bg {
-  position: absolute; inset: 0;
-  animation: lpBgZoom 2.2s var(--ease) forwards;
-  will-change: transform;
+/* The floating card */
+.lp-card {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  width: min(960px, 100%);
+  min-height: 580px;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,.55), 0 8px 32px rgba(0,0,0,.3);
+  animation: lpCardIn .9s var(--ease) both;
 }
-@keyframes lpBgZoom {
-  from { transform: scale(1.08); }
-  to   { transform: scale(1); }
-}
-.lp-bg-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(.48) saturate(1.15); }
-.lp-bg-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(105deg, rgba(0,0,0,.72) 0%, rgba(0,0,0,.3) 55%, rgba(0,0,0,.15) 100%);
+@keyframes lpCardIn {
+  from { opacity: 0; transform: translateY(24px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Left: headline + itinerary lines */
-.lp-hero-content {
-  position: relative; z-index: 2;
-  flex: 1;
-  display: flex; align-items: flex-end;
-  padding: clamp(48px,8vw,110px) clamp(40px,6vw,90px) clamp(48px,7vw,90px);
-  animation: lpContentIn 1s var(--ease) .4s both;
+/* ── LEFT: white panel ── */
+.lp-card-left {
+  background: #fff;
+  padding: 44px 40px 40px;
+  display: flex; flex-direction: column; gap: 28px;
 }
-@keyframes lpContentIn {
-  from { opacity: 0; transform: translateY(28px); }
-  to   { opacity: 1; transform: translateY(0); }
+.lp-panel-logo {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 16px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);
 }
-.lp-left { display: flex; flex-direction: column; gap: 0; max-width: 560px; }
+.lp-right-text { display: flex; flex-direction: column; gap: 0; flex: 1; }
 .lp-eyebrow {
-  font-size: 11px; font-weight: 700; letter-spacing: .14em;
-  text-transform: uppercase; color: rgba(255,255,255,.5);
-  margin: 0 0 20px;
+  font-size: 10px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0 0 16px;
 }
 .lp-h1 {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(54px,7.5vw,108px);
+  font-size: clamp(38px, 4.5vw, 60px);
   font-weight: 400; line-height: .98;
-  letter-spacing: -.03em; color: #fff;
-  margin: 0 0 22px;
+  letter-spacing: -.03em; color: var(--ink);
+  margin: 0 0 16px;
 }
 .lp-accent { color: var(--accent) !important; }
 .lp-sub {
-  font-size: clamp(15px,1.3vw,18px); line-height: 1.6;
-  color: rgba(255,255,255,.65); max-width: 420px; margin: 0 0 36px;
+  font-size: 14.5px; line-height: 1.65;
+  color: var(--ink-3); margin: 0;
+}
+.lp-actions { display: flex; flex-direction: column; gap: 10px; }
+.lp-google-wrap { min-height: 46px; display: flex; align-items: center; }
+.lp-ghost-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 50px; padding: 0 18px;
+  background: transparent; border: 1.5px solid var(--line-strong);
+  border-radius: 14px; font-size: 13.5px; font-weight: 600; color: var(--ink);
+  cursor: pointer; transition: all .18s; gap: 8px;
+}
+.lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
+.lp-fine {
+  font-size: 11.5px; color: var(--ink-3); line-height: 1.5; margin-top: -12px;
 }
 
-/* Floating itinerary lines on hero */
-.lp-itinerary { display: flex; flex-direction: column; gap: 10px; }
+/* ── RIGHT: image panel ── */
+.lp-card-right {
+  position: relative; overflow: hidden;
+}
+.lp-panel-img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: brightness(.78) saturate(1.15);
+  animation: lpImgZoom 2s var(--ease) both;
+}
+@keyframes lpImgZoom {
+  from { transform: scale(1.06); }
+  to   { transform: scale(1); }
+}
+.lp-panel-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.08) 55%, rgba(0,0,0,0) 100%);
+}
+
+/* Itinerary lines */
+.lp-panel-itin {
+  position: absolute; bottom: 28px; left: 24px; right: 24px;
+  display: flex; flex-direction: column; gap: 8px;
+}
 .lp-itin-line {
   display: flex; align-items: center; gap: 18px;
-  padding: 14px 20px;
-  background: rgba(255,255,255,.1);
-  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 16px;
+  padding: 12px 18px;
+  background: rgba(8,8,8,.5);
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
   opacity: 0;
-  animation: lpLineIn .55s var(--ease) forwards;
+  animation: lpLineIn .5s var(--ease) forwards;
 }
-.lp-itin-1 { animation-delay: .9s; }
-.lp-itin-2 { animation-delay: 1.15s; }
-.lp-itin-3 { animation-delay: 1.4s; }
+.lp-itin-1 { animation-delay: .7s; }
+.lp-itin-2 { animation-delay: .95s; }
+.lp-itin-3 { animation-delay: 1.2s; }
 @keyframes lpLineIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .lp-itin-time {
-  font-size: 13px; font-weight: 800; color: var(--accent);
-  min-width: 42px; font-variant-numeric: tabular-nums;
+  font-size: 12px; font-weight: 800; color: var(--accent);
+  min-width: 40px; font-variant-numeric: tabular-nums;
 }
-.lp-itin-label { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.9); }
-
-/* ── Floating form card — right side, overlaps image ── */
-.lp-form-card {
-  position: relative; z-index: 3;
-  width: clamp(360px, 30vw, 440px);
-  flex-shrink: 0;
-  display: flex; align-items: center;
-  padding: 24px 24px 24px 0;
-  animation: lpCardIn .9s var(--ease) .3s both;
-}
-@keyframes lpCardIn {
-  from { opacity: 0; transform: translateX(32px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-.lp-form-card-inner {
-  width: 100%;
-  background: #fff;
-  border-radius: 28px;
-  padding: 32px 28px 28px;
-  box-shadow: 0 32px 80px rgba(0,0,0,.22), 0 8px 24px rgba(0,0,0,.12);
-  display: flex; flex-direction: column; gap: 20px;
-}
-
-.lp-form-eyebrow {
-  font-size: 10px; font-weight: 800; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--ink-3); margin: 0;
-}
-.lp-form-title {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 28px; font-weight: 400; letter-spacing: -.02em;
-  color: var(--ink); margin: -8px 0 0;
-}
-
-/* Fields inside card */
-.lp-fc-fields { display: flex; flex-direction: column; gap: 16px; }
-.lp-fc-field { display: flex; flex-direction: column; gap: 6px; position: relative; }
-.lp-fc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.lp-fc-half {}
-
-.lp-fc-label {
-  font-size: 9.5px; font-weight: 800; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--ink-3);
-}
-.lp-fc-input-wrap {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--surface); border-radius: 14px;
-  padding: 0 16px; min-height: 52px;
-  transition: background .15s;
-}
-.lp-fc-input-wrap:focus-within { background: var(--surface-2); }
-.lp-fc-icon { color: var(--ink-3); flex-shrink: 0; }
-.lp-fc-input {
-  flex: 1; background: transparent !important;
-  border: none !important; border-radius: 0 !important;
-  box-shadow: none !important; min-height: 0 !important;
-  padding: 0 !important; font-size: 14px !important;
-  font-weight: 600 !important; color: var(--ink) !important;
-}
-.lp-fc-input:focus { box-shadow: none !important; }
-.lp-fc-input::placeholder { color: var(--ink-3); font-weight: 400; }
-
-.lp-fc-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
-.lp-chip {
-  padding: 5px 12px; border-radius: 999px;
-  border: 1.5px solid var(--line-strong);
-  background: transparent; font-size: 11.5px; font-weight: 600;
-  color: var(--ink-3); cursor: pointer; transition: all .15s;
-  white-space: nowrap;
-}
-.lp-chip:hover { border-color: var(--ink-2); color: var(--ink); }
-.lp-chip.active {
-  border-color: var(--accent); color: var(--accent);
-  background: rgba(51,153,137,.08); font-weight: 700;
-}
-
-/* CTA button */
-.lp-fc-cta {
-  display: flex; align-items: center; justify-content: space-between;
-  min-height: 54px; padding: 0 20px;
-  background: var(--ink); color: #fff;
-  border: none; border-radius: 16px;
-  font-size: 14px; font-weight: 700; cursor: pointer;
-  transition: opacity .15s; gap: 10px;
-}
-.lp-fc-cta:hover { opacity: .88; }
-
-/* Divider */
-.lp-fc-divider {
-  display: flex; align-items: center; gap: 10px;
-  color: var(--ink-3); font-size: 12px;
-}
-.lp-fc-divider::before, .lp-fc-divider::after {
-  content: ''; flex: 1; height: 1px; background: var(--line-strong);
-}
-
-/* Google sign in */
-.lp-fc-google { display: flex; justify-content: center; min-height: 44px; align-items: center; }
-.lp-fc-ghost {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 100%; min-height: 44px; padding: 0 20px;
-  background: transparent; border: 1.5px solid var(--line-strong);
-  border-radius: 14px; font-size: 13px; font-weight: 600;
-  color: var(--ink-2); cursor: pointer; transition: all .15s;
-}
-.lp-fc-ghost:hover { border-color: var(--ink); color: var(--ink); }
-
-/* Suggestions dropdown */
-.lp-fc-suggestions {
-  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
-  background: #fff; border-radius: 14px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.14);
-  z-index: 200; padding: 6px;
-  display: flex; flex-direction: column; gap: 2px;
-}
-.lp-fc-sug {
-  display: block; width: 100%; text-align: left;
-  padding: 9px 12px; border-radius: 9px;
-  border: none; background: transparent;
-  font-size: 13px; font-weight: 500; color: var(--ink);
-  cursor: pointer; transition: background .1s;
-}
-.lp-fc-sug:hover, .lp-fc-sug.active { background: var(--surface); }
+.lp-itin-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.9); }
 
 /* Mobile */
-@media(max-width: 900px) {
-  .login-page { flex-direction: column; height: auto; min-height: 100vh; }
-  .lp-hero-content { align-items: flex-start; padding-bottom: 32px; min-height: 55vh; }
-  .lp-form-card { width: 100%; padding: 0 16px 32px; }
-  .lp-form-card-inner { border-radius: 24px; }
-  .lp-fc-row { grid-template-columns: 1fr; }
+@media(max-width: 700px) {
+  .lp-card { grid-template-columns: 1fr; grid-template-rows: auto 260px; }
+  .lp-card-left { padding: 32px 24px 28px; gap: 20px; }
 }
+
 
 /* ── MOOD GRID ── */
 .mood-screen { max-width: 1240px; }
