@@ -2907,7 +2907,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
   /* Give the white content tile enough bottom breathing room */
   .lp-card-left {
-    padding: 24px 22px calc(80px + env(safe-area-inset-bottom, 20px)) 22px !important;
+    padding: 24px 22px max(100px, calc(60px + env(safe-area-inset-bottom, 40px))) 22px !important;
     border: 0 !important;
     box-shadow: none !important;
   }
@@ -2931,13 +2931,13 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     width: 100% !important;
     min-height: 50px !important;
     height: auto !important;
-    border: 1px solid rgba(0,0,0,.12) !important;
-    background: #F8F6F2 !important;
-    border-radius: 14px !important;
+    border: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     box-shadow: none !important;
   }
 
@@ -2960,21 +2960,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
   .lp-google-wrap iframe {
     width: 100% !important;
-    min-height: 50px !important;
-    border-radius: 0 !important;
     opacity: 1 !important;
-    position: absolute !important;
-    inset: 0 !important;
-    height: 100% !important;
-  }
-
-  .lp-google-wrap > div,
-  #googleSignIn > div {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    opacity: 1 !important;
+    position: relative !important;
+    inset: auto !important;
+    height: auto !important;
+    border-radius: 999px !important;
   }
 
   /* Ghost btn: exact desktop style */
