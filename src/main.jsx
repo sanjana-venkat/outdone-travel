@@ -2917,60 +2917,59 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-shell {
-    padding-bottom: 18px !important;
+    padding-bottom: 28px !important;
     overflow: hidden !important;
   }
 
   .lp-card {
-    height: calc(100dvh - 26px) !important;
+    height: calc(100dvh - 46px) !important;
   }
 
-  /* ── FINAL OVERRIDE: real Google iframe wins over all earlier fake button blocks ── */
+  /* ── FINAL OVERRIDE: Google button same as desktop ── */
+  /* Desktop renders the iframe inside .lp-google-wrap with no wrapper styling */
   .lp-google-wrap {
-    position: relative !important;
+    min-height: 44px !important;
     width: 100% !important;
-    min-height: 50px !important;
-    height: auto !important;
-    border: none !important;
-    background: transparent !important;
-    border-radius: 0 !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
-    overflow: visible !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
+    overflow: visible !important;
+    position: static !important;
   }
 
   .lp-google-wrap::before,
   .lp-google-wrap::after {
+    all: unset !important;
     display: none !important;
     content: none !important;
   }
 
-  .lp-google-wrap > div,
-  #googleSignIn {
+  /* The Google-rendered div and iframe: natural flow, full width */
+  #googleSignIn,
+  .lp-google-wrap > div {
     width: 100% !important;
     opacity: 1 !important;
-    position: relative !important;
-    inset: auto !important;
+    position: static !important;
     height: auto !important;
     z-index: auto !important;
-    cursor: auto !important;
   }
 
+  #googleSignIn iframe,
   .lp-google-wrap iframe {
     width: 100% !important;
     opacity: 1 !important;
-    position: relative !important;
-    inset: auto !important;
+    position: static !important;
     height: auto !important;
-    border-radius: 999px !important;
+    min-height: 44px !important;
   }
 
   /* Ghost btn: exact desktop style */
   .lp-ghost-btn {
     width: 100% !important;
-    min-height: 42px !important;
+    min-height: 40px !important;
     border-radius: 11px !important;
     border: 1.5px solid var(--line-strong) !important;
     background: transparent !important;
