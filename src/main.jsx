@@ -268,9 +268,7 @@ function App() {
         }
       });
       buttonContainer.innerHTML = "";
-      const isMobile = window.innerWidth <= 700;
-      const btnWidth = isMobile ? Math.min(window.innerWidth - 44, 400) : 320;
-      window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: btnWidth });
+      window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: 320 });
     };
     loadGoogleButton();
     return () => { cancelled = true; };
@@ -1320,9 +1318,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-accent { color: var(--accent) !important; }
 .lp-sub { font-size: 12px; line-height: 1.5; color: var(--ink-3); margin: 0; }
 .lp-actions { display: flex; flex-direction: column; gap: 6px; }
-.lp-google-wrap { min-height: 36px; display: flex; align-items: center; position: relative; }
-.lp-google-visual { display: none; } /* hidden on desktop — desktop shows real iframe */
-.lp-google-iframe-wrap { width: 100%; }
+.lp-google-wrap { min-height: 36px; display: flex; align-items: center; }
 .lp-ghost-btn { display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 14px; background: transparent; border: 1.5px solid var(--line-strong); border-radius: 11px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; transition: all .18s; gap: 8px; }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
 .lp-fine { font-size: 10px; color: var(--ink-3); line-height: 1.4; }
@@ -2263,11 +2259,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-shell {
-    padding-bottom: 32px !important;
+    padding-bottom: 28px !important;
   }
 
   .lp-card {
-    height: calc(100dvh - 52px) !important;
+    height: calc(100dvh - 44px) !important;
   }
 
   .lp-card-left {
@@ -2782,27 +2778,23 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     z-index: 3 !important;
   }
 
-  /* G logo: white pill with Google-blue G, centered text — matches desktop pill style */
   .lp-google-wrap::before {
     content: "G" !important;
     position: absolute !important;
-    left: 12px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    width: 20px !important;
-    height: 20px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: white !important;
-    border: none !important;
+    left: 8px !important;
+    top: 6px !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 14px !important;
+    display: grid !important;
+    place-items: center !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0,0,0,.08) !important;
     color: #4285F4 !important;
-    font-family: "Roboto", Arial, sans-serif !important;
-    font-size: 14px !important;
-    font-weight: 700 !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 26px !important;
+    font-weight: 800 !important;
     z-index: 1 !important;
-    line-height: 1 !important;
   }
 
   .lp-google-wrap::after {
@@ -2812,11 +2804,10 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    color: #3c4043 !important;
-    font-family: "Roboto", Arial, sans-serif !important;
-    font-size: 15px !important;
-    font-weight: 500 !important;
-    letter-spacing: .25px !important;
+    padding-left: 42px !important;
+    color: #080808 !important;
+    font-size: 16px !important;
+    font-weight: 750 !important;
     z-index: 1 !important;
     pointer-events: none !important;
   }
@@ -2824,12 +2815,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .lp-ghost-btn {
     background: #ffffff !important;
     color: #080808 !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
+    font-size: 16px !important;
+    font-weight: 750 !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
-    padding: 0 16px !important;
+    justify-content: center !important;
   }
 
   .lp-google-wrap:hover,
@@ -2911,7 +2901,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
   /* Give the white content tile enough bottom breathing room */
   .lp-card-left {
-    padding: 24px 22px max(100px, calc(60px + env(safe-area-inset-bottom, 40px))) 22px !important;
+    padding: 28px 28px max(48px, calc(32px + env(safe-area-inset-bottom, 20px))) 28px !important;
     border: 0 !important;
     box-shadow: none !important;
   }
@@ -2929,70 +2919,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     height: calc(100dvh - 46px) !important;
   }
 
-  /* ── FINAL OVERRIDE: Google button — let the iframe render naturally ── */
-  .lp-google-wrap {
-    width: 100% !important;
-    min-height: 44px !important;
-    display: flex !important;
-    align-items: center !important;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-    position: relative !important;
-  }
 
-  .lp-google-wrap::before,
-  .lp-google-wrap::after {
-    display: none !important;
-    content: none !important;
-  }
-
-  /* Let the Google-rendered button show at full width */
-  .lp-google-wrap > div,
-  #googleSignIn {
-    width: 100% !important;
-    opacity: 1 !important;
-    position: relative !important;
-    inset: auto !important;
-    height: auto !important;
-    overflow: visible !important;
-    z-index: auto !important;
-  }
-
-  .lp-google-wrap iframe,
-  #googleSignIn iframe {
-    width: 100% !important;
-    opacity: 1 !important;
-    position: relative !important;
-    inset: auto !important;
-    display: block !important;
-    overflow: visible !important;
-    clip: auto !important;
-    clip-path: none !important;
-  }
-
-  /* Also unblock parent overflow */
-  .lp-card-left { overflow: visible !important; }
-  .lp-actions { overflow: visible !important; }
-
-  /* Ghost btn: exact desktop style */
-  .lp-ghost-btn {
-    width: 100% !important;
-    min-height: 40px !important;
-    border-radius: 11px !important;
-    border: 1.5px solid var(--line-strong) !important;
-    background: transparent !important;
-    color: var(--ink) !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 0 14px !important;
-    gap: 8px !important;
-    box-shadow: none !important;
-  }
 }
 
 @media (max-width: 760px) and (max-height: 760px) {
