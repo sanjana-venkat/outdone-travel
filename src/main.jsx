@@ -563,7 +563,20 @@ function App() {
 
               <div className="lp-actions">
                 <div className="lp-google-wrap">
-                  <div id="googleSignIn" />
+                  {/* Visual button layer — always visible */}
+                  <div className="lp-google-visual" aria-hidden="true">
+                    <div className="lp-google-icon">
+                      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.566 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
+                        <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                      </svg>
+                    </div>
+                    <span>Continue with Google</span>
+                  </div>
+                  {/* Real Google iframe — invisible but clickable on top */}
+                  <div id="googleSignIn" className="lp-google-iframe-wrap" />
                   {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google…</div>}
                 </div>
                 <button className="lp-ghost-btn" onClick={() => goTo("setup")}>
@@ -1318,7 +1331,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-accent { color: var(--accent) !important; }
 .lp-sub { font-size: 12px; line-height: 1.5; color: var(--ink-3); margin: 0; }
 .lp-actions { display: flex; flex-direction: column; gap: 6px; }
-.lp-google-wrap { min-height: 36px; display: flex; align-items: center; }
+.lp-google-wrap { min-height: 36px; display: flex; align-items: center; position: relative; }
+.lp-google-visual { display: none; } /* hidden on desktop — desktop shows real iframe */
+.lp-google-iframe-wrap { width: 100%; }
 .lp-ghost-btn { display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 14px; background: transparent; border: 1.5px solid var(--line-strong); border-radius: 11px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; transition: all .18s; gap: 8px; }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
 .lp-fine { font-size: 10px; color: var(--ink-3); line-height: 1.4; }
@@ -2925,62 +2940,84 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     height: calc(100dvh - 46px) !important;
   }
 
-  /* ── FINAL OVERRIDE: Google button — identical to desktop, no clipping ── */
-  /* Unblock overflow on every ancestor that could clip the iframe */
-  .lp-card-left,
-  .lp-actions {
-    overflow: visible !important;
-  }
-
-  /* Strip ALL styling from the wrapper — desktop only has min-height + flex */
+  /* ── FINAL OVERRIDE: Google button as React visual layer + invisible iframe ── */
+  /* Show our own visual button, overlay the real iframe invisibly on top */
   .lp-google-wrap {
-    all: revert !important;
-    min-height: 44px !important;
+    position: relative !important;
     width: 100% !important;
+    height: 50px !important;
     display: flex !important;
     align-items: center !important;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     overflow: visible !important;
-    position: relative !important;
-    border-radius: 0 !important;
   }
 
   .lp-google-wrap::before,
   .lp-google-wrap::after {
     display: none !important;
-    content: "" !important;
-    background: transparent !important;
-    border: none !important;
-    position: static !important;
-    width: 0 !important;
-    height: 0 !important;
-    opacity: 0 !important;
+    content: none !important;
+  }
+
+  /* Visual button layer — our own styled button, always visible */
+  .lp-google-visual {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 16px !important;
+    background: #F8F6F1 !important;
+    border: 1px solid rgba(0,0,0,.12) !important;
+    border-radius: 14px !important;
     pointer-events: none !important;
+    z-index: 1 !important;
   }
 
-  /* Google-rendered container and iframe: natural size, visible, not clipped */
-  .lp-google-wrap > div,
+  .lp-google-icon {
+    width: 18px !important;
+    height: 18px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .lp-google-visual span {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #080808 !important;
+    flex: 1 !important;
+    text-align: center !important;
+  }
+
+  /* Real iframe: invisible but covers the whole button so it's clickable */
+  .lp-google-iframe-wrap,
   #googleSignIn {
-    position: relative !important;
+    position: absolute !important;
+    inset: 0 !important;
     width: 100% !important;
-    height: auto !important;
-    opacity: 1 !important;
-    overflow: visible !important;
-    z-index: 1 !important;
-    inset: auto !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    z-index: 2 !important;
+    overflow: hidden !important;
   }
 
-  .lp-google-wrap iframe,
-  #googleSignIn iframe {
-    position: relative !important;
+  #googleSignIn > div,
+  .lp-google-iframe-wrap > div {
     width: 100% !important;
-    height: 44px !important;
-    opacity: 1 !important;
-    inset: auto !important;
-    z-index: 1 !important;
-    display: block !important;
+    height: 100% !important;
+    opacity: 0 !important;
+  }
+
+  .lp-google-iframe-wrap iframe,
+  #googleSignIn iframe {
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
   }
 
   /* Ghost btn: exact desktop style */
@@ -3013,272 +3050,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
   .lp-card {
     height: calc(100dvh - 24px) !important;
-  }
-}
-
-
-/* ===== FINAL GOOGLE BUTTON + MOBILE WINDOW CLEANUP ===== */
-.lp-google-wrap,
-.google-wrap {
-  position: relative !important;
-  width: 100% !important;
-  height: 56px !important;
-  border-radius: 18px !important;
-  border: 1px solid #D9D4CA !important;
-  background: #F8F5EF !important;
-  box-shadow: none !important;
-  overflow: hidden !important;
-}
-
-.lp-google-wrap iframe,
-.lp-google-wrap > div,
-#googleSignIn,
-#googleSignIn > div,
-.google-wrap iframe,
-.google-wrap > div {
-  opacity: 0 !important;
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 3 !important;
-}
-
-.lp-google-wrap::before,
-.google-wrap::before {
-  content: "G" !important;
-  position: absolute !important;
-  left: 8px !important;
-  top: 6px !important;
-  width: 42px !important;
-  height: 42px !important;
-  border-radius: 14px !important;
-  display: grid !important;
-  place-items: center !important;
-  background: #FFFFFF !important;
-  border: 1px solid rgba(0,0,0,.08) !important;
-  color: #4285F4 !important;
-  font-family: Arial, sans-serif !important;
-  font-size: 26px !important;
-  font-weight: 800 !important;
-  z-index: 1 !important;
-}
-
-.lp-google-wrap::after,
-.google-wrap::after {
-  content: "Continue with Google" !important;
-  position: absolute !important;
-  inset: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding-left: 42px !important;
-  color: #080808 !important;
-  font-size: 16px !important;
-  font-weight: 750 !important;
-  z-index: 1 !important;
-  pointer-events: none !important;
-}
-
-.lp-google-wrap:hover,
-.google-wrap:hover {
-  background: #F8F5EF !important;
-  border-color: #D9D4CA !important;
-}
-
-.lp-ghost-btn {
-  height: 56px !important;
-  border-radius: 18px !important;
-  background: #FFFFFF !important;
-  border: 1px solid #D9D4CA !important;
-  color: #080808 !important;
-  box-shadow: none !important;
-  font-size: 16px !important;
-  font-weight: 750 !important;
-}
-
-.lp-ghost-btn:hover {
-  background: #F8F5EF !important;
-  color: #080808 !important;
-  border-color: #D9D4CA !important;
-}
-
-@media (max-width: 760px) {
-  .lp-card {
-    background: transparent !important;
-    border: 3px solid #FFFFFF !important;
-    border-radius: 42px !important;
-    overflow: hidden !important;
-    outline: none !important;
-    box-shadow: none !important;
-    height: calc(100dvh - 30px) !important;
-  }
-
-  .lp-shell {
-    padding-bottom: 22px !important;
-    overflow: hidden !important;
-  }
-
-  .lp-card-right,
-  .lp-card-right *,
-  .lp-panel,
-  .lp-panel *,
-  .lp-panel-image,
-  .lp-panel-image *,
-  .lp-image,
-  .lp-image *,
-  .lp-bg,
-  .lp-bg * {
-    border-left: 0 !important;
-    border-right: 0 !important;
-    border-inline-start: 0 !important;
-    border-inline-end: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after,
-  .lp-image::before,
-  .lp-image::after,
-  .lp-bg::before,
-  .lp-bg::after,
-  .lp-panel-overlay {
-    display: none !important;
-    content: none !important;
-    border: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-  }
-
-  .lp-card-right {
-    order: 1 !important;
-    position: relative !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .lp-panel,
-  .lp-panel-image {
-    position: absolute !important;
-    inset: 0 !important;
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    overflow: hidden !important;
-  }
-
-  .lp-panel img,
-  .lp-panel-image img,
-  .lp-bg,
-  .lp-bg img,
-  .lp-image,
-  .lp-image img {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    filter: saturate(1.12) contrast(1.02) brightness(.98) !important;
-  }
-
-  .lp-panel-itin {
-    position: absolute !important;
-    left: 24px !important;
-    right: 24px !important;
-    bottom: 24px !important;
-    z-index: 5 !important;
-    display: grid !important;
-    gap: 12px !important;
-  }
-
-  .lp-itin-line {
-    min-height: 58px !important;
-    display: grid !important;
-    grid-template-columns: 82px 1fr !important;
-    align-items: center !important;
-    padding: 0 18px !important;
-    border-radius: 18px !important;
-    background: rgba(255,255,255,.24) !important;
-    border: 1px solid rgba(255,255,255,.34) !important;
-    backdrop-filter: blur(18px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-itin-time {
-    color: #3CA394 !important;
-    font-weight: 900 !important;
-  }
-
-  .lp-itin-label {
-    color: #FFFFFF !important;
-    font-weight: 850 !important;
-  }
-
-  .lp-card-left {
-    order: 2 !important;
-    position: relative !important;
-    flex: 0 0 auto !important;
-    background: #FFFFFF !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-    padding: 28px 28px calc(56px + env(safe-area-inset-bottom)) 28px !important;
-  }
-
-  .lp-card-left::before,
-  .lp-card-left::after {
-    display: none !important;
-    content: none !important;
-  }
-
-  .lp-actions {
-    display: grid !important;
-    gap: 12px !important;
-    margin-top: 24px !important;
-    margin-bottom: 0 !important;
-  }
-}
-
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-card {
-    height: calc(100dvh - 26px) !important;
-  }
-
-  .lp-shell {
-    padding-bottom: 18px !important;
-  }
-
-  .lp-card-left {
-    padding: 22px 24px calc(44px + env(safe-area-inset-bottom)) 24px !important;
-  }
-
-  .lp-panel-itin {
-    left: 20px !important;
-    right: 20px !important;
-    bottom: 18px !important;
-    gap: 10px !important;
-  }
-
-  .lp-itin-line,
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    min-height: 52px !important;
-    height: 52px !important;
   }
 }
 
