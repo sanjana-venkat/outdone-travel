@@ -1638,13 +1638,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 /* ===== MOBILE LOGIN FIX: itinerary window top, white intro card bottom ===== */
 @media (max-width: 760px) {
-  html,
-  body,
-  #root {
-    height: 100%;
-    overflow: hidden;
-  }
-
+  /* Login page only: lock scroll via the login-active class */
   .app-shell.login-active,
   .login-active {
     width: 100vw !important;
@@ -1982,7 +1976,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     position: relative !important;
     z-index: 2 !important;
     width: 100% !important;
-    height: calc(100dvh - 16px) !important;
+    height: calc(100dvh - 48px) !important;
     display: flex !important;
     flex-direction: column !important;
     border: 4px solid rgba(255,255,255,.96) !important;
@@ -2269,11 +2263,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-shell {
-    padding-bottom: 14px !important;
+    padding-bottom: 32px !important;
   }
 
   .lp-card {
-    height: calc(100dvh - 22px) !important;
+    height: calc(100dvh - 52px) !important;
   }
 
   .lp-card-left {
@@ -2352,11 +2346,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 @media (max-width: 760px) and (max-height: 760px) {
   .lp-shell {
-    padding-bottom: 12px !important;
+    padding-bottom: 28px !important;
   }
 
   .lp-card {
-    height: calc(100dvh - 20px) !important;
+    height: calc(100dvh - 48px) !important;
   }
 
   .lp-card-left {
@@ -2788,23 +2782,27 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     z-index: 3 !important;
   }
 
+  /* G logo: white pill with Google-blue G, centered text — matches desktop pill style */
   .lp-google-wrap::before {
     content: "G" !important;
     position: absolute !important;
-    left: 8px !important;
-    top: 6px !important;
-    width: 42px !important;
-    height: 42px !important;
-    border-radius: 14px !important;
-    display: grid !important;
-    place-items: center !important;
-    background: #ffffff !important;
-    border: 1px solid rgba(0,0,0,.08) !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: white !important;
+    border: none !important;
     color: #4285F4 !important;
-    font-family: Arial, sans-serif !important;
-    font-size: 26px !important;
-    font-weight: 800 !important;
+    font-family: "Roboto", Arial, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
     z-index: 1 !important;
+    line-height: 1 !important;
   }
 
   .lp-google-wrap::after {
@@ -2814,10 +2812,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding-left: 42px !important;
-    color: #080808 !important;
-    font-size: 16px !important;
-    font-weight: 750 !important;
+    color: #3c4043 !important;
+    font-family: "Roboto", Arial, sans-serif !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    letter-spacing: .25px !important;
     z-index: 1 !important;
     pointer-events: none !important;
   }
@@ -2825,11 +2824,12 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .lp-ghost-btn {
     background: #ffffff !important;
     color: #080808 !important;
-    font-size: 16px !important;
-    font-weight: 750 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
+    justify-content: space-between !important;
+    padding: 0 16px !important;
   }
 
   .lp-google-wrap:hover,
@@ -3001,11 +3001,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-shell {
-    padding-bottom: 16px !important;
+    padding-bottom: 28px !important;
   }
 
   .lp-card {
-    height: calc(100dvh - 24px) !important;
+    height: calc(100dvh - 48px) !important;
   }
 }
 
