@@ -3016,6 +3016,272 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 }
 
+
+/* ===== FINAL GOOGLE BUTTON + MOBILE WINDOW CLEANUP ===== */
+.lp-google-wrap,
+.google-wrap {
+  position: relative !important;
+  width: 100% !important;
+  height: 56px !important;
+  border-radius: 18px !important;
+  border: 1px solid #D9D4CA !important;
+  background: #F8F5EF !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.lp-google-wrap iframe,
+.lp-google-wrap > div,
+#googleSignIn,
+#googleSignIn > div,
+.google-wrap iframe,
+.google-wrap > div {
+  opacity: 0 !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 3 !important;
+}
+
+.lp-google-wrap::before,
+.google-wrap::before {
+  content: "G" !important;
+  position: absolute !important;
+  left: 8px !important;
+  top: 6px !important;
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0,0,0,.08) !important;
+  color: #4285F4 !important;
+  font-family: Arial, sans-serif !important;
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  z-index: 1 !important;
+}
+
+.lp-google-wrap::after,
+.google-wrap::after {
+  content: "Continue with Google" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-left: 42px !important;
+  color: #080808 !important;
+  font-size: 16px !important;
+  font-weight: 750 !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+}
+
+.lp-google-wrap:hover,
+.google-wrap:hover {
+  background: #F8F5EF !important;
+  border-color: #D9D4CA !important;
+}
+
+.lp-ghost-btn {
+  height: 56px !important;
+  border-radius: 18px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #D9D4CA !important;
+  color: #080808 !important;
+  box-shadow: none !important;
+  font-size: 16px !important;
+  font-weight: 750 !important;
+}
+
+.lp-ghost-btn:hover {
+  background: #F8F5EF !important;
+  color: #080808 !important;
+  border-color: #D9D4CA !important;
+}
+
+@media (max-width: 760px) {
+  .lp-card {
+    background: transparent !important;
+    border: 3px solid #FFFFFF !important;
+    border-radius: 42px !important;
+    overflow: hidden !important;
+    outline: none !important;
+    box-shadow: none !important;
+    height: calc(100dvh - 30px) !important;
+  }
+
+  .lp-shell {
+    padding-bottom: 22px !important;
+    overflow: hidden !important;
+  }
+
+  .lp-card-right,
+  .lp-card-right *,
+  .lp-panel,
+  .lp-panel *,
+  .lp-panel-image,
+  .lp-panel-image *,
+  .lp-image,
+  .lp-image *,
+  .lp-bg,
+  .lp-bg * {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-inline-start: 0 !important;
+    border-inline-end: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .lp-card-right::before,
+  .lp-card-right::after,
+  .lp-panel::before,
+  .lp-panel::after,
+  .lp-panel-image::before,
+  .lp-panel-image::after,
+  .lp-image::before,
+  .lp-image::after,
+  .lp-bg::before,
+  .lp-bg::after,
+  .lp-panel-overlay {
+    display: none !important;
+    content: none !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .lp-card-right {
+    order: 1 !important;
+    position: relative !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .lp-panel,
+  .lp-panel-image {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  .lp-panel img,
+  .lp-panel-image img,
+  .lp-bg,
+  .lp-bg img,
+  .lp-image,
+  .lp-image img {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    filter: saturate(1.12) contrast(1.02) brightness(.98) !important;
+  }
+
+  .lp-panel-itin {
+    position: absolute !important;
+    left: 24px !important;
+    right: 24px !important;
+    bottom: 24px !important;
+    z-index: 5 !important;
+    display: grid !important;
+    gap: 12px !important;
+  }
+
+  .lp-itin-line {
+    min-height: 58px !important;
+    display: grid !important;
+    grid-template-columns: 82px 1fr !important;
+    align-items: center !important;
+    padding: 0 18px !important;
+    border-radius: 18px !important;
+    background: rgba(255,255,255,.24) !important;
+    border: 1px solid rgba(255,255,255,.34) !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+    box-shadow: none !important;
+  }
+
+  .lp-itin-time {
+    color: #3CA394 !important;
+    font-weight: 900 !important;
+  }
+
+  .lp-itin-label {
+    color: #FFFFFF !important;
+    font-weight: 850 !important;
+  }
+
+  .lp-card-left {
+    order: 2 !important;
+    position: relative !important;
+    flex: 0 0 auto !important;
+    background: #FFFFFF !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 28px 28px calc(56px + env(safe-area-inset-bottom)) 28px !important;
+  }
+
+  .lp-card-left::before,
+  .lp-card-left::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .lp-actions {
+    display: grid !important;
+    gap: 12px !important;
+    margin-top: 24px !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+@media (max-width: 760px) and (max-height: 760px) {
+  .lp-card {
+    height: calc(100dvh - 26px) !important;
+  }
+
+  .lp-shell {
+    padding-bottom: 18px !important;
+  }
+
+  .lp-card-left {
+    padding: 22px 24px calc(44px + env(safe-area-inset-bottom)) 24px !important;
+  }
+
+  .lp-panel-itin {
+    left: 20px !important;
+    right: 20px !important;
+    bottom: 18px !important;
+    gap: 10px !important;
+  }
+
+  .lp-itin-line,
+  .lp-google-wrap,
+  .lp-ghost-btn {
+    min-height: 52px !important;
+    height: 52px !important;
+  }
+}
+
 `;
 
 createRoot(document.getElementById("root")).render(<App />);
