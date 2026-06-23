@@ -31,14 +31,14 @@ function getTravelArchetype(moods = []) {
   return { name: "The Mood-Led Traveler", line: "You know what you want today — and you're building a day around exactly that feeling." };
 }
 
-function buildGoogleMapsTripUrl(stops = []) {
+function buildGoogleMapsTripUrl(stops = [], travelMode = "walking") {
   const names = stops.map((stop) => stop.googlePlaceName || stop.name || stop.photoQuery).filter(Boolean).slice(0, 10);
   if (!names.length) return "";
   if (names.length === 1) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(names[0])}`;
   const origin = names[0];
   const destination = names[names.length - 1];
   const waypoints = names.slice(1, -1).join("|");
-  let url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=walking`;
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=${travelMode}`;
   if (waypoints) url += `&waypoints=${encodeURIComponent(waypoints)}`;
   return url;
 }
@@ -184,6 +184,8 @@ function App() {
   const [date, setDate] = useState(getToday());
   const [diet, setDiet] = useState("Vegetarian");
   const [planFor, setPlanFor] = useState("Date");
+  const [transportMode, setTransportMode] = useState("");
+  const [timeRange, setTimeRange] = useState("");
   const [selectedMoods, setSelectedMoods] = useState(["active", "romantic"]);
   const [loadingLine, setLoadingLine] = useState(0);
   const [placesPhotos, setPlacesPhotos] = useState([]);
@@ -305,7 +307,8 @@ function App() {
 
   const selectedMoodObjects = selectedMoods.map((id) => moodVibes.find((vibe) => vibe.id === id)).filter(Boolean);
   const travelArchetype = getTravelArchetype(selectedMoodObjects);
-  const tripMapsUrl = itinerary?.stops?.length ? buildGoogleMapsTripUrl(itinerary.stops) : "";
+  const googleTravelMode = transportMode === "Car" ? "driving" : transportMode === "Public transit" ? "transit" : "walking";
+  const tripMapsUrl = itinerary?.stops?.length ? buildGoogleMapsTripUrl(itinerary.stops, googleTravelMode) : "";
 
   const loadingItems = useMemo(() => [
     user?.name ? `${user.name}'s lightweight profile` : "Quick feeler profile",
@@ -358,7 +361,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, selectedMoods: selectedMoodObjects, customActivity: customActivity.trim() || null, instruction: "Create a real, specific, mood-first day plan. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: customActivity.trim() || null, instruction: "Create a real, specific, mood-first day plan. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -659,6 +662,26 @@ function App() {
               <div className="chips">
                 {["Solo", "Date", "Friends", "Family", "Workday"].map(o => (
                   <button key={o} type="button" className={planFor === o ? "chip active" : "chip"} onClick={() => setPlanFor(o)}>{o}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* TIME RANGE */}
+            <div className="setup-card">
+              <span className="setup-card-label">TIME RANGE <span className="setup-card-optional">— optional</span></span>
+              <div className="chips">
+                {["Morning (6–12pm)", "Afternoon (12–6pm)", "Evening (6pm–12am)", "Full day"].map(o => (
+                  <button key={o} type="button" className={timeRange === o ? "chip active" : "chip"} onClick={() => setTimeRange(t => t === o ? "" : o)}>{o}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* TRANSPORT */}
+            <div className="setup-card">
+              <span className="setup-card-label">GETTING AROUND <span className="setup-card-optional">— optional</span></span>
+              <div className="chips">
+                {["Walking", "Car", "Public transit"].map(o => (
+                  <button key={o} type="button" className={transportMode === o ? "chip active" : "chip"} onClick={() => setTransportMode(t => t === o ? "" : o)}>{o}</button>
                 ))}
               </div>
             </div>
@@ -1240,6 +1263,7 @@ button { cursor: pointer; }
   box-shadow: 0 1px 6px rgba(0,0,0,.08); position: relative;
 }
 .setup-card-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.setup-card-optional { font-size: 10px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-3); opacity: .65; }
 .setup-card-input {
   background: transparent !important; border: none !important; box-shadow: none !important;
   border-radius: 0 !important; min-height: 0 !important; padding: 0 !important;
@@ -1346,6 +1370,44 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 }
 .lp-itin-time { font-size: 12px; font-weight: 800; color: var(--accent); min-width: 40px; font-variant-numeric: tabular-nums; }
 .lp-itin-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.92); }
+
+/* Tablet + Mobile: stack to single column */
+@media(max-width: 1024px) {
+  .lp-shell {
+    padding: 16px;
+    align-items: stretch;
+  }
+  .lp-card {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    width: 100%;
+    height: calc(100dvh - 32px);
+    border-width: 4px;
+    border-radius: 32px;
+  }
+  .lp-card-right {
+    order: 1;
+    min-height: 0;
+    flex: 1;
+  }
+  .lp-card-left {
+    order: 2;
+    padding: 28px 32px max(28px, env(safe-area-inset-bottom)) 32px;
+    gap: 16px;
+  }
+  .lp-google-wrap {
+    min-height: 52px;
+    border-radius: 14px;
+    border: 1px solid #D9D4CA;
+    background: #F8F5EF;
+    overflow: hidden;
+    position: relative;
+  }
+  .lp-ghost-btn {
+    min-height: 50px;
+    border-radius: 14px;
+  }
+}
 
 /* Mobile */
 @media(max-width: 700px) {
@@ -1551,7 +1613,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 @keyframes calSpin { to { transform: rotate(360deg); } }
 .cal-spin { animation: calSpin .8s linear infinite; }
 
-.timeline { max-width: 100% !important; margin: 0 auto; padding: 48px 0 90px !important; }
+.timeline { max-width: 100% !important; margin: 0 auto; padding: 48px 0 32px !important; }
 .timeline > .label { margin-bottom: 40px; }
 .stop { display: flex; position: relative; margin-bottom: 44px; }
 .stop:not(:last-child)::after { content: ""; position: absolute; left: 4px; top: 22px; bottom: -44px; width: 1px; background: var(--line-strong); }
@@ -1609,7 +1671,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .res-glass-top { flex-direction: column; gap: 6px; }
   .res-date-tag { align-self: flex-start; }
   .res-dest { font-size: clamp(28px, 8vw, 52px); }
-  .timeline { padding: 36px 20px 80px !important; }
+  .timeline { padding: 36px 20px 32px !important; }
 }
 
 @media(max-width: 980px) {
@@ -2126,21 +2188,17 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-google-wrap::before {
-    content: "G" !important;
+    content: "" !important;
     position: absolute !important;
-    left: 10px !important;
-    top: 7px !important;
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 50% !important;
-    display: grid !important;
-    place-items: center !important;
-    background: #fff !important;
-    border: 1px solid rgba(0,0,0,.08) !important;
-    color: #4285F4 !important;
-    font-family: Arial, sans-serif !important;
-    font-size: 26px !important;
-    font-weight: 800 !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/%3E%3Cpath fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3C/svg%3E") !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
     z-index: 1 !important;
   }
 
@@ -2342,11 +2400,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 @media (max-width: 760px) and (max-height: 760px) {
   .lp-shell {
-    padding-bottom: 28px !important;
+    padding-bottom: 32px !important;
   }
 
   .lp-card {
-    height: calc(100dvh - 48px) !important;
+    height: calc(100dvh - 54px) !important;
   }
 
   .lp-card-left {
@@ -2779,21 +2837,17 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-google-wrap::before {
-    content: "G" !important;
+    content: "" !important;
     position: absolute !important;
-    left: 8px !important;
-    top: 6px !important;
-    width: 42px !important;
-    height: 42px !important;
-    border-radius: 14px !important;
-    display: grid !important;
-    place-items: center !important;
-    background: #ffffff !important;
-    border: 1px solid rgba(0,0,0,.08) !important;
-    color: #4285F4 !important;
-    font-family: Arial, sans-serif !important;
-    font-size: 26px !important;
-    font-weight: 800 !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/%3E%3Cpath fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3C/svg%3E") !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
     z-index: 1 !important;
   }
 
@@ -2804,10 +2858,10 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding-left: 42px !important;
-    color: #080808 !important;
-    font-size: 16px !important;
-    font-weight: 750 !important;
+    color: #3c4043 !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    letter-spacing: .25px !important;
     z-index: 1 !important;
     pointer-events: none !important;
   }
@@ -2928,11 +2982,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-shell {
-    padding-bottom: 28px !important;
+    padding-bottom: 32px !important;
   }
 
   .lp-card {
-    height: calc(100dvh - 48px) !important;
+    height: calc(100dvh - 54px) !important;
   }
 }
 
