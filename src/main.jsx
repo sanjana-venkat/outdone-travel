@@ -2925,45 +2925,62 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     height: calc(100dvh - 46px) !important;
   }
 
-  /* ── FINAL OVERRIDE: Google button same as desktop ── */
-  /* Desktop renders the iframe inside .lp-google-wrap with no wrapper styling */
+  /* ── FINAL OVERRIDE: Google button — identical to desktop, no clipping ── */
+  /* Unblock overflow on every ancestor that could clip the iframe */
+  .lp-card-left,
+  .lp-actions {
+    overflow: visible !important;
+  }
+
+  /* Strip ALL styling from the wrapper — desktop only has min-height + flex */
   .lp-google-wrap {
+    all: revert !important;
     min-height: 44px !important;
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
     background: transparent !important;
     border: none !important;
-    border-radius: 0 !important;
     box-shadow: none !important;
     overflow: visible !important;
-    position: static !important;
+    position: relative !important;
+    border-radius: 0 !important;
   }
 
   .lp-google-wrap::before,
   .lp-google-wrap::after {
-    all: unset !important;
     display: none !important;
-    content: none !important;
+    content: "" !important;
+    background: transparent !important;
+    border: none !important;
+    position: static !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 
-  /* The Google-rendered div and iframe: natural flow, full width */
-  #googleSignIn,
-  .lp-google-wrap > div {
+  /* Google-rendered container and iframe: natural size, visible, not clipped */
+  .lp-google-wrap > div,
+  #googleSignIn {
+    position: relative !important;
     width: 100% !important;
-    opacity: 1 !important;
-    position: static !important;
     height: auto !important;
-    z-index: auto !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    z-index: 1 !important;
+    inset: auto !important;
   }
 
-  #googleSignIn iframe,
-  .lp-google-wrap iframe {
+  .lp-google-wrap iframe,
+  #googleSignIn iframe {
+    position: relative !important;
     width: 100% !important;
+    height: 44px !important;
     opacity: 1 !important;
-    position: static !important;
-    height: auto !important;
-    min-height: 44px !important;
+    inset: auto !important;
+    z-index: 1 !important;
+    display: block !important;
   }
 
   /* Ghost btn: exact desktop style */
@@ -2982,7 +2999,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     padding: 0 14px !important;
     gap: 8px !important;
     box-shadow: none !important;
-    height: auto !important;
   }
 }
 
