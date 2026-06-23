@@ -268,7 +268,9 @@ function App() {
         }
       });
       buttonContainer.innerHTML = "";
-      window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: 320 });
+      const isMobile = window.innerWidth <= 700;
+      const btnWidth = isMobile ? Math.min(window.innerWidth - 44, 400) : 320;
+      window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: btnWidth });
     };
     loadGoogleButton();
     return () => { cancelled = true; };
@@ -563,20 +565,7 @@ function App() {
 
               <div className="lp-actions">
                 <div className="lp-google-wrap">
-                  {/* Visual button layer — always visible */}
-                  <div className="lp-google-visual" aria-hidden="true">
-                    <div className="lp-google-icon">
-                      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.566 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
-                        <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z" fill="#FBBC05"/>
-                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
-                      </svg>
-                    </div>
-                    <span>Continue with Google</span>
-                  </div>
-                  {/* Real Google iframe — invisible but clickable on top */}
-                  <div id="googleSignIn" className="lp-google-iframe-wrap" />
+                  <div id="googleSignIn" />
                   {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google…</div>}
                 </div>
                 <button className="lp-ghost-btn" onClick={() => goTo("setup")}>
@@ -2940,18 +2929,17 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     height: calc(100dvh - 46px) !important;
   }
 
-  /* ── FINAL OVERRIDE: Google button as React visual layer + invisible iframe ── */
-  /* Show our own visual button, overlay the real iframe invisibly on top */
+  /* ── FINAL OVERRIDE: Google button — let the iframe render naturally ── */
   .lp-google-wrap {
-    position: relative !important;
     width: 100% !important;
-    height: 50px !important;
+    min-height: 44px !important;
     display: flex !important;
     align-items: center !important;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     overflow: visible !important;
+    position: relative !important;
   }
 
   .lp-google-wrap::before,
@@ -2960,65 +2948,33 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     content: none !important;
   }
 
-  /* Visual button layer — our own styled button, always visible */
-  .lp-google-visual {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    padding: 0 16px !important;
-    background: #F8F6F1 !important;
-    border: 1px solid rgba(0,0,0,.12) !important;
-    border-radius: 14px !important;
-    pointer-events: none !important;
-    z-index: 1 !important;
-  }
-
-  .lp-google-icon {
-    width: 18px !important;
-    height: 18px !important;
-    flex-shrink: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  .lp-google-visual span {
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    color: #080808 !important;
-    flex: 1 !important;
-    text-align: center !important;
-  }
-
-  /* Real iframe: invisible but covers the whole button so it's clickable */
-  .lp-google-iframe-wrap,
+  /* Let the Google-rendered button show at full width */
+  .lp-google-wrap > div,
   #googleSignIn {
-    position: absolute !important;
-    inset: 0 !important;
     width: 100% !important;
-    height: 100% !important;
-    opacity: 0 !important;
-    z-index: 2 !important;
-    overflow: hidden !important;
+    opacity: 1 !important;
+    position: relative !important;
+    inset: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    z-index: auto !important;
   }
 
-  #googleSignIn > div,
-  .lp-google-iframe-wrap > div {
-    width: 100% !important;
-    height: 100% !important;
-    opacity: 0 !important;
-  }
-
-  .lp-google-iframe-wrap iframe,
+  .lp-google-wrap iframe,
   #googleSignIn iframe {
     width: 100% !important;
-    height: 100% !important;
-    opacity: 0 !important;
+    opacity: 1 !important;
+    position: relative !important;
+    inset: auto !important;
+    display: block !important;
+    overflow: visible !important;
+    clip: auto !important;
+    clip-path: none !important;
   }
+
+  /* Also unblock parent overflow */
+  .lp-card-left { overflow: visible !important; }
+  .lp-actions { overflow: visible !important; }
 
   /* Ghost btn: exact desktop style */
   .lp-ghost-btn {
