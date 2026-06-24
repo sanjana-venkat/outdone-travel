@@ -646,6 +646,9 @@ function App() {
             <div className="setup-card">
               <span className="setup-card-label">WHEN</span>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="setup-card-input" />
+              <div className="setup-card-divider" />
+              <span className="setup-card-label">START TIME <span className="setup-card-optional">— optional</span></span>
+              <input type="time" value={timeRange} onChange={(e) => setTimeRange(e.target.value)} className="setup-card-input" />
             </div>
 
             <div className="setup-card">
@@ -662,16 +665,6 @@ function App() {
               <div className="chips">
                 {["Solo", "Date", "Friends", "Family", "Workday"].map(o => (
                   <button key={o} type="button" className={planFor === o ? "chip active" : "chip"} onClick={() => setPlanFor(o)}>{o}</button>
-                ))}
-              </div>
-            </div>
-
-            {/* TIME RANGE */}
-            <div className="setup-card">
-              <span className="setup-card-label">TIME RANGE <span className="setup-card-optional">— optional</span></span>
-              <div className="chips">
-                {["Morning (6–12pm)", "Afternoon (12–6pm)", "Evening (6pm–12am)", "Full day"].map(o => (
-                  <button key={o} type="button" className={timeRange === o ? "chip active" : "chip"} onClick={() => setTimeRange(t => t === o ? "" : o)}>{o}</button>
                 ))}
               </div>
             </div>
@@ -1264,6 +1257,7 @@ button { cursor: pointer; }
 }
 .setup-card-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .setup-card-optional { font-size: 10px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-3); opacity: .65; }
+.setup-card-divider { height: 1px; background: var(--line); margin: 4px 0; }
 .setup-card-input {
   background: transparent !important; border: none !important; box-shadow: none !important;
   border-radius: 0 !important; min-height: 0 !important; padding: 0 !important;
@@ -1381,9 +1375,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     grid-template-columns: 1fr;
     grid-template-rows: 1fr auto;
     width: 100%;
-    height: calc(100dvh - 32px);
+    height: 100dvh;
     border-width: 4px;
-    border-radius: 32px;
+    border-radius: 32px 32px 0 0;
   }
   .lp-card-right {
     order: 1;
@@ -1397,10 +1391,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
   .lp-google-wrap {
     min-height: 52px;
-    border-radius: 14px;
-    border: 1px solid #D9D4CA;
-    background: #F8F5EF;
-    overflow: hidden;
+    background: transparent;
+    border: none;
+    overflow: visible;
     position: relative;
   }
   .lp-ghost-btn {
@@ -1897,16 +1890,12 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     position: relative !important;
     width: 100% !important;
     min-height: 44px !important;
-    border: none !important;
-    background: transparent !important;
+        background: transparent !important;
     display: flex !important;
     align-items: center !important;
     overflow: visible !important;
     box-shadow: none !important;
   }
-
-  .lp-google-wrap::before,
-  .lp-google-wrap::after { display: none !important; content: none !important; }
 
   .lp-google-wrap > div,
   #googleSignIn {
@@ -2034,11 +2023,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     position: relative !important;
     z-index: 2 !important;
     width: 100% !important;
-    height: calc(100dvh - 48px) !important;
+    height: 100dvh !important;
     display: flex !important;
     flex-direction: column !important;
     border: 4px solid rgba(255,255,255,.96) !important;
-    border-radius: 42px !important;
+    border-radius: 42px 42px 0 0 !important;
     overflow: hidden !important;
     background: transparent !important;
     box-shadow: none !important;
@@ -2167,10 +2156,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .lp-google-wrap {
     width: 100% !important;
     height: 58px !important;
-    border-radius: 999px !important;
-    border: 1px solid #d9d4ca !important;
+        border: 1px solid #d9d4ca !important;
     background: #f8f5ef !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     position: relative !important;
     box-shadow: none !important;
   }
@@ -2185,36 +2173,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     width: 100% !important;
     height: 100% !important;
     z-index: 3 !important;
-  }
-
-  .lp-google-wrap::before {
-    content: "" !important;
-    position: absolute !important;
-    left: 14px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    width: 20px !important;
-    height: 20px !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/%3E%3Cpath fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3C/svg%3E") !important;
-    background-size: contain !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    z-index: 1 !important;
-  }
-
-  .lp-google-wrap::after {
-    content: "Continue with Google" !important;
-    position: absolute !important;
-    inset: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding-left: 44px !important;
-    color: #080808 !important;
-    font-size: 16px !important;
-    font-weight: 800 !important;
-    z-index: 1 !important;
-    pointer-events: none !important;
   }
 
   .lp-ghost-btn {
@@ -2317,11 +2275,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-shell {
-    padding-bottom: 28px !important;
+    padding-bottom: 0 !important;
   }
 
   .lp-card {
-    height: calc(100dvh - 44px) !important;
+    height: 100dvh !important;
   }
 
   .lp-card-left {
@@ -2352,10 +2310,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     height: 58px !important;
   }
 
-  .lp-google-wrap::before {
-    border-radius: 16px !important;
-  }
-
   .lp-ghost-btn {
     background: #ffffff !important;
     border: 1px solid #dedbd4 !important;
@@ -2368,8 +2322,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-google-wrap {
-    background: #F8F5EF !important;
-    border: 1px solid #d9d4ca !important;
+        border: 1px solid #d9d4ca !important;
   }
 
   .lp-google-wrap:hover {
@@ -2400,11 +2353,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 @media (max-width: 760px) and (max-height: 760px) {
   .lp-shell {
-    padding-bottom: 32px !important;
+    padding-bottom: 0 !important;
   }
 
   .lp-card {
-    height: calc(100dvh - 54px) !important;
+    height: 100dvh !important;
   }
 
   .lp-card-left {
@@ -2464,23 +2417,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-google-wrap {
-    background: #F8F5EF !important;
-    border: 1px solid #D9D4CA !important;
+        border: 1px solid #D9D4CA !important;
     box-shadow: none !important;
-  }
-
-  .lp-google-wrap::before {
-    left: 10px !important;
-    top: 7px !important;
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 14px !important;
-  }
-
-  .lp-google-wrap::after {
-    font-size: 16px !important;
-    font-weight: 750 !important;
-    color: #080808 !important;
   }
 
   .lp-ghost-btn {
@@ -2521,8 +2459,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 .google-wrap,
 .lp-google-wrap {
-  border-radius: 18px !important;
-}
+  }
 
 .lp-ghost-btn,
 .google-connect-btn,
@@ -2622,31 +2559,13 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-google-wrap {
-    background: #F8F5EF !important;
-  }
+      }
 
   .lp-ghost-btn {
     background: #ffffff !important;
     color: #080808 !important;
     font-size: 16px !important;
     font-weight: 750 !important;
-  }
-
-  .lp-google-wrap::before {
-    width: 42px !important;
-    height: 42px !important;
-    left: 8px !important;
-    top: 6px !important;
-    border-radius: 14px !important;
-    background: #ffffff !important;
-  }
-
-  .lp-google-wrap::after {
-    content: "Continue with Google" !important;
-    font-size: 16px !important;
-    font-weight: 750 !important;
-    color: #080808 !important;
-    padding-left: 44px !important;
   }
 
   .lp-google-wrap:hover,
@@ -2690,7 +2609,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .lp-card {
     background: transparent !important;
     border: 3px solid #ffffff !important;
-    border-radius: 42px !important;
+    border-radius: 42px 42px 0 0 !important;
     overflow: hidden !important;
     box-shadow: none !important;
     outline: none !important;
@@ -2836,36 +2755,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     z-index: 3 !important;
   }
 
-  .lp-google-wrap::before {
-    content: "" !important;
-    position: absolute !important;
-    left: 14px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    width: 20px !important;
-    height: 20px !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/%3E%3Cpath fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3C/svg%3E") !important;
-    background-size: contain !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    z-index: 1 !important;
-  }
-
-  .lp-google-wrap::after {
-    content: "Continue with Google" !important;
-    position: absolute !important;
-    inset: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    color: #3c4043 !important;
-    font-size: 15px !important;
-    font-weight: 500 !important;
-    letter-spacing: .25px !important;
-    z-index: 1 !important;
-    pointer-events: none !important;
-  }
-
   .lp-ghost-btn {
     background: #ffffff !important;
     color: #080808 !important;
@@ -2947,6 +2836,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
   .lp-card {
     border: 3px solid #ffffff !important;
+    border-radius: 42px 42px 0 0 !important;
     outline: 0 !important;
     box-shadow: none !important;
     background: transparent !important;
@@ -2964,8 +2854,39 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     margin-bottom: 0 !important;
   }
 
+  /* Google iframe: no wrapper, renders naturally */
+  .lp-google-wrap {
+    background: transparent !important;
+    border: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    min-height: 44px !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  .lp-google-wrap > div,
+  #googleSignIn {
+    width: 100% !important;
+    opacity: 1 !important;
+    position: relative !important;
+    inset: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .lp-google-wrap iframe,
+  #googleSignIn iframe {
+    width: 100% !important;
+    opacity: 1 !important;
+    position: relative !important;
+    height: auto !important;
+    display: block !important;
+    clip: auto !important;
+    clip-path: none !important;
+  }
+
   .lp-shell {
-    padding-bottom: 28px !important;
+    padding-bottom: 0 !important;
     overflow: hidden !important;
   }
 
@@ -2982,11 +2903,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-shell {
-    padding-bottom: 32px !important;
+    padding-bottom: 0 !important;
   }
 
   .lp-card {
-    height: calc(100dvh - 54px) !important;
+    height: 100dvh !important;
   }
 }
 
