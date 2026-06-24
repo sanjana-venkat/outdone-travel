@@ -2893,6 +2893,20 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     pointer-events: none !important;
     position: relative !important;
     z-index: 1 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* SVG and text inside fake must also be visible */
+  .lp-google-fake svg,
+  .lp-google-fake span {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+  }
+
+  .lp-google-fake span {
+    display: inline !important;
   }
 
   .lp-google-fake span {
