@@ -566,7 +566,18 @@ function App() {
 
               <div className="lp-actions">
                 <div className="lp-google-wrap">
-                  <div id="googleSignIn" />
+                  {/* Fake visual layer — always visible on mobile, hidden on desktop */}
+                  <div className="lp-google-fake" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                  </div>
+                  {/* Real Google iframe — on desktop visible, on mobile invisible but clickable on top */}
+                  <div id="googleSignIn" className="lp-google-real" />
                   {!googleReady && GOOGLE_CLIENT_ID && <div className="google-loading">Loading Google…</div>}
                 </div>
                 <button className="lp-ghost-btn" onClick={() => goTo("setup")}>
@@ -1336,7 +1347,10 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-accent { color: var(--accent) !important; }
 .lp-sub { font-size: 12px; line-height: 1.5; color: var(--ink-3); margin: 0; }
 .lp-actions { display: flex; flex-direction: column; gap: 6px; }
-.lp-google-wrap { min-height: 36px; display: flex; align-items: center; }
+.lp-google-wrap { min-height: 36px; display: flex; align-items: center; position: relative; width: 100%; }
+/* Desktop: hide fake, show real */
+.lp-google-fake { display: none; }
+.lp-google-real { width: 100%; }
 .lp-ghost-btn { display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 14px; background: transparent; border: 1.5px solid var(--line-strong); border-radius: 11px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; transition: all .18s; gap: 8px; }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
 .lp-fine { font-size: 10px; color: var(--ink-3); line-height: 1.4; }
@@ -2854,35 +2868,66 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     margin-bottom: 0 !important;
   }
 
-  /* Google iframe: no wrapper, renders naturally */
+  /* Mobile Google button: show our fake visual, real iframe invisible but clickable on top */
   .lp-google-wrap {
+    position: relative !important;
+    width: 100% !important;
+    height: 52px !important;
     background: transparent !important;
     border: none !important;
     overflow: visible !important;
     box-shadow: none !important;
-    min-height: 44px !important;
-    width: 100% !important;
+    display: block !important;
+  }
+
+  /* Our styled fake button — visible, not clickable */
+  .lp-google-fake {
     display: flex !important;
     align-items: center !important;
-  }
-  .lp-google-wrap > div,
-  #googleSignIn {
+    justify-content: center !important;
+    gap: 10px !important;
+    position: absolute !important;
+    inset: 0 !important;
     width: 100% !important;
-    opacity: 1 !important;
-    position: relative !important;
-    inset: auto !important;
-    height: auto !important;
-    overflow: visible !important;
+    height: 100% !important;
+    background: #F8F5EF !important;
+    border: 1px solid #D9D4CA !important;
+    border-radius: 14px !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
   }
-  .lp-google-wrap iframe,
+
+  .lp-google-fake span {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #3c4043 !important;
+    letter-spacing: .25px !important;
+  }
+
+  /* Real iframe container: covers the fake button, invisible but clickable */
+  .lp-google-real,
+  #googleSignIn {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    z-index: 2 !important;
+    overflow: hidden !important;
+  }
+
+  .lp-google-real > div,
+  #googleSignIn > div {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .lp-google-real iframe,
   #googleSignIn iframe {
     width: 100% !important;
-    opacity: 1 !important;
-    position: relative !important;
-    height: auto !important;
-    display: block !important;
-    clip: auto !important;
-    clip-path: none !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
   }
 
   .lp-shell {
