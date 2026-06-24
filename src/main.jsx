@@ -567,7 +567,9 @@ function App() {
               <div className="lp-right-text">
                 <p className="lp-eyebrow">Powered by Gemini ✦</p>
                 <h1 className="lp-h1">Today feels<br/><span className="lp-accent">different.</span></h1>
-                <p className="lp-sub">Tell us how you feel — we build your entire day around it. Mood-first, always.</p>
+                <p className="lp-sub"> My mother-in-law accidentally found the flaw in personalization.
+She looked at a recommendation and said, "I'm just not in the mood for that today."
+That's the problem we're solving. Tell us your mood and we'll build the day around it.</p>
               </div>
 
               <div className="lp-actions">
@@ -627,7 +629,7 @@ function App() {
             {user && <div className="profile-chip"><img src={user.picture} alt="" />{user.name}</div>}
             <div className="partnership-box-inner">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,marginTop:1}}><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-              <span><strong>We don't have your search history or past trips yet</strong> — so we need to ask. A Google partnership would let us skip this entirely. For now, a few quick questions and Gemini handles the rest.</span>
+              <span><strong>Google won't let us stalk you. Yet.</strong> Hoping for a Google partnership soon so we can spy on your Gmail, Maps, calendar, travel history, and autofill this. Until then, we'll have to ask a few questions, and Gemini handles the rest!</span>
             </div>
           </div>
 
