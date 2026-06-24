@@ -627,7 +627,7 @@ function App() {
             {user && <div className="profile-chip"><img src={user.picture} alt="" />{user.name}</div>}
             <div className="partnership-box-inner">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,marginTop:1}}><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-              <span><strong>Google won't let us stalk you. Yet.</strong> Hoping for a Google partnership soon so we can spy on your Gmail, Maps, calendar, travel history, and autofill this. Until then, we'll have to ask a few questions, and Gemini handles the rest!</span>
+              <span><strong>Google won't let us stalk you. Yet.</strong> Soon, we might spy on your Gmail, Maps, calendar, travel history, and autofill this. Until then, we'll have to ask a few questions, and Gemini handles the rest!</span>
             </div>
           </div>
 
