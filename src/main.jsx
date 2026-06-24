@@ -2868,32 +2868,30 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     margin-bottom: 0 !important;
   }
 
-  /* Mobile Google button: show our fake visual, real iframe invisible but clickable on top */
+  /* Mobile Google button: wrap IS the visible button, iframe overlays invisibly */
   .lp-google-wrap {
     position: relative !important;
     width: 100% !important;
     height: 52px !important;
-    background: transparent !important;
-    border: none !important;
-    overflow: visible !important;
+    background: #F8F5EF !important;
+    border: 1px solid #D9D4CA !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
     box-shadow: none !important;
-    display: block !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
-  /* Our styled fake button — visible, not clickable */
+  /* Fake content sits inside the wrap in normal flow — can't be clipped out */
   .lp-google-fake {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 10px !important;
-    position: absolute !important;
-    inset: 0 !important;
     width: 100% !important;
-    height: 100% !important;
-    background: #F8F5EF !important;
-    border: 1px solid #D9D4CA !important;
-    border-radius: 14px !important;
     pointer-events: none !important;
+    position: relative !important;
     z-index: 1 !important;
   }
 
@@ -2904,7 +2902,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     letter-spacing: .25px !important;
   }
 
-  /* Real iframe container: covers the fake button, invisible but clickable */
+  /* Real iframe: absolutely covers the whole wrap, invisible but clickable */
   .lp-google-real,
   #googleSignIn {
     position: absolute !important;
@@ -2913,7 +2911,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     height: 100% !important;
     opacity: 0 !important;
     z-index: 2 !important;
-    overflow: hidden !important;
   }
 
   .lp-google-real > div,
@@ -2926,7 +2923,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   #googleSignIn iframe {
     width: 100% !important;
     height: 100% !important;
-    opacity: 0 !important;
     cursor: pointer !important;
   }
 
