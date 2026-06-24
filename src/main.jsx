@@ -2189,13 +2189,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-google-wrap {
-    width: 100% !important;
-    height: 58px !important;
-        border: 1px solid #d9d4ca !important;
-    background: #f8f5ef !important;
-    overflow: visible !important;
-    position: relative !important;
-    box-shadow: none !important;
+    display: none !important;
   }
 
   .lp-google-wrap iframe,
@@ -2357,7 +2351,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-google-wrap {
-        border: 1px solid #d9d4ca !important;
+    display: none !important;
   }
 
   .lp-google-wrap:hover {
@@ -2452,8 +2446,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 
   .lp-google-wrap {
-        border: 1px solid #D9D4CA !important;
-    box-shadow: none !important;
+    display: none !important;
   }
 
   .lp-ghost-btn {
@@ -2767,15 +2760,17 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     margin-top: 24px !important;
   }
 
-  .lp-google-wrap,
+  .lp-google-wrap {
+    display: none !important;
+  }
+
   .lp-ghost-btn {
     width: 100% !important;
     height: 56px !important;
     border-radius: 18px !important;
     border: 1px solid #D9D4CA !important;
-    background: #F8F5EF !important;
+    background: transparent !important;
     box-shadow: none !important;
-    overflow: hidden !important;
   }
 
   .lp-google-wrap iframe,
@@ -2897,19 +2892,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     display: none !important;
   }
 
-  /* Mobile Google button: wrap IS the visible button, iframe overlays invisibly */
   .lp-google-wrap {
-    position: relative !important;
-    width: 100% !important;
-    height: 52px !important;
-    background: #F8F5EF !important;
-    border: 1px solid #D9D4CA !important;
-    border-radius: 14px !important;
-    overflow: hidden !important;
-    box-shadow: none !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: none !important;
   }
 
   /* Fake content sits inside the wrap in normal flow — can't be clipped out */
