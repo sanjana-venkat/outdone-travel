@@ -567,7 +567,7 @@ function App() {
               <div className="lp-right-text">
                 <p className="lp-eyebrow">Powered by Gemini ✦</p>
                 <h1 className="lp-h1">Today feels<br/><span className="lp-accent">different.</span></h1>
-                <p className="lp-sub"> Because even the best recommendation models can't predict who you want to be today. Get your mood-based itineraries in seconds!</p>
+                <p className="lp-sub"> Because even the best recommendation models can't predict who you want to be today.</p>
               </div>
 
               <div className="lp-actions">
