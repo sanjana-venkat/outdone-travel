@@ -3145,6 +3145,106 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 }
 
+
+/* ===== FINAL COMPACT LEFT-ALIGNED PROFILE CARD ===== */
+.partnership-box {
+  max-width: 560px !important;
+  width: min(560px, calc(100vw - 48px)) !important;
+  margin: 24px 0 40px !important;
+  padding: 24px !important;
+  border-radius: 28px !important;
+  background: rgba(255,255,255,.58) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(0,0,0,.08) !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.profile-chip {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  margin-bottom: 18px !important;
+}
+
+.profile-chip img {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 16px !important;
+  object-fit: cover !important;
+}
+
+.profile-chip-copy span {
+  font-size: 22px !important;
+  font-weight: 750 !important;
+  letter-spacing: -.03em !important;
+  line-height: 1.05 !important;
+  color: var(--ink) !important;
+}
+
+.profile-chip-copy small {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--ink-3) !important;
+}
+
+.partnership-box-inner {
+  display: grid !important;
+  grid-template-columns: 18px 1fr !important;
+  gap: 10px !important;
+  align-items: start !important;
+  max-width: 440px !important;
+  margin: 0 !important;
+}
+
+.partnership-icon {
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  border: 1.3px solid rgba(0,0,0,.34) !important;
+  color: var(--ink-3) !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  font-family: Georgia, serif !important;
+  margin-top: 3px !important;
+}
+
+.partnership-copy {
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+  color: var(--ink-3) !important;
+}
+
+.partnership-copy strong {
+  display: block !important;
+  color: var(--ink) !important;
+  font-weight: 850 !important;
+  margin: 0 0 4px !important;
+}
+
+@media (max-width: 760px) {
+  .partnership-box {
+    width: calc(100vw - 32px) !important;
+    margin: 22px 0 32px !important;
+    padding: 22px !important;
+    border-radius: 24px !important;
+  }
+  .profile-chip img {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 15px !important;
+  }
+  .profile-chip-copy span { font-size: 20px !important; }
+  .profile-chip-copy small { font-size: 13px !important; }
+  .partnership-copy { font-size: 14px !important; line-height: 1.5 !important; }
+}
+
 `;
 
 createRoot(document.getElementById("root")).render(<App />);
