@@ -635,8 +635,11 @@ function App() {
               </div>
             )}
             <div className="partnership-box-inner">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,marginTop:1}}><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-              <span><strong>Google won't let us stalk you. Yet.</strong> Soon, we might spy on your Gmail, Maps, calendar, travel history, and autofill this. Until then, we'll have to ask a few questions, and Gemini handles the rest!</span>
+              <span className="partnership-icon" aria-hidden="true">i</span>
+              <div className="partnership-copy">
+                <strong>Google won't let us stalk you. Yet.</strong>
+                <span>Soon we might use your Gmail, Maps, calendar, and travel history to autofill this. For now, answer a few quick questions and Gemini handles the rest.</span>
+              </div>
             </div>
           </div>
 
@@ -2991,6 +2994,154 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
   .lp-card {
     height: 100dvh !important;
+  }
+}
+
+
+/* ===== CLEAN PARTNERSHIP CARD + AUTOCOMPLETE FIX ===== */
+.partnership-box {
+  max-width: 880px !important;
+  width: min(880px, calc(100vw - 48px)) !important;
+  margin: 34px auto 32px !important;
+  padding: 22px 24px !important;
+  border-radius: 28px !important;
+  border: 1px solid rgba(0,0,0,.12) !important;
+  background: rgba(255,255,255,.58) !important;
+  box-shadow: none !important;
+}
+
+.partnership-box.has-profile {
+  display: grid !important;
+  grid-template-columns: 220px 1fr !important;
+  gap: 22px !important;
+  align-items: center !important;
+}
+
+.profile-chip {
+  display: grid !important;
+  grid-template-columns: 54px 1fr !important;
+  gap: 12px !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+
+.profile-chip img {
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 16px !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.profile-chip-copy {
+  display: grid !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+}
+
+.profile-chip-copy span {
+  color: var(--ink) !important;
+  font-size: 16px !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+  letter-spacing: -.02em !important;
+  white-space: nowrap !important;
+}
+
+.profile-chip-copy small {
+  color: var(--ink-3) !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 140px !important;
+}
+
+.partnership-box-inner {
+  display: grid !important;
+  grid-template-columns: 22px 1fr !important;
+  gap: 12px !important;
+  align-items: start !important;
+  margin: 0 !important;
+  color: var(--ink-3) !important;
+}
+
+.partnership-icon {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 1.5px solid var(--ink-3) !important;
+  color: var(--ink-3) !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  font-family: Georgia, serif !important;
+  margin-top: 2px !important;
+}
+
+.partnership-copy {
+  display: block !important;
+  font-size: 16px !important;
+  line-height: 1.55 !important;
+  color: var(--ink-3) !important;
+}
+
+.partnership-copy strong {
+  color: var(--ink-2) !important;
+  font-weight: 850 !important;
+  margin-right: 6px !important;
+}
+
+.partnership-copy span {
+  color: var(--ink-3) !important;
+}
+
+.setup-suggestions {
+  margin-top: 14px !important;
+}
+
+.setup-sug {
+  text-align: left !important;
+}
+
+@media (max-width: 760px) {
+  .partnership-box {
+    width: calc(100vw - 32px) !important;
+    margin: 22px auto 28px !important;
+    padding: 18px !important;
+    border-radius: 24px !important;
+  }
+
+  .partnership-box.has-profile {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .profile-chip {
+    grid-template-columns: 44px 1fr !important;
+    gap: 10px !important;
+  }
+
+  .profile-chip img {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 14px !important;
+  }
+
+  .profile-chip-copy span {
+    font-size: 15px !important;
+  }
+
+  .profile-chip-copy small {
+    max-width: 220px !important;
+  }
+
+  .partnership-copy {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
   }
 }
 
