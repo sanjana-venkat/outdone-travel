@@ -181,6 +181,7 @@ function App() {
   const [destination, setDestination] = useState("Paris");
   const [placePredictions, setPlacePredictions] = useState([]);
   const [isAutocompleting, setIsAutocompleting] = useState(false);
+  const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
   const [date, setDate] = useState(getToday());
   const [diet, setDiet] = useState("Vegetarian");
   const [planFor, setPlanFor] = useState("Date");
@@ -623,8 +624,16 @@ function App() {
 
       {step === "setup" && (
         <main className="screen setup-screen on">
-          <div className="partnership-box">
-            {user && <div className="profile-chip"><img src={user.picture} alt="" />{user.name}</div>}
+          <div className={`partnership-box${user ? " has-profile" : ""}`}>
+            {user && (
+              <div className="profile-chip">
+                <img src={user.picture} alt="" />
+                <div className="profile-chip-copy">
+                  <span>{user.name}</span>
+                  {user.email && <small>{user.email}</small>}
+                </div>
+              </div>
+            )}
             <div className="partnership-box-inner">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,marginTop:1}}><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
               <span><strong>Google won't let us stalk you. Yet.</strong> Soon, we might spy on your Gmail, Maps, calendar, travel history, and autofill this. Until then, we'll have to ask a few questions, and Gemini handles the rest!</span>
@@ -642,12 +651,18 @@ function App() {
               <span className="setup-card-label">WHERE</span>
               <input
                 value={destination}
-                onChange={(e) => setDestination(e.target.value)}
+                onChange={(e) => {
+                  setDestination(e.target.value);
+                  setShowDestinationSuggestions(true);
+                }}
+                onFocus={() => {
+                  if (destination.trim().length >= 2) setShowDestinationSuggestions(true);
+                }}
                 placeholder="City, neighborhood, or place"
                 autoComplete="off"
                 className="setup-card-input"
               />
-              {destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
+              {showDestinationSuggestions && destination.trim().length >= 2 && destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
                 <div className="setup-suggestions">
                   {destinationOptions.map((item) => (
                     <button
@@ -655,7 +670,7 @@ function App() {
                       key={item.placeId || item.label}
                       className="setup-sug"
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { setDestination(item.label); setPlacePredictions([]); }}
+                      onClick={() => { setDestination(item.label); setPlacePredictions([]); setShowDestinationSuggestions(false); }}
                     >
                       {item.label}
                     </button>
