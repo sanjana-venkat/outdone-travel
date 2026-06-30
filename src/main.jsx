@@ -704,17 +704,10 @@ function App() {
               {user && (
                 <div className="profile-chip">
                   <img src={user.picture} alt="" />
-                  <div className="profile-chip-copy">
-                    <span>{user.name}</span>
-                  </div>
+                  <span className="profile-chip-name">{user.name}</span>
                 </div>
               )}
-              <div className="partnership-box-inner">
-                <div className="partnership-copy">
-                  <strong>Google won't let us stalk you. Yet.</strong>
-                  <span>Soon we'll use Gmail, Maps, calendar, and your travel history to skip these questions. Until then, answer a few quick ones and Gemini handles the rest.</span>
-                </div>
-              </div>
+              <p className="partnership-copy">Soon we can skip this with your Google data.</p>
             </div>
 
             <button className="btn-accent" onClick={() => goTo("mood")}>Choose today's mood →</button>
@@ -2821,168 +2814,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 @media (max-width: 760px) and (max-height: 760px) {
   .lp-card-left {
-    padding: 22px 24px max(22px, env(safe-area-inset-bottom)) !important;
-  }
-
-  .lp-panel-itin {
-    left: 20px !important;
-    right: 20px !important;
-    bottom: 18px !important;
-    gap: 10px !important;
-  }
-
-  .lp-itin-line {
-    min-height: 52px !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    height: 52px !important;
-  }
-}
-
-
-/* ===== MOBILE EDGE FIX: remove inner vertical line + add bottom breathing room ===== */
-@media (max-width: 760px) {
-  .lp-card-right,
-  .lp-card-right *,
-  .lp-panel,
-  .lp-panel *,
-  .lp-panel-image,
-  .lp-panel-image *,
-  .lp-image,
-  .lp-image *,
-  .lp-bg,
-  .lp-bg * {
-    border-left: 0 !important;
-    border-right: 0 !important;
-    border-inline-start: 0 !important;
-    border-inline-end: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after,
-  .lp-image::before,
-  .lp-image::after,
-  .lp-bg::before,
-  .lp-bg::after {
-    display: none !important;
-    content: none !important;
-    border: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-  }
-
-  .lp-card {
-    border: 3px solid #ffffff !important;
-    border-radius: 42px 42px 0 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    overflow: hidden !important;
-  }
-
-  /* Give the white content tile enough bottom breathing room */
-  .lp-card-left {
-    padding: 28px 28px max(48px, calc(32px + env(safe-area-inset-bottom, 20px))) 28px !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-actions {
-    margin-bottom: 0 !important;
-  }
-
-  /* Show our plain styled button, hide the iframe wrapper */
-  .lp-google-btn-mobile {
-    display: flex !important;
-  }
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  /* Fake content sits inside the wrap in normal flow — can't be clipped out */
-  .lp-google-fake {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 10px !important;
-    width: 100% !important;
-    pointer-events: none !important;
-    position: relative !important;
-    z-index: 1 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  /* SVG and text inside fake must also be visible */
-  .lp-google-fake svg,
-  .lp-google-fake span {
-    opacity: 1 !important;
-    visibility: visible !important;
-    display: block !important;
-  }
-
-  .lp-google-fake span {
-    display: inline !important;
-  }
-
-  .lp-google-fake span {
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    color: #3c4043 !important;
-    letter-spacing: .25px !important;
-  }
-
-  /* Real iframe: absolutely covers the whole wrap, invisible but clickable */
-  .lp-google-real,
-  #googleSignIn {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    opacity: 0 !important;
-    z-index: 2 !important;
-  }
-
-  .lp-google-real > div,
-  #googleSignIn > div {
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-  .lp-google-real iframe,
-  #googleSignIn iframe {
-    width: 100% !important;
-    height: 100% !important;
-    cursor: pointer !important;
-  }
-
-  .lp-shell {
-    padding-bottom: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .lp-card {
-    height: calc(100dvh - 46px) !important;
-  }
-
-
-}
-
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-card-left {
     padding: 22px 24px calc(44px + env(safe-area-inset-bottom)) 24px !important;
   }
 
@@ -2996,275 +2827,25 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 }
 
 
-/* ===== FINAL SETUP PROFILE CARD + AUTOCOMPLETE ===== */
-.partnership-box {
-  max-width: 760px !important;
-  width: min(760px, calc(100vw - 48px)) !important;
-  margin: 40px auto 34px !important;
-  padding: 36px !important;
-  border-radius: 32px !important;
-  background: rgba(255,255,255,.58) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  border: 1px solid rgba(0,0,0,.08) !important;
-  box-shadow: none !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-}
-
-.profile-chip {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  gap: 12px !important;
-  margin-bottom: 28px !important;
-}
-
-.profile-chip img {
-  width: 64px !important;
-  height: 64px !important;
-  border-radius: 20px !important;
-  object-fit: cover !important;
-  display: block !important;
-}
-
-.profile-chip-copy {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 4px !important;
-  min-width: 0 !important;
-}
-
-.profile-chip-copy span {
-  font-size: 28px !important;
-  font-weight: 750 !important;
-  letter-spacing: -.03em !important;
-  line-height: 1.05 !important;
-  color: var(--ink) !important;
-  white-space: normal !important;
-}
-
-.profile-chip-copy small {
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  line-height: 1.2 !important;
-  color: var(--ink-3) !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-.partnership-box-inner {
-  display: grid !important;
-  grid-template-columns: 20px 1fr !important;
-  gap: 12px !important;
-  align-items: start !important;
-  margin: 0 !important;
-  max-width: 560px !important;
-  color: var(--ink-3) !important;
-}
-
-.partnership-icon {
-  width: 20px !important;
-  height: 20px !important;
-  border-radius: 50% !important;
-  border: 1.4px solid rgba(0,0,0,.34) !important;
-  color: var(--ink-3) !important;
-  display: grid !important;
-  place-items: center !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-  font-family: Georgia, serif !important;
-  margin-top: 4px !important;
-  flex-shrink: 0 !important;
-}
-
-.partnership-copy {
-  display: block !important;
-  color: var(--ink-3) !important;
-  font-size: 16px !important;
-  line-height: 1.65 !important;
-  letter-spacing: -.01em !important;
-}
-
-.partnership-copy strong {
-  display: block !important;
-  color: var(--ink) !important;
-  font-weight: 850 !important;
-  margin: 0 0 4px !important;
-}
-
-.partnership-copy span {
-  color: var(--ink-3) !important;
-}
-
-.setup-suggestions {
-  margin-top: 14px !important;
-}
-
-.setup-sug {
-  text-align: left !important;
-}
-
-@media (max-width: 760px) {
-  .partnership-box {
-    width: calc(100vw - 32px) !important;
-    margin: 24px auto 28px !important;
-    padding: 28px !important;
-    border-radius: 28px !important;
-  }
-
-  .profile-chip {
-    margin-bottom: 24px !important;
-  }
-
-  .profile-chip img {
-    width: 56px !important;
-    height: 56px !important;
-    border-radius: 18px !important;
-  }
-
-  .profile-chip-copy span {
-    font-size: 22px !important;
-  }
-
-  .profile-chip-copy small {
-    font-size: 14px !important;
-  }
-
-  .partnership-box-inner {
-    max-width: 100% !important;
-  }
-
-  .partnership-copy {
-    font-size: 15px !important;
-    line-height: 1.55 !important;
-  }
-}
-
-
-/* ===== FINAL COMPACT LEFT-ALIGNED PROFILE CARD ===== */
-.partnership-box {
-  max-width: 560px !important;
-  width: min(560px, calc(100vw - 48px)) !important;
-  margin: 24px 0 40px !important;
-  padding: 24px !important;
-  border-radius: 28px !important;
-  background: rgba(255,255,255,.58) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  border: 1px solid rgba(0,0,0,.08) !important;
-  box-shadow: none !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-}
-
-.profile-chip {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  gap: 10px !important;
-  margin-bottom: 18px !important;
-}
-
-.profile-chip img {
-  width: 52px !important;
-  height: 52px !important;
-  border-radius: 16px !important;
-  object-fit: cover !important;
-}
-
-.profile-chip-copy span {
-  font-size: 22px !important;
-  font-weight: 750 !important;
-  letter-spacing: -.03em !important;
-  line-height: 1.05 !important;
-  color: var(--ink) !important;
-}
-
-.profile-chip-copy small {
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  color: var(--ink-3) !important;
-}
-
-.partnership-box-inner {
-  display: grid !important;
-  grid-template-columns: 18px 1fr !important;
-  gap: 10px !important;
-  align-items: start !important;
-  max-width: 440px !important;
-  margin: 0 !important;
-}
-
-.partnership-icon {
-  width: 18px !important;
-  height: 18px !important;
-  border-radius: 50% !important;
-  border: 1.3px solid rgba(0,0,0,.34) !important;
-  color: var(--ink-3) !important;
-  display: grid !important;
-  place-items: center !important;
-  font-size: 11px !important;
-  font-weight: 900 !important;
-  font-family: Georgia, serif !important;
-  margin-top: 3px !important;
-}
-
-.partnership-copy {
-  font-size: 15px !important;
-  line-height: 1.55 !important;
-  color: var(--ink-3) !important;
-}
-
-.partnership-copy strong {
-  display: block !important;
-  color: var(--ink) !important;
-  font-weight: 850 !important;
-  margin: 0 0 4px !important;
-}
-
-@media (max-width: 760px) {
-  .partnership-box {
-    width: calc(100vw - 32px) !important;
-    margin: 22px 0 32px !important;
-    padding: 22px !important;
-    border-radius: 24px !important;
-  }
-  .profile-chip img {
-    width: 48px !important;
-    height: 48px !important;
-    border-radius: 15px !important;
-  }
-  .profile-chip-copy span { font-size: 20px !important; }
-  .profile-chip-copy small { font-size: 13px !important; }
-  .partnership-copy { font-size: 14px !important; line-height: 1.5 !important; }
-}
-
-
-/* ===== SURGICAL EDIT: smaller Google stalk tile before mood CTA ===== */
+/* ===== PROFILE CARD: single flat tile, no nested box ===== */
 .setup-stack .partnership-box {
-  width: 100% !important;
-  max-width: 600px !important;
-  margin: 2px 0 -8px !important;
+  max-width: 100% !important;
+  margin: 6px 0 0 !important;
   padding: 16px 18px !important;
-  border-radius: 22px !important;
-  background: rgba(255,255,255,.62) !important;
-  border: 1px solid rgba(0,0,0,.08) !important;
+  border-radius: 20px !important;
+  background: rgba(255,255,255,.6) !important;
+  border: 1px solid rgba(0,0,0,.07) !important;
   box-shadow: none !important;
   display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
+  align-items: center !important;
+  gap: 12px !important;
 }
 
 .setup-stack .profile-chip {
   display: flex !important;
-  flex-direction: row !important;
   align-items: center !important;
   gap: 10px !important;
-  margin: 0 0 12px !important;
+  flex-shrink: 0 !important;
 }
 
 .setup-stack .profile-chip img {
@@ -3274,163 +2855,38 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   object-fit: cover !important;
 }
 
-.setup-stack .profile-chip-copy {
-  display: flex !important;
-  min-width: 0 !important;
-}
-
-.setup-stack .profile-chip-copy span {
-  font-size: 16px !important;
-  font-weight: 800 !important;
+.setup-stack .profile-chip-name {
+  font-size: 14px !important;
+  font-weight: 750 !important;
   letter-spacing: -.02em !important;
-  line-height: 1 !important;
   color: var(--ink) !important;
-}
-
-.setup-stack .profile-chip-copy small {
-  display: none !important;
-}
-
-.setup-stack .partnership-box-inner {
-  display: grid !important;
-  grid-template-columns: 16px 1fr !important;
-  gap: 9px !important;
-  align-items: start !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-}
-
-.setup-stack .partnership-icon {
-  width: 16px !important;
-  height: 16px !important;
-  font-size: 10px !important;
-  margin-top: 2px !important;
+  white-space: nowrap !important;
 }
 
 .setup-stack .partnership-copy {
-  font-size: 13px !important;
-  line-height: 1.45 !important;
+  margin: 0 !important;
+  font-size: 13.5px !important;
+  line-height: 1.4 !important;
   color: var(--ink-3) !important;
-}
-
-.setup-stack .partnership-copy strong {
-  font-size: 14px !important;
-  line-height: 1.2 !important;
-  margin: 0 0 3px !important;
+  font-weight: 500 !important;
 }
 
 @media (max-width: 760px) {
   .setup-stack .partnership-box {
-    width: 100% !important;
-    margin: 0 0 -6px !important;
-    padding: 15px 16px !important;
-    border-radius: 20px !important;
+    padding: 14px 16px !important;
+    border-radius: 18px !important;
+    flex-wrap: wrap !important;
   }
-
   .setup-stack .profile-chip img {
-    width: 32px !important;
-    height: 32px !important;
+    width: 30px !important;
+    height: 30px !important;
     border-radius: 10px !important;
   }
-
-  .setup-stack .profile-chip-copy span {
-    font-size: 15px !important;
+  .setup-stack .profile-chip-name {
+    font-size: 13px !important;
   }
-
   .setup-stack .partnership-copy {
     font-size: 12.5px !important;
-    line-height: 1.42 !important;
-  }
-}
-
-
-/* ===== DESIGN POLISH: softer Google context card + full-width custom input ===== */
-.setup-stack .partnership-box {
-  max-width: 100% !important;
-  margin: 6px 0 0 !important;
-  padding: 18px !important;
-  border-radius: 26px !important;
-  background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.52)) !important;
-  border: 1px solid rgba(0,0,0,.07) !important;
-}
-
-.setup-stack .profile-chip {
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 12px !important;
-  margin: 0 0 14px !important;
-}
-
-.setup-stack .profile-chip img {
-  width: 42px !important;
-  height: 42px !important;
-  border-radius: 14px !important;
-}
-
-.setup-stack .profile-chip-copy span {
-  font-size: 19px !important;
-  font-weight: 850 !important;
-  letter-spacing: -.03em !important;
-}
-
-.setup-stack .partnership-box-inner {
-  display: block !important;
-  max-width: none !important;
-  padding: 16px 18px !important;
-  border-radius: 20px !important;
-  background: rgba(255,255,255,.58) !important;
-  border: 1px solid rgba(0,0,0,.06) !important;
-}
-
-.setup-stack .partnership-icon {
-  display: none !important;
-}
-
-.setup-stack .partnership-copy {
-  max-width: 680px !important;
-  font-size: 14px !important;
-  line-height: 1.55 !important;
-}
-
-.setup-stack .partnership-copy strong {
-  font-size: 16px !important;
-  margin-bottom: 5px !important;
-}
-
-.custom-activity-wrap {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-.custom-activity-card {
-  width: 100% !important;
-}
-
-@media (max-width: 760px) {
-  .setup-stack .partnership-box {
-    padding: 16px !important;
-    border-radius: 22px !important;
-  }
-
-  .setup-stack .profile-chip img {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 13px !important;
-  }
-
-  .setup-stack .profile-chip-copy span {
-    font-size: 17px !important;
-  }
-
-  .setup-stack .partnership-box-inner {
-    padding: 14px 15px !important;
-    border-radius: 18px !important;
-  }
-
-  .setup-stack .partnership-copy,
-  .setup-stack .partnership-copy strong {
-    font-size: 13px !important;
-    line-height: 1.45 !important;
   }
 }
 
