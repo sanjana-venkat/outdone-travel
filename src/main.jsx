@@ -624,25 +624,6 @@ function App() {
 
       {step === "setup" && (
         <main className="screen setup-screen on">
-          <div className="partnership-box">
-            {user && (
-              <div className="profile-chip">
-                <img src={user.picture} alt="" />
-                <div className="profile-chip-copy">
-                  <span>{user.name}</span>
-                  {user.email && <small>{user.email}</small>}
-                </div>
-              </div>
-            )}
-            <div className="partnership-box-inner">
-              <span className="partnership-icon" aria-hidden="true">i</span>
-              <div className="partnership-copy">
-                <strong>Google won't let us stalk you. Yet.</strong>
-                <span>Soon we'll use Gmail, Maps, calendar, and your travel history to skip these questions. Until then, answer a few quick ones and Gemini handles the rest.</span>
-              </div>
-            </div>
-          </div>
-
           <section className="setup-header">
             <p className="label">Step 1 / 2</p>
             <h2>Set the plan.</h2>
@@ -716,6 +697,24 @@ function App() {
                 {["Walking", "Car", "Public transit"].map(o => (
                   <button key={o} type="button" className={transportMode === o ? "chip active" : "chip"} onClick={() => setTransportMode(t => t === o ? "" : o)}>{o}</button>
                 ))}
+              </div>
+            </div>
+
+            <div className="partnership-box">
+              {user && (
+                <div className="profile-chip">
+                  <img src={user.picture} alt="" />
+                  <div className="profile-chip-copy">
+                    <span>{user.name}</span>
+                  </div>
+                </div>
+              )}
+              <div className="partnership-box-inner">
+                <span className="partnership-icon" aria-hidden="true">i</span>
+                <div className="partnership-copy">
+                  <strong>Google won't let us stalk you. Yet.</strong>
+                  <span>Soon we'll use Gmail, Maps, calendar, and your travel history to skip these questions. Until then, answer a few quick ones and Gemini handles the rest.</span>
+                </div>
               </div>
             </div>
 
@@ -3243,6 +3242,106 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .profile-chip-copy span { font-size: 20px !important; }
   .profile-chip-copy small { font-size: 13px !important; }
   .partnership-copy { font-size: 14px !important; line-height: 1.5 !important; }
+}
+
+
+/* ===== SURGICAL EDIT: smaller Google stalk tile before mood CTA ===== */
+.setup-stack .partnership-box {
+  width: 100% !important;
+  max-width: 600px !important;
+  margin: 2px 0 -8px !important;
+  padding: 16px 18px !important;
+  border-radius: 22px !important;
+  background: rgba(255,255,255,.62) !important;
+  border: 1px solid rgba(0,0,0,.08) !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.setup-stack .profile-chip {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 0 12px !important;
+}
+
+.setup-stack .profile-chip img {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 11px !important;
+  object-fit: cover !important;
+}
+
+.setup-stack .profile-chip-copy {
+  display: flex !important;
+  min-width: 0 !important;
+}
+
+.setup-stack .profile-chip-copy span {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.02em !important;
+  line-height: 1 !important;
+  color: var(--ink) !important;
+}
+
+.setup-stack .profile-chip-copy small {
+  display: none !important;
+}
+
+.setup-stack .partnership-box-inner {
+  display: grid !important;
+  grid-template-columns: 16px 1fr !important;
+  gap: 9px !important;
+  align-items: start !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+.setup-stack .partnership-icon {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 10px !important;
+  margin-top: 2px !important;
+}
+
+.setup-stack .partnership-copy {
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  color: var(--ink-3) !important;
+}
+
+.setup-stack .partnership-copy strong {
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+  margin: 0 0 3px !important;
+}
+
+@media (max-width: 760px) {
+  .setup-stack .partnership-box {
+    width: 100% !important;
+    margin: 0 0 -6px !important;
+    padding: 15px 16px !important;
+    border-radius: 20px !important;
+  }
+
+  .setup-stack .profile-chip img {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+  }
+
+  .setup-stack .profile-chip-copy span {
+    font-size: 15px !important;
+  }
+
+  .setup-stack .partnership-copy {
+    font-size: 12.5px !important;
+    line-height: 1.42 !important;
+  }
 }
 
 `;
