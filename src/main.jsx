@@ -710,7 +710,6 @@ function App() {
                 </div>
               )}
               <div className="partnership-box-inner">
-                <span className="partnership-icon" aria-hidden="true">i</span>
                 <div className="partnership-copy">
                   <strong>Google won't let us stalk you. Yet.</strong>
                   <span>Soon we'll use Gmail, Maps, calendar, and your travel history to skip these questions. Until then, answer a few quick ones and Gemini handles the rest.</span>
@@ -3341,6 +3340,97 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .setup-stack .partnership-copy {
     font-size: 12.5px !important;
     line-height: 1.42 !important;
+  }
+}
+
+
+/* ===== DESIGN POLISH: softer Google context card + full-width custom input ===== */
+.setup-stack .partnership-box {
+  max-width: 100% !important;
+  margin: 6px 0 0 !important;
+  padding: 18px !important;
+  border-radius: 26px !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.52)) !important;
+  border: 1px solid rgba(0,0,0,.07) !important;
+}
+
+.setup-stack .profile-chip {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 0 14px !important;
+}
+
+.setup-stack .profile-chip img {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+}
+
+.setup-stack .profile-chip-copy span {
+  font-size: 19px !important;
+  font-weight: 850 !important;
+  letter-spacing: -.03em !important;
+}
+
+.setup-stack .partnership-box-inner {
+  display: block !important;
+  max-width: none !important;
+  padding: 16px 18px !important;
+  border-radius: 20px !important;
+  background: rgba(255,255,255,.58) !important;
+  border: 1px solid rgba(0,0,0,.06) !important;
+}
+
+.setup-stack .partnership-icon {
+  display: none !important;
+}
+
+.setup-stack .partnership-copy {
+  max-width: 680px !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+
+.setup-stack .partnership-copy strong {
+  font-size: 16px !important;
+  margin-bottom: 5px !important;
+}
+
+.custom-activity-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.custom-activity-card {
+  width: 100% !important;
+}
+
+@media (max-width: 760px) {
+  .setup-stack .partnership-box {
+    padding: 16px !important;
+    border-radius: 22px !important;
+  }
+
+  .setup-stack .profile-chip img {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 13px !important;
+  }
+
+  .setup-stack .profile-chip-copy span {
+    font-size: 17px !important;
+  }
+
+  .setup-stack .partnership-box-inner {
+    padding: 14px 15px !important;
+    border-radius: 18px !important;
+  }
+
+  .setup-stack .partnership-copy,
+  .setup-stack .partnership-copy strong {
+    font-size: 13px !important;
+    line-height: 1.45 !important;
   }
 }
 
