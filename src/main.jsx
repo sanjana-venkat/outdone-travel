@@ -625,8 +625,8 @@ function App() {
       {step === "setup" && (
         <main className="screen setup-screen on">
           <section className="setup-header">
-            <p className="label">First, let's get the basics.</p>
-            <h2>Let's get the easy stuff out of the way.</h2>
+            <p className="label">Setup.</p>
+            <h2>First, let's get the basics.</h2>
             <p>Where you are, when you're going, and the few constraints that actually matter.</p>
           </section>
 
