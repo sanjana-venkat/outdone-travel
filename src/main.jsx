@@ -710,7 +710,7 @@ function App() {
               <p className="partnership-copy">
                 Soon, with your Google data, we might already know you're in Paris, that you're vegan, and who you're traveling with, so we can skip most of this.
                 <br /><br />
-                But one thing we probably shouldn't assume is how you feel today.
+                But one thing we probably shouldn't assume is how you <em>feel today</em>.
               </p>
             </div>
 
@@ -2840,18 +2840,21 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 }
 
 
-/* ===== PROFILE CARD: single flat tile, no nested box ===== */
+/* ===== PROFILE CARD: simple translucent profile note ===== */
 .setup-stack .partnership-box {
   max-width: 100% !important;
   margin: 6px 0 0 !important;
-  padding: 16px 18px !important;
-  border-radius: 20px !important;
-  background: rgba(255,255,255,.6) !important;
-  border: 1px solid rgba(0,0,0,.07) !important;
-  box-shadow: none !important;
+  padding: 20px 22px !important;
+  border-radius: 24px !important;
+  background: rgba(255,255,255,.52) !important;
+  border: 1px solid rgba(0,0,0,.08) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.035) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
   display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 16px !important;
 }
 
 .setup-stack .profile-chip {
@@ -2862,44 +2865,55 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 }
 
 .setup-stack .profile-chip img {
-  width: 34px !important;
-  height: 34px !important;
-  border-radius: 11px !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 12px !important;
   object-fit: cover !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.8), 0 6px 18px rgba(0,0,0,.08) !important;
 }
 
 .setup-stack .profile-chip-name {
-  font-size: 14px !important;
-  font-weight: 750 !important;
-  letter-spacing: -.02em !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.03em !important;
   color: var(--ink) !important;
   white-space: nowrap !important;
 }
 
 .setup-stack .partnership-copy {
   margin: 0 !important;
-  font-size: 13.5px !important;
-  line-height: 1.4 !important;
-  color: var(--ink-3) !important;
+  max-width: 540px !important;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+  color: var(--ink-2) !important;
   font-weight: 500 !important;
+  letter-spacing: -.015em !important;
+}
+
+.setup-stack .partnership-copy em {
+  font-family: 'DM Serif Display', Georgia, serif !important;
+  font-style: italic !important;
+  color: var(--ink) !important;
+  font-weight: 400 !important;
 }
 
 @media (max-width: 760px) {
   .setup-stack .partnership-box {
-    padding: 14px 16px !important;
-    border-radius: 18px !important;
-    flex-wrap: wrap !important;
+    padding: 18px 18px !important;
+    border-radius: 20px !important;
+    gap: 14px !important;
   }
   .setup-stack .profile-chip img {
-    width: 30px !important;
-    height: 30px !important;
-    border-radius: 10px !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 11px !important;
   }
   .setup-stack .profile-chip-name {
-    font-size: 13px !important;
+    font-size: 14px !important;
   }
   .setup-stack .partnership-copy {
-    font-size: 12.5px !important;
+    font-size: 13.5px !important;
+    line-height: 1.5 !important;
   }
 }
 
