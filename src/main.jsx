@@ -700,16 +700,6 @@ function App() {
               </div>
             </div>
 
-            <div className="partnership-box">
-              {user && (
-                <div className="profile-chip">
-                  <img src={user.picture} alt="" />
-                  <span className="profile-chip-name">{user.name}</span>
-                </div>
-              )}
-              <p className="partnership-copy">Soon we can skip this with your Google data.</p>
-            </div>
-
             <button className="btn-accent" onClick={() => goTo("mood")}>Choose today's mood →</button>
           </div>
         </main>
