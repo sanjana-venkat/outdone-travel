@@ -725,8 +725,7 @@ function App() {
             <p className="label">Now tell us something Google can't.</p>
             <h2>What's the <span className="gem">vibe today?</span></h2>
             <p>
-              We've all had apps assume we wanted the same thing forever because we clicked on it once. Maybe yesterday you wanted museums. Today you want rooftop bars.
-              <br />
+              We've all had apps assume we wanted the same thing forever because we clicked on it once. Maybe yesterday you wanted museums. Today you want rooftop bars. 
               That's why we're asking. Pick up to three moods and Gemini will handle the rest.
             </p>
           </section>
