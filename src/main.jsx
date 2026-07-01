@@ -319,12 +319,12 @@ function App() {
 
   const loadingItems = useMemo(() => [
     user?.name ? `${user.name}'s lightweight profile` : "Quick feeler profile",
-    "Today's mood signals",
-    "Dietary preferences",
-    "Destination context",
-    "Google Places candidates",
-    "Real place photos and ratings",
-    "Gemini itinerary generation"
+    "Understanding today's intent",
+    "Keeping your real constraints in mind",
+    "Reading the destination context",
+    "Looking for places that match today's mood",
+    "Pulling real place photos and ratings",
+    "Asking Gemini to think like today's version of you"
   ], [user]);
 
   function toggleMood(id) {
@@ -625,9 +625,9 @@ function App() {
       {step === "setup" && (
         <main className="screen setup-screen on">
           <section className="setup-header">
-            <p className="label">Step 1 / 2</p>
-            <h2>Set the plan.</h2>
-            <p>Tell us where, when, and what constraints matter.</p>
+            <p className="label">First, let's get the basics.</p>
+            <h2>Let's get the easy stuff out of the way.</h2>
+            <p>Where you are, when you're going, and the few constraints that actually matter.</p>
           </section>
 
           <div className="setup-stack">
@@ -700,7 +700,21 @@ function App() {
               </div>
             </div>
 
-            <button className="btn-accent" onClick={() => goTo("mood")}>Choose today's mood →</button>
+            <div className="partnership-box">
+              {user && (
+                <div className="profile-chip">
+                  <img src={user.picture} alt="" />
+                  <span className="profile-chip-name">{user.name}</span>
+                </div>
+              )}
+              <p className="partnership-copy">
+                Soon, with your Google data, we might already know you're in Paris, that you're vegan, and who you're traveling with, so we can skip most of this.
+                <br /><br />
+                But one thing we probably shouldn't assume is how you feel today.
+              </p>
+            </div>
+
+            <button className="btn-accent" onClick={() => goTo("mood")}>Next up: tell us your mood →</button>
           </div>
         </main>
       )}
@@ -708,9 +722,17 @@ function App() {
       {step === "mood" && (
         <main className="screen mood-screen on">
           <section className="mood-header">
-            <p className="label">Step 2 / 2 · Choose up to 3</p>
-            <h2>What's your <span className="gem">vibe?</span></h2>
-            <p>This one input reshapes your entire day. It's the variable Gemini can't infer from data alone.</p>
+            <p className="label">Now tell us something Google can't.</p>
+            <h2>What's the <span className="gem">vibe today?</span></h2>
+            <p>
+              We've all had apps assume we wanted the same thing forever because we clicked on it once months ago.
+              <br /><br />
+              Maybe yesterday you wanted museums. Today you want rooftop bars.
+              <br /><br />
+              That's why we're asking.
+              <br /><br />
+              Pick up to three moods and Gemini will use them as the lens for every recommendation it makes.
+            </p>
           </section>
           <section className="mood-grid image-grid">
             {moodVibes.map((vibe, index) => (
@@ -742,7 +764,7 @@ function App() {
           </div>
 
           <section className="build-cta-row">
-            <button className="btn-accent" onClick={generatePlan}>Build itinerary</button>
+            <button className="btn-accent" onClick={generatePlan}>See today's version of your trip</button>
           </section>
         </main>
       )}
@@ -750,7 +772,7 @@ function App() {
       {step === "loading" && (
         <main className="loading-screen on">
           <div className="loader-head">
-            <h2 className="loader-headline">Decoding your <span className="gem">Travel DNA</span></h2>
+            <h2 className="loader-headline">Building around <span className="gem">today's version of you</span></h2>
             <p className="loader-sub">{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
           </div>
           <div className="loader-stage">
@@ -919,6 +941,7 @@ function App() {
                 <span className="res-date-tag">{itinerary?.dates || prettyDate(date)}</span>
               </div>
               <h2 className="res-dest">{itinerary?.destination || destination}</h2>
+              <p className="res-thesis">This itinerary wasn't built around your past. It was built around who you wanted to be today.</p>
               {itinerary?.summary && (
                 <p className="res-summary">{itinerary.summary}</p>
               )}
