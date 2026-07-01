@@ -625,8 +625,8 @@ function App() {
       {step === "setup" && (
         <main className="screen setup-screen on">
           <section className="setup-header">
-            <p className="label">Step 1 of 2 - Setup.</p>
-            <h2>Let's get the basics.</h2>
+            <p className="label">First, let's get the basics.</p>
+            <h2>Let's get the easy stuff out of the way.</h2>
             <p>Where you are, when you're going, and the few constraints that actually matter.</p>
           </section>
 
@@ -714,7 +714,7 @@ function App() {
               </p>
             </div>
 
-            <button className="btn-accent" onClick={() => goTo("mood")}>Tell us your mood →</button>
+            <button className="btn-accent" onClick={() => goTo("mood")}>Next up: tell us your mood →</button>
           </div>
         </main>
       )}
@@ -725,8 +725,13 @@ function App() {
             <p className="label">Now tell us something Google can't.</p>
             <h2>What's the <span className="gem">vibe today?</span></h2>
             <p>
-              We've all had apps assume we wanted the same thing forever because we clicked on it once. Maybe yesterday you wanted museums. Today you want rooftop bars. 
-              That's why we're asking. Pick up to three moods and Gemini will handle the rest.
+              We've all had apps assume we wanted the same thing forever because we clicked on it once months ago.
+              <br /><br />
+              Maybe yesterday you wanted museums. Today you want rooftop bars.
+              <br /><br />
+              That's why we're asking.
+              <br /><br />
+              Pick up to three moods and Gemini will use them as the lens for every recommendation it makes.
             </p>
           </section>
           <section className="mood-grid image-grid">
