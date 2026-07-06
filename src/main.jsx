@@ -181,13 +181,12 @@ function App() {
   const [destination, setDestination] = useState("Paris");
   const [placePredictions, setPlacePredictions] = useState([]);
   const [isAutocompleting, setIsAutocompleting] = useState(false);
-  const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
   const [date, setDate] = useState(getToday());
   const [diet, setDiet] = useState("Vegetarian");
   const [planFor, setPlanFor] = useState("Date");
   const [transportMode, setTransportMode] = useState("");
   const [timeRange, setTimeRange] = useState("");
-  const [selectedMoods, setSelectedMoods] = useState([]);
+  const [selectedMoods, setSelectedMoods] = useState(["active", "romantic"]);
   const [loadingLine, setLoadingLine] = useState(0);
   const [placesPhotos, setPlacesPhotos] = useState([]);
   const [itinerary, setItinerary] = useState(null);
@@ -201,6 +200,9 @@ function App() {
   const [shareLoading, setShareLoading] = useState(false);
   const [calendarState, setCalendarState] = useState("idle");
   const [customActivity, setCustomActivity] = useState("");
+  const [cardIndex, setCardIndex] = useState(0);
+  const [savedCards, setSavedCards] = useState(new Set());
+  const [loginSlide, setLoginSlide] = useState(0);
   const shellRef = useRef(null);
 
   function goTo(s) {
@@ -251,6 +253,14 @@ function App() {
     };
     window.addEventListener("pointermove", moveGlow);
     return () => { window.removeEventListener("pointermove", moveGlow); if (rafId) cancelAnimationFrame(rafId); };
+  }, []);
+
+  // Login background cycling through mood images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLoginSlide(i => (i + 1) % moodVibes.length);
+    }, 3500);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -319,12 +329,12 @@ function App() {
 
   const loadingItems = useMemo(() => [
     user?.name ? `${user.name}'s lightweight profile` : "Quick feeler profile",
-    "Understanding today's intent",
-    "Keeping your real constraints in mind",
-    "Reading the destination context",
-    "Looking for places that match today's mood",
-    "Pulling real place photos and ratings",
-    "Asking Gemini to think like today's version of you"
+    "Today's mood signals",
+    "Dietary preferences",
+    "Destination context",
+    "Google Places candidates",
+    "Real place photos and ratings",
+    "Gemini itinerary generation"
   ], [user]);
 
   function toggleMood(id) {
@@ -341,6 +351,8 @@ function App() {
     setLoadingLine(0);
     setItinerary(null);
     setPlacesPhotos([]);
+    setCardIndex(0);
+    setSavedCards(new Set());
 
     const CLAMP_AT = 5;
     const interval = setInterval(() => {
@@ -559,7 +571,7 @@ function App() {
       {step === "login" && (
         <div className="lp-shell">
           <div className="lp-bg-outer">
-            <img src="https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            <img src={moodVibes[loginSlide].img} alt="" className="lp-bg-outer-img lp-bg-cycling" key={loginSlide} />
             <div className="lp-bg-outer-dim" />
           </div>
 
@@ -567,8 +579,8 @@ function App() {
             <div className="lp-card-left">
               <div className="lp-right-text">
                 <p className="lp-eyebrow">Powered by Gemini ✦</p>
-                <h1 className="lp-h1">Today feels<br/><span className="lp-accent">different.</span></h1>
-                <p className="lp-sub"> Because even the best recommendation models can't predict who you want to be today.</p>
+                <h1 className="lp-h1">Plan <span className="lp-accent lp-accent-sm">in seconds.</span></h1>
+                <p className="lp-sub">Tell us how you feel — we build your entire day around it. Mood-first, always.</p>
               </div>
 
               <div className="lp-actions">
@@ -603,19 +615,17 @@ function App() {
 
             <div className="lp-card-right">
               <div className="lp-panel-overlay" />
-              <div className="lp-panel-itin">
-                <div className="lp-itin-line lp-itin-1">
-                  <span className="lp-itin-time">08:30</span>
-                  <span className="lp-itin-label">Quiet temple morning</span>
-                </div>
-                <div className="lp-itin-line lp-itin-2">
-                  <span className="lp-itin-time">12:00</span>
-                  <span className="lp-itin-label">Vegetarian lunch nearby</span>
-                </div>
-                <div className="lp-itin-line lp-itin-3">
-                  <span className="lp-itin-time">17:30</span>
-                  <span className="lp-itin-label">Golden-hour walk</span>
-                </div>
+              <div className="lp-panel-itin" key={loginSlide}>
+                {[
+                  { time: "08:30", label: moodVibes[loginSlide].tag.split(",")[0].trim() },
+                  { time: "13:00", label: moodVibes[(loginSlide+1)%moodVibes.length].tag.split(",")[0].trim() },
+                  { time: "18:30", label: moodVibes[(loginSlide+2)%moodVibes.length].tag.split(",")[0].trim() },
+                ].map((line, i) => (
+                  <div key={i} className={`lp-itin-line lp-itin-${i+1}`}>
+                    <span className="lp-itin-time">{line.time}</span>
+                    <span className="lp-itin-label">{line.label}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -624,10 +634,18 @@ function App() {
 
       {step === "setup" && (
         <main className="screen setup-screen on">
+          <div className="partnership-box">
+            {user && <div className="profile-chip"><img src={user.picture} alt="" />{user.name}</div>}
+            <div className="partnership-box-inner">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,marginTop:1}}><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              <span><strong>We don't have your search history or past trips yet</strong> — so we need to ask. A Google partnership would let us skip this entirely. For now, a few quick questions and Gemini handles the rest.</span>
+            </div>
+          </div>
+
           <section className="setup-header">
-            <p className="label">Step 1 of 2 - Setup</p>
-            <h2>Let's get the basics.</h2>
-            <p>Where you are, when you're going, and the few constraints that actually matter.</p>
+            <p className="label">Step 1 / 2</p>
+            <h2>Set the plan.</h2>
+            <p>Tell us where, when, and what constraints matter.</p>
           </section>
 
           <div className="setup-stack">
@@ -635,18 +653,12 @@ function App() {
               <span className="setup-card-label">WHERE</span>
               <input
                 value={destination}
-                onChange={(e) => {
-                  setDestination(e.target.value);
-                  setShowDestinationSuggestions(true);
-                }}
-                onFocus={() => {
-                  if (destination.trim().length >= 2) setShowDestinationSuggestions(true);
-                }}
+                onChange={(e) => setDestination(e.target.value)}
                 placeholder="City, neighborhood, or place"
                 autoComplete="off"
                 className="setup-card-input"
               />
-              {showDestinationSuggestions && destination.trim().length >= 2 && destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
+              {destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
                 <div className="setup-suggestions">
                   {destinationOptions.map((item) => (
                     <button
@@ -654,7 +666,7 @@ function App() {
                       key={item.placeId || item.label}
                       className="setup-sug"
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { setDestination(item.label); setPlacePredictions([]); setShowDestinationSuggestions(false); }}
+                      onClick={() => { setDestination(item.label); setPlacePredictions([]); }}
                     >
                       {item.label}
                     </button>
@@ -700,21 +712,7 @@ function App() {
               </div>
             </div>
 
-            {user && (
-              <div className="partnership-box">
-                <div className="profile-chip">
-                  <img src={user.picture} alt="" />
-                  <span className="profile-chip-name">{user.name}</span>
-                </div>
-                <p className="partnership-copy">
-                  Soon, with your Google data, we might already know you're in Paris, that you're vegan, and who you're traveling with, so we can skip most of this.
-                  <br /><br />
-                  But one thing we probably shouldn't assume is how you <em>feel today</em>.
-                </p>
-              </div>
-            )}
-
-            <button className="btn-accent" onClick={() => goTo("mood")}>Tell us your mood →</button>
+            <button className="btn-accent" onClick={() => goTo("mood")}>Choose today's mood →</button>
           </div>
         </main>
       )}
@@ -722,25 +720,15 @@ function App() {
       {step === "mood" && (
         <main className="screen mood-screen on">
           <section className="mood-header">
-            <p className="label">Step 2 of 2 - Mood</p>
-            <h2>What's the <span className="gem">vibe today?</span></h2>
-            <p>
-              Maybe yesterday you wanted museums. Today you want sunsets on a beach. 
-              That's why we're asking. Pick up to three moods and Gemini will handle the rest.
-            </p>
+            <p className="label">Step 2 / 2 · Choose up to 3</p>
+            <h2>What's your <span className="gem">vibe?</span></h2>
+            <p>This one input reshapes your entire day. It's the variable Gemini can't infer from data alone.</p>
           </section>
           <section className="mood-grid image-grid">
             {moodVibes.map((vibe, index) => (
               <button type="button" key={vibe.id} className={selectedMoods.includes(vibe.id) ? "image-mood-tile active" : "image-mood-tile"} onClick={() => toggleMood(vibe.id)}>
                 <img src={vibe.img} alt={vibe.title} loading="lazy" />
                 <span className="tile-number">{String(index + 1).padStart(2, "0")}</span>
-                <span className={selectedMoods.includes(vibe.id) ? "tile-check active" : "tile-check"}>
-                  {selectedMoods.includes(vibe.id) && (
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
-                      <path d="M5 12.5L10 17.5L19 7.5" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </span>
                 <div className="image-tile-overlay" />
                 <div className="image-tile-content">
                   <strong>{vibe.title}</strong>
@@ -766,7 +754,7 @@ function App() {
           </div>
 
           <section className="build-cta-row">
-            <button className="btn-accent" onClick={generatePlan}>Generate the plan</button>
+            <button className="btn-accent" onClick={generatePlan}>Build itinerary</button>
           </section>
         </main>
       )}
@@ -774,7 +762,7 @@ function App() {
       {step === "loading" && (
         <main className="loading-screen on">
           <div className="loader-head">
-            <h2 className="loader-headline">Building around <span className="gem">today's version of you</span></h2>
+            <h2 className="loader-headline">Decoding your <span className="gem">Travel DNA</span></h2>
             <p className="loader-sub">{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
           </div>
           <div className="loader-stage">
@@ -1019,45 +1007,97 @@ function App() {
                 </span>
               </button>
             </div>
-            {tripMapsUrl && (
-              <a className="btn-accent maps-trip-btn action-primary-cta" href={tripMapsUrl} target="_blank" rel="noreferrer">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
-                Open trip in Google Maps
-              </a>
-            )}
+
           </section>
 
-          <section className="timeline">
-            <p className="label">Today's flow</p>
-            {(itinerary?.stops || []).map((stop, i) => (
-              <article className="stop" key={`${stop.name}-${i}`}>
-                <div className={i === 0 ? "s-pin s-pin-featured" : "s-pin"}>
-                  <span className="s-pin-index">{String(i + 1).padStart(2, "0")}</span>
-                </div>
-                <div className="s-body">
-                  <p className="s-cat">{stop.category}</p>
-                  <h3>{stop.time} <span>{stop.period}</span></h3>
-                  <h4>{stop.name}</h4>
-                  <div className="place-meta prominent">
-                    {stop.rating && (
-                      <a className="rating-pill" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.googlePlaceName || stop.name)}`} target="_blank" rel="noreferrer">★ {stop.rating}{stop.userRatingCount ? ` · ${stop.userRatingCount.toLocaleString()} reviews` : ""}</a>
-                    )}
-                    {stop.openNow !== undefined && <span>{stop.openNow ? "Open now" : "Hours vary"}</span>}
-                    {stop.address && (
-                      <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`} target="_blank" rel="noreferrer">{stop.address}</a>
-                    )}
-                    {!stop.rating && stop.placesStatus !== "google-places" && <span className="demo-pill">Places details unavailable in fallback</span>}
-                  </div>
-                  <p>{stop.description}</p>
-                  <div className="s-photo">
-                    <img src={stop.imageUrl || stop.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length, 1)]?.img || moodVibes[i % moodVibes.length].img} alt={stop.name} loading="lazy" />
-                    <div className="s-photo-ov" />
-                    <span>{stop.googlePlaceName || stop.address || stop.category || stop.name}</span>
-                  </div>
-                  <small>{stop.routeFromPrevious}</small>
-                </div>
-              </article>
-            ))}
+          {/* ── RECOMMENDATION CARD STACK ── */}
+          <section className="rec-stack-section">
+            <div className="rec-stack-header">
+              <p className="label">Your picks for today</p>
+              <span className="rec-counter">{cardIndex + 1} / {(itinerary?.stops || []).length}</span>
+            </div>
+
+            <div className="rec-track-wrap">
+              <div
+                className="rec-track"
+                style={{transform: `translateX(calc(-${cardIndex} * (min(520px,90vw) + 20px)))`}}
+                onTouchStart={e => { e._startX = e.touches[0].clientX; }}
+                onTouchEnd={e => {
+                  const dx = e.changedTouches[0].clientX - (e._startX || e.changedTouches[0].clientX);
+                  if (dx < -50) setCardIndex(i => Math.min((itinerary?.stops||[]).length-1, i+1));
+                  if (dx > 50) setCardIndex(i => Math.max(0, i-1));
+                }}
+              >
+                {(itinerary?.stops || []).map((stop, i) => {
+                  const img = stop.imageUrl || stop.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length,1)]?.img || moodVibes[i % moodVibes.length].img;
+                  const isSaved = savedCards.has(i);
+                  const isActive = i === cardIndex;
+                  return (
+                    <div key={`${stop.name}-${i}`} className={`rec-card${isActive ? " rec-card-active" : ""}${i < cardIndex ? " rec-card-past" : ""}`}>
+                      {/* Full-bleed image */}
+                      <div className="rec-card-img-wrap">
+                        <img src={img} alt={stop.name} />
+                        <div className="rec-card-img-ov" />
+                        {/* Heart button */}
+                        <button
+                          className={`rec-heart${isSaved ? " rec-heart-saved" : ""}`}
+                          onClick={() => setSavedCards(s => { const n = new Set(s); isSaved ? n.delete(i) : n.add(i); return n; })}
+                          aria-label={isSaved ? "Remove" : "Save"}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                          </svg>
+                        </button>
+                        {/* Category tag */}
+                        <span className="rec-card-tag">{stop.category}</span>
+                      </div>
+
+                      {/* Card content */}
+                      <div className="rec-card-body">
+                        <div className="rec-card-meta">
+                          <span className="rec-card-time">{stop.time}</span>
+                          {stop.rating && <span className="rec-card-rating">★ {stop.rating}</span>}
+                          {stop.openNow !== undefined && <span className="rec-card-open">{stop.openNow ? "Open" : "Check hours"}</span>}
+                        </div>
+                        <h3 className="rec-card-name">{stop.name}</h3>
+                        <p className="rec-card-desc">{stop.description}</p>
+                        {stop.address && (
+                          <a className="rec-card-addr" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`} target="_blank" rel="noreferrer">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+                            {stop.address}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Navigation dots + arrows */}
+            <div className="rec-nav">
+              <button className="rec-arrow rec-arrow-prev" onClick={() => setCardIndex(i => Math.max(0, i-1))} disabled={cardIndex === 0}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <div className="rec-dots">
+                {(itinerary?.stops || []).map((_,i) => (
+                  <button key={i} className={`rec-dot${i === cardIndex ? " rec-dot-active" : ""}${savedCards.has(i) ? " rec-dot-saved" : ""}`} onClick={() => setCardIndex(i)} />
+                ))}
+              </div>
+              <button className="rec-arrow rec-arrow-next" onClick={() => setCardIndex(i => Math.min((itinerary?.stops||[]).length-1, i+1))} disabled={cardIndex === (itinerary?.stops||[]).length-1}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 4l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
+
+            {/* Saved picks summary */}
+            {savedCards.size > 0 && (
+              <div className="rec-saved-bar">
+                <span>❤ {savedCards.size} place{savedCards.size > 1 ? "s" : ""} saved</span>
+                {tripMapsUrl && (
+                  <a className="rec-maps-btn" href={tripMapsUrl} target="_blank" rel="noreferrer">Open in Maps →</a>
+                )}
+              </div>
+            )}
           </section>
         </main>
       )}
@@ -1293,7 +1333,7 @@ button { cursor: pointer; }
 .partnership-box-inner strong { color: var(--ink-2); font-weight: 700; }
 .setup-header { margin-bottom: 32px; }
 .setup-stack { display: flex; flex-direction: column; gap: 28px; max-width: 600px; }
-.custom-activity-wrap { margin-top: 48px; width: 100%; max-width: none; }
+.custom-activity-wrap { margin-top: 48px; max-width: 960px; }
 .custom-activity-card { max-width: 100%; }
 .setup-card {
   background: #fff; border-radius: 20px; padding: 20px 24px;
@@ -1477,13 +1517,11 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .image-mood-tile:hover img, .image-mood-tile.active img { transform: scale(1.03); }
 .image-tile-overlay { position: absolute; inset: 0; background: linear-gradient(to top,rgba(0,0,0,.48),rgba(0,0,0,.04) 68%); }
 .tile-number { position: absolute; left: 16px; top: 16px; z-index: 2; font-size: 11px; letter-spacing: .1em; font-weight: 800; color: rgba(255,255,255,.45); }
-.tile-check { position: absolute; right: 16px; top: 16px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.75); background: rgba(0,0,0,.08); display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
-.tile-check.active { border-color: var(--gold-bright); background: var(--gold-bright); }
 .image-tile-content { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; }
 .image-tile-content strong { display: block; font-size: clamp(18px,1.8vw,24px); font-weight: 900; line-height: 1; letter-spacing: -.03em; color: #fff; }
 .image-tile-content p { margin: 6px 0 0; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; line-height: 1.3; }
 
-.custom-activity-wrap { margin-top: 40px; width: 100%; max-width: none; display: grid; gap: 10px; }
+.custom-activity-wrap { margin-top: 40px; max-width: 960px; display: grid; gap: 10px; }
 .custom-activity-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .custom-activity-input {
   width: 100%; background: #fff; border: none; border-radius: 20px;
@@ -2830,6 +2868,168 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 @media (max-width: 760px) and (max-height: 760px) {
   .lp-card-left {
+    padding: 22px 24px max(22px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .lp-panel-itin {
+    left: 20px !important;
+    right: 20px !important;
+    bottom: 18px !important;
+    gap: 10px !important;
+  }
+
+  .lp-itin-line {
+    min-height: 52px !important;
+  }
+
+  .lp-google-wrap,
+  .lp-ghost-btn {
+    height: 52px !important;
+  }
+}
+
+
+/* ===== MOBILE EDGE FIX: remove inner vertical line + add bottom breathing room ===== */
+@media (max-width: 760px) {
+  .lp-card-right,
+  .lp-card-right *,
+  .lp-panel,
+  .lp-panel *,
+  .lp-panel-image,
+  .lp-panel-image *,
+  .lp-image,
+  .lp-image *,
+  .lp-bg,
+  .lp-bg * {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-inline-start: 0 !important;
+    border-inline-end: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .lp-card-right::before,
+  .lp-card-right::after,
+  .lp-panel::before,
+  .lp-panel::after,
+  .lp-panel-image::before,
+  .lp-panel-image::after,
+  .lp-image::before,
+  .lp-image::after,
+  .lp-bg::before,
+  .lp-bg::after {
+    display: none !important;
+    content: none !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .lp-card {
+    border: 3px solid #ffffff !important;
+    border-radius: 42px 42px 0 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: hidden !important;
+  }
+
+  /* Give the white content tile enough bottom breathing room */
+  .lp-card-left {
+    padding: 28px 28px max(48px, calc(32px + env(safe-area-inset-bottom, 20px))) 28px !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .lp-actions {
+    margin-bottom: 0 !important;
+  }
+
+  /* Show our plain styled button, hide the iframe wrapper */
+  .lp-google-btn-mobile {
+    display: flex !important;
+  }
+  .lp-google-wrap {
+    display: none !important;
+  }
+
+  .lp-google-wrap {
+    display: none !important;
+  }
+
+  /* Fake content sits inside the wrap in normal flow — can't be clipped out */
+  .lp-google-fake {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    pointer-events: none !important;
+    position: relative !important;
+    z-index: 1 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* SVG and text inside fake must also be visible */
+  .lp-google-fake svg,
+  .lp-google-fake span {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+  }
+
+  .lp-google-fake span {
+    display: inline !important;
+  }
+
+  .lp-google-fake span {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #3c4043 !important;
+    letter-spacing: .25px !important;
+  }
+
+  /* Real iframe: absolutely covers the whole wrap, invisible but clickable */
+  .lp-google-real,
+  #googleSignIn {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    z-index: 2 !important;
+  }
+
+  .lp-google-real > div,
+  #googleSignIn > div {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .lp-google-real iframe,
+  #googleSignIn iframe {
+    width: 100% !important;
+    height: 100% !important;
+    cursor: pointer !important;
+  }
+
+  .lp-shell {
+    padding-bottom: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .lp-card {
+    height: calc(100dvh - 46px) !important;
+  }
+
+
+}
+
+@media (max-width: 760px) and (max-height: 760px) {
+  .lp-card-left {
     padding: 22px 24px calc(44px + env(safe-area-inset-bottom)) 24px !important;
   }
 
@@ -2842,83 +3042,302 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 }
 
-
-/* ===== PROFILE CARD: simple translucent profile note ===== */
-.setup-stack .partnership-box {
-  max-width: 100% !important;
-  margin: 6px 0 0 !important;
-  padding: 20px 22px !important;
-  border-radius: 24px !important;
-  background: rgba(255,255,255,.52) !important;
-  border: 1px solid rgba(0,0,0,.08) !important;
-  box-shadow: 0 18px 44px rgba(0,0,0,.035) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  gap: 16px !important;
+/* ── LOGIN: cycling background ── */
+.lp-accent-sm {
+  font-size: clamp(20px, 2.2vw, 32px) !important;
+  display: inline !important;
+}
+.lp-bg-cycling {
+  animation: bgFadeIn .8s ease both, bgKenBurns 4s ease-in-out forwards !important;
+}
+@keyframes bgFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes bgKenBurns {
+  from { transform: scale(1.02); }
+  to   { transform: scale(1.08); }
 }
 
-.setup-stack .profile-chip {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  flex-shrink: 0 !important;
+/* ── RECOMMENDATION CARD STACK ── */
+.rec-stack-section {
+  width: 100%;
+  padding: 0 0 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.setup-stack .profile-chip img {
-  width: 38px !important;
-  height: 38px !important;
-  border-radius: 12px !important;
-  object-fit: cover !important;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.8), 0 6px 18px rgba(0,0,0,.08) !important;
+.rec-stack-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(28px,6vw,80px);
 }
 
-.setup-stack .profile-chip-name {
-  font-size: 15px !important;
-  font-weight: 800 !important;
-  letter-spacing: -.03em !important;
-  color: var(--ink) !important;
-  white-space: nowrap !important;
+.rec-counter {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-3);
+  letter-spacing: .04em;
 }
 
-.setup-stack .partnership-copy {
-  margin: 0 !important;
-  max-width: 540px !important;
-  font-size: 15px !important;
-  line-height: 1.55 !important;
-  color: var(--ink-2) !important;
-  font-weight: 500 !important;
-  letter-spacing: -.015em !important;
+/* Track: horizontally scrolling cards */
+.rec-track-wrap {
+  overflow: hidden;
+  padding: 0 clamp(28px,6vw,80px);
+  cursor: grab;
+  user-select: none;
+}
+.rec-track-wrap:active { cursor: grabbing; }
+
+.rec-track {
+  display: flex;
+  gap: 20px;
+  transition: transform .45s cubic-bezier(.2,.8,.2,1);
+  will-change: transform;
 }
 
-.setup-stack .partnership-copy em {
-  font-family: 'DM Serif Display', Georgia, serif !important;
-  font-style: italic !important;
-  color: var(--ink) !important;
-  font-weight: 400 !important;
+/* Individual card */
+.rec-card {
+  flex-shrink: 0;
+  width: min(520px, 90vw);
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+  transition: transform .3s var(--ease), box-shadow .3s var(--ease), opacity .3s;
+  opacity: .5;
+  transform: scale(.97);
+}
+.rec-card.rec-card-active {
+  opacity: 1;
+  transform: scale(1);
+  box-shadow: 0 12px 40px rgba(0,0,0,.14);
+}
+.rec-card.rec-card-past {
+  opacity: .35;
+  transform: scale(.95);
 }
 
-@media (max-width: 760px) {
-  .setup-stack .partnership-box {
-    padding: 18px 18px !important;
-    border-radius: 20px !important;
-    gap: 14px !important;
-  }
-  .setup-stack .profile-chip img {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 11px !important;
-  }
-  .setup-stack .profile-chip-name {
-    font-size: 14px !important;
-  }
-  .setup-stack .partnership-copy {
-    font-size: 13.5px !important;
-    line-height: 1.5 !important;
-  }
+/* Card image — tall hero */
+.rec-card-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  overflow: hidden;
 }
+.rec-card-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .6s var(--ease);
+}
+.rec-card-active .rec-card-img-wrap img { transform: scale(1.02); }
+.rec-card-img-ov {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.6) 0%, rgba(0,0,0,.0) 50%);
+}
+
+/* Heart button */
+.rec-heart {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .2s, color .2s, transform .15s;
+}
+.rec-heart:hover { transform: scale(1.1); background: rgba(0,0,0,.55); }
+.rec-heart.rec-heart-saved {
+  background: #e84393;
+  color: #fff;
+}
+.rec-heart.rec-heart-saved:hover { background: #c4367a; }
+
+/* Category tag */
+.rec-card-tag {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 3;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.85);
+  background: rgba(0,0,0,.4);
+  backdrop-filter: blur(6px);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.15);
+}
+
+/* Card body */
+.rec-card-body {
+  padding: 20px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rec-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rec-card-time {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.rec-card-rating {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.rec-card-open {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.rec-card-name {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-weight: 400;
+  letter-spacing: -.02em;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.15;
+}
+.rec-card-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rec-card-addr {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  text-decoration: none;
+  margin-top: 4px;
+}
+.rec-card-addr:hover { color: var(--accent); }
+
+/* Navigation */
+.rec-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 clamp(28px,6vw,80px);
+}
+.rec-arrow {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.rec-arrow:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); background: var(--surface); }
+.rec-arrow:disabled { opacity: .25; cursor: not-allowed; }
+.rec-dots {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 300px;
+}
+.rec-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-3);
+  cursor: pointer;
+  padding: 0;
+  transition: background .2s, transform .2s;
+}
+.rec-dot.rec-dot-active {
+  background: var(--ink);
+  transform: scale(1.4);
+}
+.rec-dot.rec-dot-saved {
+  background: #e84393;
+}
+
+/* Saved bar */
+.rec-saved-bar {
+  margin: 0 clamp(28px,6vw,80px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-radius: 16px;
+  background: rgba(232,67,147,.08);
+  border: 1px solid rgba(232,67,147,.2);
+  font-size: 14px;
+  font-weight: 700;
+  color: #c4367a;
+}
+.rec-maps-btn {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: #fff;
+}
+.rec-maps-btn:hover { opacity: .85; }
+
+/* Mobile adjustments */
+@media(max-width: 760px) {
+  .rec-stack-header { padding: 0 20px; }
+  .rec-track-wrap { padding: 0 20px; }
+  .rec-card { width: min(360px, 85vw); }
+  .rec-card-img-wrap { height: 240px; }
+  .rec-nav { padding: 0 20px; }
+  .rec-saved-bar { margin: 0 20px; }
+
+  /* Mobile: show next card peeking */
+  .rec-track-wrap { overflow: visible; }
+  .rec-card { width: min(320px, 82vw); }
+}
+
+/* Remove old timeline styles that are no longer needed */
+.timeline { display: none; }
 
 `;
 
