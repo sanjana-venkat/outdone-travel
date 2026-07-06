@@ -187,7 +187,7 @@ function App() {
   const [planFor, setPlanFor] = useState("Date");
   const [transportMode, setTransportMode] = useState("");
   const [timeRange, setTimeRange] = useState("");
-  const [selectedMoods, setSelectedMoods] = useState(["active", "romantic"]);
+  const [selectedMoods, setSelectedMoods] = useState([]);
   const [loadingLine, setLoadingLine] = useState(0);
   const [placesPhotos, setPlacesPhotos] = useState([]);
   const [itinerary, setItinerary] = useState(null);
@@ -625,8 +625,8 @@ function App() {
       {step === "setup" && (
         <main className="screen setup-screen on">
           <section className="setup-header">
-            <p className="label">First, let's get the basics.</p>
-            <h2>Let's get the easy stuff out of the way.</h2>
+            <p className="label">Step 1 of 2 - Setup</p>
+            <h2>Let's get the basics.</h2>
             <p>Where you are, when you're going, and the few constraints that actually matter.</p>
           </section>
 
@@ -700,21 +700,21 @@ function App() {
               </div>
             </div>
 
-            <div className="partnership-box">
-              {user && (
+            {user && (
+              <div className="partnership-box">
                 <div className="profile-chip">
                   <img src={user.picture} alt="" />
                   <span className="profile-chip-name">{user.name}</span>
                 </div>
-              )}
-              <p className="partnership-copy">
-                Soon, with your Google data, we might already know you're in Paris, that you're vegan, and who you're traveling with, so we can skip most of this.
-                <br /><br />
-                But one thing we probably shouldn't assume is how you <em>feel today</em>.
-              </p>
-            </div>
+                <p className="partnership-copy">
+                  Soon, with your Google data, we might already know you're in Paris, that you're vegan, and who you're traveling with, so we can skip most of this.
+                  <br /><br />
+                  But one thing we probably shouldn't assume is how you <em>feel today</em>.
+                </p>
+              </div>
+            )}
 
-            <button className="btn-accent" onClick={() => goTo("mood")}>Next up: tell us your mood →</button>
+            <button className="btn-accent" onClick={() => goTo("mood")}>Tell us your mood →</button>
           </div>
         </main>
       )}
@@ -722,16 +722,11 @@ function App() {
       {step === "mood" && (
         <main className="screen mood-screen on">
           <section className="mood-header">
-            <p className="label">Now tell us something Google can't.</p>
+            <p className="label">Step 2 of 2 - Mood</p>
             <h2>What's the <span className="gem">vibe today?</span></h2>
             <p>
-              We've all had apps assume we wanted the same thing forever because we clicked on it once months ago.
-              <br /><br />
-              Maybe yesterday you wanted museums. Today you want rooftop bars.
-              <br /><br />
-              That's why we're asking.
-              <br /><br />
-              Pick up to three moods and Gemini will use them as the lens for every recommendation it makes.
+              Maybe yesterday you wanted museums. Today you want sunsets on a beach. 
+              That's why we're asking. Pick up to three moods and Gemini will handle the rest.
             </p>
           </section>
           <section className="mood-grid image-grid">
@@ -739,6 +734,13 @@ function App() {
               <button type="button" key={vibe.id} className={selectedMoods.includes(vibe.id) ? "image-mood-tile active" : "image-mood-tile"} onClick={() => toggleMood(vibe.id)}>
                 <img src={vibe.img} alt={vibe.title} loading="lazy" />
                 <span className="tile-number">{String(index + 1).padStart(2, "0")}</span>
+                <span className={selectedMoods.includes(vibe.id) ? "tile-check active" : "tile-check"}>
+                  {selectedMoods.includes(vibe.id) && (
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                      <path d="M5 12.5L10 17.5L19 7.5" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </span>
                 <div className="image-tile-overlay" />
                 <div className="image-tile-content">
                   <strong>{vibe.title}</strong>
@@ -764,7 +766,7 @@ function App() {
           </div>
 
           <section className="build-cta-row">
-            <button className="btn-accent" onClick={generatePlan}>See today's version of your trip</button>
+            <button className="btn-accent" onClick={generatePlan}>Generate the plan</button>
           </section>
         </main>
       )}
@@ -941,7 +943,6 @@ function App() {
                 <span className="res-date-tag">{itinerary?.dates || prettyDate(date)}</span>
               </div>
               <h2 className="res-dest">{itinerary?.destination || destination}</h2>
-              <p className="res-thesis">This itinerary wasn't built around your past. It was built around who you wanted to be today.</p>
               {itinerary?.summary && (
                 <p className="res-summary">{itinerary.summary}</p>
               )}
@@ -1292,7 +1293,7 @@ button { cursor: pointer; }
 .partnership-box-inner strong { color: var(--ink-2); font-weight: 700; }
 .setup-header { margin-bottom: 32px; }
 .setup-stack { display: flex; flex-direction: column; gap: 28px; max-width: 600px; }
-.custom-activity-wrap { margin-top: 48px; max-width: 960px; }
+.custom-activity-wrap { margin-top: 48px; width: 100%; max-width: none; }
 .custom-activity-card { max-width: 100%; }
 .setup-card {
   background: #fff; border-radius: 20px; padding: 20px 24px;
@@ -1476,11 +1477,13 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .image-mood-tile:hover img, .image-mood-tile.active img { transform: scale(1.03); }
 .image-tile-overlay { position: absolute; inset: 0; background: linear-gradient(to top,rgba(0,0,0,.48),rgba(0,0,0,.04) 68%); }
 .tile-number { position: absolute; left: 16px; top: 16px; z-index: 2; font-size: 11px; letter-spacing: .1em; font-weight: 800; color: rgba(255,255,255,.45); }
+.tile-check { position: absolute; right: 16px; top: 16px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.75); background: rgba(0,0,0,.08); display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
+.tile-check.active { border-color: var(--gold-bright); background: var(--gold-bright); }
 .image-tile-content { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; }
 .image-tile-content strong { display: block; font-size: clamp(18px,1.8vw,24px); font-weight: 900; line-height: 1; letter-spacing: -.03em; color: #fff; }
 .image-tile-content p { margin: 6px 0 0; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; line-height: 1.3; }
 
-.custom-activity-wrap { margin-top: 40px; max-width: 960px; display: grid; gap: 10px; }
+.custom-activity-wrap { margin-top: 40px; width: 100%; max-width: none; display: grid; gap: 10px; }
 .custom-activity-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .custom-activity-input {
   width: 100%; background: #fff; border: none; border-radius: 20px;
