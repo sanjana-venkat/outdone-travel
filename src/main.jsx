@@ -625,7 +625,7 @@ function App() {
       {step === "setup" && (
         <main className="screen setup-screen on">
           <section className="setup-header">
-            <p className="label">Step 1 of 2 - Setup.</p>
+            <p className="label">Step 1 of 2 - Setup</p>
             <h2>Let's get the basics.</h2>
             <p>Where you are, when you're going, and the few constraints that actually matter.</p>
           </section>
@@ -722,10 +722,10 @@ function App() {
       {step === "mood" && (
         <main className="screen mood-screen on">
           <section className="mood-header">
-            <p className="label">Now tell us something Google can't.</p>
+            <p className="label">Step 2 of 2 - Mood</p>
             <h2>What's the <span className="gem">vibe today?</span></h2>
             <p>
-              We've all had apps assume we wanted the same thing forever because we clicked on it once. Maybe yesterday you wanted museums. Today you want rooftop bars. 
+              Maybe yesterday you wanted museums. Today you want sunsets on a beach. 
               That's why we're asking. Pick up to three moods and Gemini will handle the rest.
             </p>
           </section>
@@ -766,7 +766,7 @@ function App() {
           </div>
 
           <section className="build-cta-row">
-            <button className="btn-accent" onClick={generatePlan}>See today's version of your trip</button>
+            <button className="btn-accent" onClick={generatePlan}>Generate the plan</button>
           </section>
         </main>
       )}
