@@ -187,7 +187,7 @@ function App() {
   const [planFor, setPlanFor] = useState("Date");
   const [transportMode, setTransportMode] = useState("");
   const [timeRange, setTimeRange] = useState("");
-  const [selectedMoods, setSelectedMoods] = useState(["active", "romantic"]);
+  const [selectedMoods, setSelectedMoods] = useState([]);
   const [loadingLine, setLoadingLine] = useState(0);
   const [placesPhotos, setPlacesPhotos] = useState([]);
   const [itinerary, setItinerary] = useState(null);
@@ -734,6 +734,13 @@ function App() {
               <button type="button" key={vibe.id} className={selectedMoods.includes(vibe.id) ? "image-mood-tile active" : "image-mood-tile"} onClick={() => toggleMood(vibe.id)}>
                 <img src={vibe.img} alt={vibe.title} loading="lazy" />
                 <span className="tile-number">{String(index + 1).padStart(2, "0")}</span>
+                <span className={selectedMoods.includes(vibe.id) ? "tile-check active" : "tile-check"}>
+                  {selectedMoods.includes(vibe.id) && (
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                      <path d="M5 12.5L10 17.5L19 7.5" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </span>
                 <div className="image-tile-overlay" />
                 <div className="image-tile-content">
                   <strong>{vibe.title}</strong>
@@ -1470,6 +1477,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .image-mood-tile:hover img, .image-mood-tile.active img { transform: scale(1.03); }
 .image-tile-overlay { position: absolute; inset: 0; background: linear-gradient(to top,rgba(0,0,0,.48),rgba(0,0,0,.04) 68%); }
 .tile-number { position: absolute; left: 16px; top: 16px; z-index: 2; font-size: 11px; letter-spacing: .1em; font-weight: 800; color: rgba(255,255,255,.45); }
+.tile-check { position: absolute; right: 16px; top: 16px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.75); background: rgba(0,0,0,.08); display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
+.tile-check.active { border-color: var(--gold-bright); background: var(--gold-bright); }
 .image-tile-content { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; }
 .image-tile-content strong { display: block; font-size: clamp(18px,1.8vw,24px); font-weight: 900; line-height: 1; letter-spacing: -.03em; color: #fff; }
 .image-tile-content p { margin: 6px 0 0; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; line-height: 1.3; }
