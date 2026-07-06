@@ -725,8 +725,8 @@ function App() {
             <p className="label">Step 2 of 2 - Mood</p>
             <h2>What's the <span className="gem">vibe today?</span></h2>
             <p>
-              Maybe yesterday you wanted museums. Today you want sunsets on a beach. 
-              That's why we're asking. Pick up to three moods and Gemini will handle the rest.
+              Maybe yesterday you wanted museums. Today you want beach sunsets. 
+              That's why we're asking. Pick up to three moods and we'll do the magic.
             </p>
           </section>
           <section className="mood-grid image-grid">
