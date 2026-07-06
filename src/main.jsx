@@ -567,7 +567,7 @@ function App() {
             <div className="lp-card-left">
               <div className="lp-right-text">
                 <p className="lp-eyebrow">Powered by Gemini ✦</p>
-                <h1 className="lp-h1">Plan your day<br/><span className="lp-accent">in seconds.</span></h1>
+                <h1 className="lp-h1">Plan<br/><span className="lp-accent">in seconds.</span></h1>
                 <p className="lp-sub"> Just tell us your trip details and your vibe, and get curated recommendations</p>
               </div>
 
