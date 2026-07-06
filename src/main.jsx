@@ -31,6 +31,13 @@ function getTravelArchetype(moods = []) {
   return { name: "The Mood-Led Traveler", line: "You know what you want today — and you're building a day around exactly that feeling." };
 }
 
+function priceLabel(p) {
+  if (p == null) return null;
+  if (typeof p === "number") return p > 0 ? "$".repeat(Math.min(4, p)) : null;
+  const map = { PRICE_LEVEL_INEXPENSIVE: "$", PRICE_LEVEL_MODERATE: "$$", PRICE_LEVEL_EXPENSIVE: "$$$", PRICE_LEVEL_VERY_EXPENSIVE: "$$$$" };
+  return map[p] || null;
+}
+
 function buildGoogleMapsTripUrl(stops = [], travelMode = "walking") {
   const names = stops.map((stop) => stop.googlePlaceName || stop.name || stop.photoQuery).filter(Boolean).slice(0, 10);
   if (!names.length) return "";
@@ -181,12 +188,13 @@ function App() {
   const [destination, setDestination] = useState("Paris");
   const [placePredictions, setPlacePredictions] = useState([]);
   const [isAutocompleting, setIsAutocompleting] = useState(false);
+  const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
   const [date, setDate] = useState(getToday());
   const [diet, setDiet] = useState("Vegetarian");
   const [planFor, setPlanFor] = useState("Date");
   const [transportMode, setTransportMode] = useState("");
   const [timeRange, setTimeRange] = useState("");
-  const [selectedMoods, setSelectedMoods] = useState(["active", "romantic"]);
+  const [selectedMoods, setSelectedMoods] = useState([]);
   const [loadingLine, setLoadingLine] = useState(0);
   const [placesPhotos, setPlacesPhotos] = useState([]);
   const [itinerary, setItinerary] = useState(null);
@@ -202,7 +210,7 @@ function App() {
   const [customActivity, setCustomActivity] = useState("");
   const [cardIndex, setCardIndex] = useState(0);
   const [savedCards, setSavedCards] = useState(new Set());
-  const [loginSlide, setLoginSlide] = useState(0);
+  const [swipeDir, setSwipeDir] = useState(1);
   const shellRef = useRef(null);
 
   function goTo(s) {
@@ -253,14 +261,6 @@ function App() {
     };
     window.addEventListener("pointermove", moveGlow);
     return () => { window.removeEventListener("pointermove", moveGlow); if (rafId) cancelAnimationFrame(rafId); };
-  }, []);
-
-  // Login background cycling through mood images
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLoginSlide(i => (i + 1) % moodVibes.length);
-    }, 3500);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -329,12 +329,12 @@ function App() {
 
   const loadingItems = useMemo(() => [
     user?.name ? `${user.name}'s lightweight profile` : "Quick feeler profile",
-    "Today's mood signals",
-    "Dietary preferences",
-    "Destination context",
-    "Google Places candidates",
-    "Real place photos and ratings",
-    "Gemini itinerary generation"
+    "Understanding today's intent",
+    "Keeping your real constraints in mind",
+    "Reading the destination context",
+    "Looking for places that match today's mood",
+    "Pulling real place photos and ratings",
+    "Asking Gemini to think like today's version of you"
   ], [user]);
 
   function toggleMood(id) {
@@ -489,7 +489,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell${step === "login" ? " login-active" : ""}`} ref={shellRef}>
+    <div className={`app-shell${step === "login" ? " login-active" : ""}${step === "result" ? " result-active" : ""}`} ref={shellRef}>
       <style>{css}</style>
 
       <nav className="navbar">
@@ -571,7 +571,7 @@ function App() {
       {step === "login" && (
         <div className="lp-shell">
           <div className="lp-bg-outer">
-            <img src={moodVibes[loginSlide].img} alt="" className="lp-bg-outer-img lp-bg-cycling" key={loginSlide} />
+            <img src="https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
             <div className="lp-bg-outer-dim" />
           </div>
 
@@ -579,8 +579,8 @@ function App() {
             <div className="lp-card-left">
               <div className="lp-right-text">
                 <p className="lp-eyebrow">Powered by Gemini ✦</p>
-                <h1 className="lp-h1">Plan <span className="lp-accent lp-accent-sm">in seconds.</span></h1>
-                <p className="lp-sub">Tell us how you feel — we build your entire day around it. Mood-first, always.</p>
+                <h1 className="lp-h1">Plan<br/><span className="lp-accent">in seconds.</span></h1>
+                <p className="lp-sub"> Just tell us your trip details and your vibe, and get curated recommendations</p>
               </div>
 
               <div className="lp-actions">
@@ -615,17 +615,19 @@ function App() {
 
             <div className="lp-card-right">
               <div className="lp-panel-overlay" />
-              <div className="lp-panel-itin" key={loginSlide}>
-                {[
-                  { time: "08:30", label: moodVibes[loginSlide].tag.split(",")[0].trim() },
-                  { time: "13:00", label: moodVibes[(loginSlide+1)%moodVibes.length].tag.split(",")[0].trim() },
-                  { time: "18:30", label: moodVibes[(loginSlide+2)%moodVibes.length].tag.split(",")[0].trim() },
-                ].map((line, i) => (
-                  <div key={i} className={`lp-itin-line lp-itin-${i+1}`}>
-                    <span className="lp-itin-time">{line.time}</span>
-                    <span className="lp-itin-label">{line.label}</span>
-                  </div>
-                ))}
+              <div className="lp-panel-itin">
+                <div className="lp-itin-line lp-itin-1">
+                  <span className="lp-itin-time">08:30</span>
+                  <span className="lp-itin-label">Quiet temple morning</span>
+                </div>
+                <div className="lp-itin-line lp-itin-2">
+                  <span className="lp-itin-time">12:00</span>
+                  <span className="lp-itin-label">Vegetarian lunch nearby</span>
+                </div>
+                <div className="lp-itin-line lp-itin-3">
+                  <span className="lp-itin-time">17:30</span>
+                  <span className="lp-itin-label">Golden-hour walk</span>
+                </div>
               </div>
             </div>
           </div>
@@ -634,18 +636,10 @@ function App() {
 
       {step === "setup" && (
         <main className="screen setup-screen on">
-          <div className="partnership-box">
-            {user && <div className="profile-chip"><img src={user.picture} alt="" />{user.name}</div>}
-            <div className="partnership-box-inner">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,marginTop:1}}><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-              <span><strong>We don't have your search history or past trips yet</strong> — so we need to ask. A Google partnership would let us skip this entirely. For now, a few quick questions and Gemini handles the rest.</span>
-            </div>
-          </div>
-
           <section className="setup-header">
-            <p className="label">Step 1 / 2</p>
-            <h2>Set the plan.</h2>
-            <p>Tell us where, when, and what constraints matter.</p>
+            <p className="label">Step 1 of 2 - Setup</p>
+            <h2>Let's get the basics.</h2>
+            <p>Where you are, when you're going, and the few constraints that actually matter.</p>
           </section>
 
           <div className="setup-stack">
@@ -653,12 +647,18 @@ function App() {
               <span className="setup-card-label">WHERE</span>
               <input
                 value={destination}
-                onChange={(e) => setDestination(e.target.value)}
+                onChange={(e) => {
+                  setDestination(e.target.value);
+                  setShowDestinationSuggestions(true);
+                }}
+                onFocus={() => {
+                  if (destination.trim().length >= 2) setShowDestinationSuggestions(true);
+                }}
                 placeholder="City, neighborhood, or place"
                 autoComplete="off"
                 className="setup-card-input"
               />
-              {destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
+              {showDestinationSuggestions && destination.trim().length >= 2 && destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
                 <div className="setup-suggestions">
                   {destinationOptions.map((item) => (
                     <button
@@ -666,7 +666,7 @@ function App() {
                       key={item.placeId || item.label}
                       className="setup-sug"
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { setDestination(item.label); setPlacePredictions([]); }}
+                      onClick={() => { setDestination(item.label); setPlacePredictions([]); setShowDestinationSuggestions(false); }}
                     >
                       {item.label}
                     </button>
@@ -712,7 +712,21 @@ function App() {
               </div>
             </div>
 
-            <button className="btn-accent" onClick={() => goTo("mood")}>Choose today's mood →</button>
+            {user && (
+              <div className="partnership-box">
+                <div className="profile-chip">
+                  <img src={user.picture} alt="" />
+                  <span className="profile-chip-name">{user.name}</span>
+                </div>
+                <p className="partnership-copy">
+                  Soon, with your Google data, we might already know you're in Paris, that you're vegan, and who you're traveling with, so we can skip most of this.
+                  <br /><br />
+                  But one thing we probably shouldn't assume is how you <em>feel today</em>.
+                </p>
+              </div>
+            )}
+
+            <button className="btn-accent" onClick={() => goTo("mood")}>Next, your vibe →</button>
           </div>
         </main>
       )}
@@ -720,15 +734,25 @@ function App() {
       {step === "mood" && (
         <main className="screen mood-screen on">
           <section className="mood-header">
-            <p className="label">Step 2 / 2 · Choose up to 3</p>
-            <h2>What's your <span className="gem">vibe?</span></h2>
-            <p>This one input reshapes your entire day. It's the variable Gemini can't infer from data alone.</p>
+            <p className="label">Step 2 of 2 - Mood</p>
+            <h2>What's the <span className="gem">vibe today?</span></h2>
+            <p>
+              Maybe yesterday you wanted museums. Today you want beach sunsets. 
+              That's why we're asking. Pick up to three moods and we'll do the magic.
+            </p>
           </section>
           <section className="mood-grid image-grid">
             {moodVibes.map((vibe, index) => (
               <button type="button" key={vibe.id} className={selectedMoods.includes(vibe.id) ? "image-mood-tile active" : "image-mood-tile"} onClick={() => toggleMood(vibe.id)}>
                 <img src={vibe.img} alt={vibe.title} loading="lazy" />
                 <span className="tile-number">{String(index + 1).padStart(2, "0")}</span>
+                <span className={selectedMoods.includes(vibe.id) ? "tile-check active" : "tile-check"}>
+                  {selectedMoods.includes(vibe.id) && (
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                      <path d="M5 12.5L10 17.5L19 7.5" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </span>
                 <div className="image-tile-overlay" />
                 <div className="image-tile-content">
                   <strong>{vibe.title}</strong>
@@ -754,7 +778,7 @@ function App() {
           </div>
 
           <section className="build-cta-row">
-            <button className="btn-accent" onClick={generatePlan}>Build itinerary</button>
+            <button className="btn-accent" onClick={generatePlan}>Generate the plan</button>
           </section>
         </main>
       )}
@@ -762,7 +786,7 @@ function App() {
       {step === "loading" && (
         <main className="loading-screen on">
           <div className="loader-head">
-            <h2 className="loader-headline">Decoding your <span className="gem">Travel DNA</span></h2>
+            <h2 className="loader-headline">Building around <span className="gem">today's version of you</span></h2>
             <p className="loader-sub">{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
           </div>
           <div className="loader-stage">
@@ -918,44 +942,22 @@ function App() {
       )}
 
       {step === "result" && (
-        <main className="result-screen on">
-          <section className="res-hero">
-            <img
-              className="res-bg-img"
-              src={itinerary?.heroImageUrl || selectedMoodObjects[0]?.img || moodVibes[0].img}
-              alt=""
-            />
-            <div className="res-glass-panel">
-              <div className="res-glass-top">
-                <p className="archetype-line">{travelArchetype.line}</p>
-                <span className="res-date-tag">{itinerary?.dates || prettyDate(date)}</span>
-              </div>
-              <h2 className="res-dest">{itinerary?.destination || destination}</h2>
-              {itinerary?.summary && (
-                <p className="res-summary">{itinerary.summary}</p>
-              )}
-              {itinerary?.generatedBy === "fallback" && (
-                <div className="fallback-banner">
-                  <span>Preview mode</span>
-                  <p>Live planning is temporarily capped, so Travel DNA is showing a designed preview while place details continue to enrich.</p>
-                  <button type="button" onClick={() => setShowSubscribe(true)}>Like this idea? Get updates</button>
-                </div>
-              )}
+        <main className="rec-screen on">
+          {/* ── HEADER ROW ── */}
+          <header className="rec-head">
+            <div className="rec-head-left">
+              <p className="rec-head-eyebrow">{itinerary?.dates || prettyDate(date)} · {savedCards.size > 0 ? `${savedCards.size} saved` : "Your picks"}</p>
+              <h2 className="rec-head-dest">{itinerary?.destination || destination}</h2>
             </div>
-          </section>
-
-          <section className="action-bar">
-            <div className="action-icons-row">
-              <button className="icon-btn" onClick={() => goTo("setup")} title="Edit setup">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span>Edit</span>
+            <div className="rec-head-actions">
+              <button className="icon-btn-sm" onClick={() => goTo("setup")} title="Edit setup">
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
-              <button className="icon-btn" onClick={generatePlan} title="Regenerate">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0110.5-4M15 9a6 6 0 01-10.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M13 5h2.5V2.5M5 13H2.5V15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span>Redo</span>
+              <button className="icon-btn-sm" onClick={generatePlan} title="Regenerate">
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0110.5-4M15 9a6 6 0 01-10.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M13 5h2.5V2.5M5 13H2.5V15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <button
-                className={`icon-btn${shareCopied ? " icon-btn-active" : ""}${shareLoading ? " icon-btn-loading" : ""}`}
+                className={`icon-btn-sm${shareCopied ? " icon-btn-sm-active" : ""}`}
                 disabled={shareLoading}
                 onClick={async () => {
                   if (shareLoading) return;
@@ -979,126 +981,128 @@ function App() {
                   } catch (e) { console.error("Share failed:", e); }
                   finally { setShareLoading(false); }
                 }}
-                title="Share itinerary"
+                title="Share"
               >
-                {shareLoading ? (
-                  <svg className="cal-spin" width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round"/></svg>
-                ) : shareCopied ? (
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="13" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="13" cy="14.5" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="5" cy="9" r="2" stroke="currentColor" strokeWidth="1.5"/><line x1="11.1" y1="4.6" x2="6.9" y2="7.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><line x1="6.9" y1="10.1" x2="11.1" y2="13.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                )}
-                <span>{shareLoading ? "Saving…" : shareCopied ? "Copied!" : "Share"}</span>
+                {shareCopied
+                  ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="13" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="13" cy="14.5" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="5" cy="9" r="2" stroke="currentColor" strokeWidth="1.5"/><line x1="11.1" y1="4.6" x2="6.9" y2="7.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><line x1="6.9" y1="10.1" x2="11.1" y2="13.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>}
               </button>
-              <button
-                className={`icon-btn cal-icon-btn-${calendarState}`}
-                onClick={addToCalendar}
-                disabled={calendarState === "loading"}
-                title={user ? "Add to Google Calendar" : "Download .ics"}
-              >
-                {calendarState === "loading" && <svg className="cal-spin" width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round"/></svg>}
-                {calendarState === "done"    && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                {calendarState === "error"   && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 6v4M9 12v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5"/></svg>}
-                {calendarState === "idle"    && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M2 8h14" stroke="currentColor" strokeWidth="1.5"/><path d="M6 1.5v3M12 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-                <span>
-                  {calendarState === "loading" ? "Adding…" :
-                   calendarState === "done"    ? (user ? "Added!" : "Saved!") :
-                   calendarState === "error"   ? "Failed" : "Calendar"}
-                </span>
+              <button className={`icon-btn-sm cal-icon-btn-${calendarState}`} onClick={addToCalendar} disabled={calendarState === "loading"} title={user ? "Add to Google Calendar" : "Download .ics"}>
+                {calendarState === "loading" ? <svg className="cal-spin" width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round"/></svg>
+                : calendarState === "done" ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M2 8h14" stroke="currentColor" strokeWidth="1.5"/><path d="M6 1.5v3M12 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>}
               </button>
+              {tripMapsUrl && (
+                <a className="rec-maps-cta" href={tripMapsUrl} target="_blank" rel="noreferrer">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+                  Maps
+                </a>
+              )}
             </div>
+          </header>
 
-          </section>
-
-          {/* ── RECOMMENDATION CARD STACK ── */}
-          <section className="rec-stack-section">
-            <div className="rec-stack-header">
-              <p className="label">Your picks for today</p>
-              <span className="rec-counter">{cardIndex + 1} / {(itinerary?.stops || []).length}</span>
-            </div>
-
-            <div className="rec-track-wrap">
-              <div
-                className="rec-track"
-                style={{transform: `translateX(calc(-${cardIndex} * (min(520px,90vw) + 20px)))`}}
-                onTouchStart={e => { e._startX = e.touches[0].clientX; }}
-                onTouchEnd={e => {
-                  const dx = e.changedTouches[0].clientX - (e._startX || e.changedTouches[0].clientX);
-                  if (dx < -50) setCardIndex(i => Math.min((itinerary?.stops||[]).length-1, i+1));
-                  if (dx > 50) setCardIndex(i => Math.max(0, i-1));
-                }}
-              >
-                {(itinerary?.stops || []).map((stop, i) => {
-                  const img = stop.imageUrl || stop.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length,1)]?.img || moodVibes[i % moodVibes.length].img;
-                  const isSaved = savedCards.has(i);
-                  const isActive = i === cardIndex;
-                  return (
-                    <div key={`${stop.name}-${i}`} className={`rec-card${isActive ? " rec-card-active" : ""}${i < cardIndex ? " rec-card-past" : ""}`}>
-                      {/* Full-bleed image */}
-                      <div className="rec-card-img-wrap">
-                        <img src={img} alt={stop.name} />
-                        <div className="rec-card-img-ov" />
-                        {/* Heart button */}
-                        <button
-                          className={`rec-heart${isSaved ? " rec-heart-saved" : ""}`}
-                          onClick={() => setSavedCards(s => { const n = new Set(s); isSaved ? n.delete(i) : n.add(i); return n; })}
-                          aria-label={isSaved ? "Remove" : "Save"}
-                        >
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                          </svg>
-                        </button>
-                        {/* Category tag */}
-                        <span className="rec-card-tag">{stop.category}</span>
-                      </div>
-
-                      {/* Card content */}
-                      <div className="rec-card-body">
-                        <div className="rec-card-meta">
-                          <span className="rec-card-time">{stop.time}</span>
-                          {stop.rating && <span className="rec-card-rating">★ {stop.rating}</span>}
-                          {stop.openNow !== undefined && <span className="rec-card-open">{stop.openNow ? "Open" : "Check hours"}</span>}
-                        </div>
-                        <h3 className="rec-card-name">{stop.name}</h3>
-                        <p className="rec-card-desc">{stop.description}</p>
-                        {stop.address && (
-                          <a className="rec-card-addr" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`} target="_blank" rel="noreferrer">
-                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
-                            {stop.address}
-                          </a>
-                        )}
-                      </div>
+          {/* ── SPLIT: image left, card stack right ── */}
+          <div className="rec-split">
+            {(() => {
+              const stops = itinerary?.stops || [];
+              const stop = stops[cardIndex] || {};
+              const imgOf = (s, i) => s.imageUrl || s.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length,1)]?.img || moodVibes[i % moodVibes.length].img;
+              return (
+                <>
+                  {/* LEFT: photo pane (desktop) */}
+                  <div className="rec-photo">
+                    <img key={cardIndex} src={imgOf(stop, cardIndex)} alt={stop.name || ""} className="rec-photo-img" />
+                    <div className="rec-photo-ov" />
+                    <div className="rec-photo-meta">
+                      <span className="rec-photo-count">{String(cardIndex+1).padStart(2,"0")} / {String(stops.length).padStart(2,"0")}</span>
+                      <span className="rec-photo-name">{stop.googlePlaceName || stop.name}</span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  </div>
 
-            {/* Navigation dots + arrows */}
-            <div className="rec-nav">
-              <button className="rec-arrow rec-arrow-prev" onClick={() => setCardIndex(i => Math.max(0, i-1))} disabled={cardIndex === 0}>
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              <div className="rec-dots">
-                {(itinerary?.stops || []).map((_,i) => (
-                  <button key={i} className={`rec-dot${i === cardIndex ? " rec-dot-active" : ""}${savedCards.has(i) ? " rec-dot-saved" : ""}`} onClick={() => setCardIndex(i)} />
-                ))}
-              </div>
-              <button className="rec-arrow rec-arrow-next" onClick={() => setCardIndex(i => Math.min((itinerary?.stops||[]).length-1, i+1))} disabled={cardIndex === (itinerary?.stops||[]).length-1}>
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 4l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-            </div>
+                  {/* RIGHT: card stack */}
+                  <div
+                    className="rec-stack"
+                    onTouchStart={e => { window._recX = e.touches[0].clientX; }}
+                    onTouchEnd={e => {
+                      const dx = e.changedTouches[0].clientX - (window._recX ?? e.changedTouches[0].clientX);
+                      if (dx < -48) { setSwipeDir(1); setCardIndex(i => Math.min(stops.length-1, i+1)); }
+                      if (dx > 48)  { setSwipeDir(-1); setCardIndex(i => Math.max(0, i-1)); }
+                    }}
+                  >
+                    {stops.map((s, i) => {
+                      const off = i - cardIndex;
+                      if (off < -1 || off > 2) return null;
+                      const isSaved = savedCards.has(i);
+                      const price = priceLabel(s.priceLevel);
+                      return (
+                        <article
+                          key={`${s.name}-${i}`}
+                          className={`rec-card${off === 0 ? " rec-card-front" : ""}${off < 0 ? " rec-card-gone" : ""}`}
+                          style={off > 0 ? {
+                            transform: `translateX(${off * 26}px) scale(${1 - off * .055}) rotate(${off * 1.4}deg)`,
+                            zIndex: 10 - off,
+                            opacity: 1 - off * .25,
+                          } : off === 0 ? { zIndex: 12 } : {
+                            transform: `translateX(${swipeDir < 0 ? "" : "-"}115%) rotate(${swipeDir < 0 ? 8 : -8}deg)`,
+                            opacity: 0,
+                            zIndex: 14,
+                          }}
+                        >
+                          {/* In-card image (mobile only via CSS) */}
+                          <div className="rec-card-img">
+                            <img src={imgOf(s, i)} alt="" loading="lazy" />
+                            <div className="rec-card-img-ov" />
+                          </div>
 
-            {/* Saved picks summary */}
-            {savedCards.size > 0 && (
-              <div className="rec-saved-bar">
-                <span>❤ {savedCards.size} place{savedCards.size > 1 ? "s" : ""} saved</span>
-                {tripMapsUrl && (
-                  <a className="rec-maps-btn" href={tripMapsUrl} target="_blank" rel="noreferrer">Open in Maps →</a>
-                )}
-              </div>
-            )}
-          </section>
+                          <button
+                            className={`rec-heart${isSaved ? " rec-heart-on" : ""}`}
+                            onClick={() => setSavedCards(prev => { const n = new Set(prev); isSaved ? n.delete(i) : n.add(i); return n; })}
+                            aria-label={isSaved ? "Unsave" : "Save"}
+                          >
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                          </button>
+
+                          <div className="rec-card-inner">
+                            <p className="rec-card-cat">{s.category}</p>
+                            <div className="rec-card-timerow">
+                              <span className="rec-card-time">{s.time}</span>
+                              {s.rating && <span className="rec-card-pill rec-pill-rating">★ {s.rating}</span>}
+                              {price && <span className="rec-card-pill rec-pill-price">{price}</span>}
+                              {s.openNow !== undefined && <span className="rec-card-pill">{s.openNow ? "Open" : "Check hours"}</span>}
+                            </div>
+                            <h3 className="rec-card-name">{s.name}</h3>
+                            <p className="rec-card-desc">{s.description}</p>
+                            {s.address && (
+                              <a className="rec-card-addr" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`} target="_blank" rel="noreferrer">
+                                <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+                                {s.address}
+                              </a>
+                            )}
+                            {s.routeFromPrevious && <small className="rec-card-route">{s.routeFromPrevious}</small>}
+                          </div>
+                        </article>
+                      );
+                    })}
+
+                    {/* Nav row */}
+                    <div className="rec-nav">
+                      <button className="rec-arrow" onClick={() => { setSwipeDir(-1); setCardIndex(i => Math.max(0, i-1)); }} disabled={cardIndex === 0}>
+                        <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                      <div className="rec-dots">
+                        {stops.map((_, i) => (
+                          <button key={i} className={`rec-dot${i === cardIndex ? " rec-dot-on" : ""}${savedCards.has(i) ? " rec-dot-heart" : ""}`} onClick={() => { setSwipeDir(i > cardIndex ? 1 : -1); setCardIndex(i); }} />
+                        ))}
+                      </div>
+                      <button className="rec-arrow" onClick={() => { setSwipeDir(1); setCardIndex(i => Math.min(stops.length-1, i+1)); }} disabled={cardIndex === stops.length-1}>
+                        <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M7 4l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
         </main>
       )}
 
@@ -1333,7 +1337,7 @@ button { cursor: pointer; }
 .partnership-box-inner strong { color: var(--ink-2); font-weight: 700; }
 .setup-header { margin-bottom: 32px; }
 .setup-stack { display: flex; flex-direction: column; gap: 28px; max-width: 600px; }
-.custom-activity-wrap { margin-top: 48px; max-width: 960px; }
+.custom-activity-wrap { margin-top: 48px; width: 100%; max-width: none; }
 .custom-activity-card { max-width: 100%; }
 .setup-card {
   background: #fff; border-radius: 20px; padding: 20px 24px;
@@ -1517,11 +1521,13 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .image-mood-tile:hover img, .image-mood-tile.active img { transform: scale(1.03); }
 .image-tile-overlay { position: absolute; inset: 0; background: linear-gradient(to top,rgba(0,0,0,.48),rgba(0,0,0,.04) 68%); }
 .tile-number { position: absolute; left: 16px; top: 16px; z-index: 2; font-size: 11px; letter-spacing: .1em; font-weight: 800; color: rgba(255,255,255,.45); }
+.tile-check { position: absolute; right: 16px; top: 16px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.75); background: rgba(0,0,0,.08); display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
+.tile-check.active { border-color: var(--gold-bright); background: var(--gold-bright); }
 .image-tile-content { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; }
 .image-tile-content strong { display: block; font-size: clamp(18px,1.8vw,24px); font-weight: 900; line-height: 1; letter-spacing: -.03em; color: #fff; }
 .image-tile-content p { margin: 6px 0 0; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; line-height: 1.3; }
 
-.custom-activity-wrap { margin-top: 40px; max-width: 960px; display: grid; gap: 10px; }
+.custom-activity-wrap { margin-top: 40px; width: 100%; max-width: none; display: grid; gap: 10px; }
 .custom-activity-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .custom-activity-input {
   width: 100%; background: #fff; border: none; border-radius: 20px;
@@ -2868,168 +2874,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 @media (max-width: 760px) and (max-height: 760px) {
   .lp-card-left {
-    padding: 22px 24px max(22px, env(safe-area-inset-bottom)) !important;
-  }
-
-  .lp-panel-itin {
-    left: 20px !important;
-    right: 20px !important;
-    bottom: 18px !important;
-    gap: 10px !important;
-  }
-
-  .lp-itin-line {
-    min-height: 52px !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    height: 52px !important;
-  }
-}
-
-
-/* ===== MOBILE EDGE FIX: remove inner vertical line + add bottom breathing room ===== */
-@media (max-width: 760px) {
-  .lp-card-right,
-  .lp-card-right *,
-  .lp-panel,
-  .lp-panel *,
-  .lp-panel-image,
-  .lp-panel-image *,
-  .lp-image,
-  .lp-image *,
-  .lp-bg,
-  .lp-bg * {
-    border-left: 0 !important;
-    border-right: 0 !important;
-    border-inline-start: 0 !important;
-    border-inline-end: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after,
-  .lp-image::before,
-  .lp-image::after,
-  .lp-bg::before,
-  .lp-bg::after {
-    display: none !important;
-    content: none !important;
-    border: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-  }
-
-  .lp-card {
-    border: 3px solid #ffffff !important;
-    border-radius: 42px 42px 0 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    overflow: hidden !important;
-  }
-
-  /* Give the white content tile enough bottom breathing room */
-  .lp-card-left {
-    padding: 28px 28px max(48px, calc(32px + env(safe-area-inset-bottom, 20px))) 28px !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-actions {
-    margin-bottom: 0 !important;
-  }
-
-  /* Show our plain styled button, hide the iframe wrapper */
-  .lp-google-btn-mobile {
-    display: flex !important;
-  }
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  /* Fake content sits inside the wrap in normal flow — can't be clipped out */
-  .lp-google-fake {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 10px !important;
-    width: 100% !important;
-    pointer-events: none !important;
-    position: relative !important;
-    z-index: 1 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  /* SVG and text inside fake must also be visible */
-  .lp-google-fake svg,
-  .lp-google-fake span {
-    opacity: 1 !important;
-    visibility: visible !important;
-    display: block !important;
-  }
-
-  .lp-google-fake span {
-    display: inline !important;
-  }
-
-  .lp-google-fake span {
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    color: #3c4043 !important;
-    letter-spacing: .25px !important;
-  }
-
-  /* Real iframe: absolutely covers the whole wrap, invisible but clickable */
-  .lp-google-real,
-  #googleSignIn {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    opacity: 0 !important;
-    z-index: 2 !important;
-  }
-
-  .lp-google-real > div,
-  #googleSignIn > div {
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-  .lp-google-real iframe,
-  #googleSignIn iframe {
-    width: 100% !important;
-    height: 100% !important;
-    cursor: pointer !important;
-  }
-
-  .lp-shell {
-    padding-bottom: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .lp-card {
-    height: calc(100dvh - 46px) !important;
-  }
-
-
-}
-
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-card-left {
     padding: 22px 24px calc(44px + env(safe-area-inset-bottom)) 24px !important;
   }
 
@@ -3042,302 +2886,344 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 }
 
-/* ── LOGIN: cycling background ── */
-.lp-accent-sm {
-  font-size: clamp(20px, 2.2vw, 32px) !important;
-  display: inline !important;
-}
-.lp-bg-cycling {
-  animation: bgFadeIn .8s ease both, bgKenBurns 4s ease-in-out forwards !important;
-}
-@keyframes bgFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes bgKenBurns {
-  from { transform: scale(1.02); }
-  to   { transform: scale(1.08); }
+
+/* ===== PROFILE CARD: simple translucent profile note ===== */
+.setup-stack .partnership-box {
+  max-width: 100% !important;
+  margin: 6px 0 0 !important;
+  padding: 20px 22px !important;
+  border-radius: 24px !important;
+  background: rgba(255,255,255,.52) !important;
+  border: 1px solid rgba(0,0,0,.08) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.035) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 16px !important;
 }
 
-/* ── RECOMMENDATION CARD STACK ── */
-.rec-stack-section {
+.setup-stack .profile-chip {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.setup-stack .profile-chip img {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 12px !important;
+  object-fit: cover !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.8), 0 6px 18px rgba(0,0,0,.08) !important;
+}
+
+.setup-stack .profile-chip-name {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.03em !important;
+  color: var(--ink) !important;
+  white-space: nowrap !important;
+}
+
+.setup-stack .partnership-copy {
+  margin: 0 !important;
+  max-width: 540px !important;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+  color: var(--ink-2) !important;
+  font-weight: 500 !important;
+  letter-spacing: -.015em !important;
+}
+
+.setup-stack .partnership-copy em {
+  font-family: 'DM Serif Display', Georgia, serif !important;
+  font-style: italic !important;
+  color: var(--ink) !important;
+  font-weight: 400 !important;
+}
+
+@media (max-width: 760px) {
+  .setup-stack .partnership-box {
+    padding: 18px 18px !important;
+    border-radius: 20px !important;
+    gap: 14px !important;
+  }
+  .setup-stack .profile-chip img {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 11px !important;
+  }
+  .setup-stack .profile-chip-name {
+    font-size: 14px !important;
+  }
+  .setup-stack .partnership-copy {
+    font-size: 13.5px !important;
+    line-height: 1.5 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   RECOMMENDATION SCREEN — one viewport, no scroll
+   Anime.js-inspired springs: cubic-bezier(.34,1.56,.64,1)
+═══════════════════════════════════════════ */
+.result-active {
+  height: 100dvh !important;
+  overflow: hidden !important;
+  padding-bottom: 0 !important;
+}
+
+.rec-screen {
   width: 100%;
-  padding: 0 0 48px;
+  max-width: 1440px;
+  height: calc(100dvh - 68px);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  padding: 8px clamp(20px,4vw,56px) 20px;
+  overflow: hidden;
+  animation: scIn .3s var(--ease) both;
 }
 
-.rec-stack-header {
+/* Header */
+.rec-head {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  padding: 0 clamp(28px,6vw,80px);
-}
-
-.rec-counter {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--ink-3);
-  letter-spacing: .04em;
-}
-
-/* Track: horizontally scrolling cards */
-.rec-track-wrap {
-  overflow: hidden;
-  padding: 0 clamp(28px,6vw,80px);
-  cursor: grab;
-  user-select: none;
-}
-.rec-track-wrap:active { cursor: grabbing; }
-
-.rec-track {
-  display: flex;
-  gap: 20px;
-  transition: transform .45s cubic-bezier(.2,.8,.2,1);
-  will-change: transform;
-}
-
-/* Individual card */
-.rec-card {
+  gap: 16px;
+  padding-bottom: 14px;
   flex-shrink: 0;
-  width: min(520px, 90vw);
-  border-radius: 24px;
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  box-shadow: 0 4px 24px rgba(0,0,0,.08);
-  transition: transform .3s var(--ease), box-shadow .3s var(--ease), opacity .3s;
-  opacity: .5;
-  transform: scale(.97);
 }
-.rec-card.rec-card-active {
-  opacity: 1;
-  transform: scale(1);
-  box-shadow: 0 12px 40px rgba(0,0,0,.14);
+.rec-head-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0 0 4px;
 }
-.rec-card.rec-card-past {
-  opacity: .35;
-  transform: scale(.95);
+.rec-head-dest {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(26px, 3.2vw, 44px);
+  font-weight: 400; line-height: 1; letter-spacing: -.02em;
+  color: var(--ink); margin: 0;
+}
+.rec-head-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.icon-btn-sm {
+  width: 38px; height: 38px; border-radius: 12px;
+  border: 1.5px solid var(--line-strong); background: transparent;
+  color: var(--ink-2); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s;
+}
+.icon-btn-sm:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); background: var(--surface); }
+.icon-btn-sm:disabled { opacity: .4; cursor: wait; }
+.icon-btn-sm-active { border-color: var(--accent) !important; color: var(--accent) !important; }
+.cal-icon-btn-done { border-color: var(--accent) !important; color: var(--accent) !important; }
+.rec-maps-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 38px; padding: 0 16px; border-radius: 12px;
+  background: var(--ink); color: #fff; font-size: 13px; font-weight: 700;
+  text-decoration: none; transition: opacity .15s;
+}
+.rec-maps-cta:hover { opacity: .85; }
+
+/* Split layout */
+.rec-split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(380px, 1fr);
+  gap: clamp(20px, 3vw, 40px);
+  align-items: stretch;
 }
 
-/* Card image — tall hero */
-.rec-card-img-wrap {
+/* LEFT photo pane */
+.rec-photo {
   position: relative;
-  width: 100%;
-  height: 320px;
+  border-radius: 26px;
   overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
 }
-.rec-card-img-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform .6s var(--ease);
+.rec-photo-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  animation: photoIn .7s cubic-bezier(.2,.8,.2,1) both, photoKen 9s ease-in-out 0.6s both;
 }
-.rec-card-active .rec-card-img-wrap img { transform: scale(1.02); }
-.rec-card-img-ov {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,.6) 0%, rgba(0,0,0,.0) 50%);
+@keyframes photoIn {
+  from { opacity: 0; transform: scale(1.06); filter: blur(6px); }
+  to   { opacity: 1; transform: scale(1); filter: blur(0); }
 }
-
-/* Heart button */
-.rec-heart {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 3;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0,0,0,.35);
-  backdrop-filter: blur(8px);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background .2s, color .2s, transform .15s;
+@keyframes photoKen {
+  from { transform: scale(1); }
+  to   { transform: scale(1.06); }
 }
-.rec-heart:hover { transform: scale(1.1); background: rgba(0,0,0,.55); }
-.rec-heart.rec-heart-saved {
-  background: #e84393;
-  color: #fff;
+.rec-photo-ov {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 42%);
 }
-.rec-heart.rec-heart-saved:hover { background: #c4367a; }
-
-/* Category tag */
-.rec-card-tag {
-  position: absolute;
-  bottom: 14px;
-  left: 14px;
-  z-index: 3;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.85);
-  background: rgba(0,0,0,.4);
-  backdrop-filter: blur(6px);
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.15);
+.rec-photo-meta {
+  position: absolute; left: 22px; right: 22px; bottom: 20px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.rec-photo-count {
+  font-size: 11px; font-weight: 800; letter-spacing: .12em;
+  color: rgba(255,255,255,.65); font-variant-numeric: tabular-nums;
+}
+.rec-photo-name {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(20px, 2vw, 30px); color: #fff; letter-spacing: -.02em;
+  animation: nameSlide .55s cubic-bezier(.34,1.56,.64,1) .15s both;
+}
+@keyframes nameSlide {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Card body */
-.rec-card-body {
-  padding: 20px 22px 24px;
+/* RIGHT card stack */
+.rec-stack {
+  position: relative;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  touch-action: pan-y;
 }
-.rec-card-meta {
+.rec-card {
+  position: absolute;
+  inset: 0 0 62px 0;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 10px 34px rgba(0,0,0,.10);
+  overflow: hidden;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  transition: transform .55s cubic-bezier(.34,1.56,.64,1), opacity .4s ease;
+  will-change: transform, opacity;
 }
+.rec-card-front {
+  animation: cardPop .55s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes cardPop {
+  from { transform: translateX(30px) scale(.96) rotate(1.5deg); opacity: .6; }
+  to   { transform: translateX(0) scale(1) rotate(0); opacity: 1; }
+}
+.rec-card-gone { pointer-events: none; }
+
+/* In-card image — hidden on desktop, shown on mobile */
+.rec-card-img { display: none; position: relative; height: 200px; flex-shrink: 0; }
+.rec-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.rec-card-img-ov { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.35), transparent 55%); }
+
+/* Heart */
+.rec-heart {
+  position: absolute; top: 16px; right: 16px; z-index: 5;
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 1.5px solid var(--line-strong);
+  background: #fff; color: var(--ink-3);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform .35s cubic-bezier(.34,1.9,.64,1), color .2s, border-color .2s, background .2s;
+}
+.rec-heart:hover { transform: scale(1.12); color: #e84393; border-color: #e84393; }
+.rec-heart-on {
+  background: #e84393; border-color: #e84393; color: #fff;
+  animation: heartPop .45s cubic-bezier(.34,2.2,.64,1);
+}
+@keyframes heartPop {
+  0% { transform: scale(.7); }
+  55% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+/* Card inner content */
+.rec-card-inner {
+  flex: 1;
+  min-height: 0;
+  padding: clamp(22px,3vw,34px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+.rec-card-cat {
+  font-size: 10px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0;
+}
+.rec-card-timerow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .rec-card-time {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--accent);
+  font-size: 13px; font-weight: 800; color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
-.rec-card-rating {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent);
+.rec-card-pill {
+  font-size: 11px; font-weight: 700; color: var(--ink-2);
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line);
 }
-.rec-card-open {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-3);
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--surface-2);
-}
+.rec-pill-rating { color: var(--accent); background: rgba(51,153,137,.08); border-color: rgba(51,153,137,.25); }
+.rec-pill-price { color: #b8860b; background: rgba(184,134,11,.08); border-color: rgba(184,134,11,.25); font-variant-numeric: tabular-nums; letter-spacing: .05em; }
 .rec-card-name {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(20px, 2.2vw, 28px);
-  font-weight: 400;
-  letter-spacing: -.02em;
-  color: var(--ink);
-  margin: 0;
-  line-height: 1.15;
+  font-size: clamp(24px, 2.6vw, 38px);
+  font-weight: 400; line-height: 1.05; letter-spacing: -.02em;
+  color: var(--ink); margin: 2px 0 0;
 }
 .rec-card-desc {
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--ink-2);
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: 14px; line-height: 1.65; color: var(--ink-2); margin: 4px 0 0;
 }
 .rec-card-addr {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-3);
-  text-decoration: none;
-  margin-top: 4px;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--ink-3);
+  text-decoration: none; margin-top: 2px;
 }
 .rec-card-addr:hover { color: var(--accent); }
+.rec-card-route { color: var(--ink-3); font-size: 11.5px; line-height: 1.5; margin-top: auto; padding-top: 8px; }
 
-/* Navigation */
+/* Nav */
 .rec-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 0 clamp(28px,6vw,80px);
+  margin-top: auto;
+  height: 48px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
 }
 .rec-arrow {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1.5px solid var(--line-strong);
-  background: transparent;
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1.5px solid var(--line-strong); background: #fff;
   color: var(--ink-2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all .15s;
-  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s;
 }
-.rec-arrow:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); background: var(--surface); }
+.rec-arrow:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); transform: scale(1.06); }
 .rec-arrow:disabled { opacity: .25; cursor: not-allowed; }
-.rec-dots {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 300px;
-}
+.rec-dots { display: flex; gap: 7px; align-items: center; }
 .rec-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  border: none;
-  background: var(--surface-3);
-  cursor: pointer;
-  padding: 0;
-  transition: background .2s, transform .2s;
+  width: 7px; height: 7px; border-radius: 999px;
+  border: none; background: var(--surface-3);
+  cursor: pointer; padding: 0;
+  transition: all .35s cubic-bezier(.34,1.56,.64,1);
 }
-.rec-dot.rec-dot-active {
-  background: var(--ink);
-  transform: scale(1.4);
-}
-.rec-dot.rec-dot-saved {
-  background: #e84393;
-}
+.rec-dot-on { background: var(--ink); width: 22px; }
+.rec-dot-heart { background: #e84393; }
+.rec-dot-heart.rec-dot-on { background: #e84393; width: 22px; }
 
-/* Saved bar */
-.rec-saved-bar {
-  margin: 0 clamp(28px,6vw,80px);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
-  border-radius: 16px;
-  background: rgba(232,67,147,.08);
-  border: 1px solid rgba(232,67,147,.2);
-  font-size: 14px;
-  font-weight: 700;
-  color: #c4367a;
+/* ── Mobile: stacked cards with in-card image (wireframe 3) ── */
+@media (max-width: 900px) {
+  .rec-screen {
+    height: calc(100dvh - 68px);
+    padding: 4px 16px 12px;
+  }
+  .rec-head { padding-bottom: 10px; align-items: center; }
+  .rec-head-dest { font-size: 24px; }
+  .rec-head-actions .rec-maps-cta { display: none; }
+  .rec-split {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .rec-photo { display: none; }
+  .rec-card-img { display: block; }
+  .rec-card { inset: 0 0 56px 0; }
+  .rec-card-inner { padding: 18px 20px 20px; gap: 8px; }
+  .rec-card-name { font-size: 24px; }
+  .rec-card-desc { font-size: 13.5px; -webkit-line-clamp: 4; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+  .rec-heart { top: 12px; right: 12px; width: 42px; height: 42px; }
+  .rec-nav { height: 44px; }
 }
-.rec-maps-btn {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink);
-  text-decoration: none;
-  padding: 6px 14px;
-  border-radius: 10px;
-  background: var(--ink);
-  color: #fff;
-}
-.rec-maps-btn:hover { opacity: .85; }
-
-/* Mobile adjustments */
-@media(max-width: 760px) {
-  .rec-stack-header { padding: 0 20px; }
-  .rec-track-wrap { padding: 0 20px; }
-  .rec-card { width: min(360px, 85vw); }
-  .rec-card-img-wrap { height: 240px; }
-  .rec-nav { padding: 0 20px; }
-  .rec-saved-bar { margin: 0 20px; }
-
-  /* Mobile: show next card peeking */
-  .rec-track-wrap { overflow: visible; }
-  .rec-card { width: min(320px, 82vw); }
-}
-
-/* Remove old timeline styles that are no longer needed */
-.timeline { display: none; }
 
 `;
 
