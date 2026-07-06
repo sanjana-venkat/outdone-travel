@@ -181,6 +181,7 @@ function App() {
   const [destination, setDestination] = useState("Paris");
   const [placePredictions, setPlacePredictions] = useState([]);
   const [isAutocompleting, setIsAutocompleting] = useState(false);
+  const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
   const [date, setDate] = useState(getToday());
   const [diet, setDiet] = useState("Vegetarian");
   const [planFor, setPlanFor] = useState("Date");
@@ -318,12 +319,12 @@ function App() {
 
   const loadingItems = useMemo(() => [
     user?.name ? `${user.name}'s lightweight profile` : "Quick feeler profile",
-    "Today's mood signals",
-    "Dietary preferences",
-    "Destination context",
-    "Google Places candidates",
-    "Real place photos and ratings",
-    "Gemini itinerary generation"
+    "Understanding today's intent",
+    "Keeping your real constraints in mind",
+    "Reading the destination context",
+    "Looking for places that match today's mood",
+    "Pulling real place photos and ratings",
+    "Asking Gemini to think like today's version of you"
   ], [user]);
 
   function toggleMood(id) {
@@ -567,9 +568,7 @@ function App() {
               <div className="lp-right-text">
                 <p className="lp-eyebrow">Powered by Gemini ✦</p>
                 <h1 className="lp-h1">Today feels<br/><span className="lp-accent">different.</span></h1>
-                <p className="lp-sub"> My mother-in-law accidentally found the flaw in personalization.
-She looked at a recommendation and said, "I'm just not in the mood for that today."
-That's the problem we're solving. Tell us your mood and we'll build the day around it.</p>
+                <p className="lp-sub"> Because even the best recommendation models can't predict who you want to be today.</p>
               </div>
 
               <div className="lp-actions">
@@ -625,18 +624,10 @@ That's the problem we're solving. Tell us your mood and we'll build the day arou
 
       {step === "setup" && (
         <main className="screen setup-screen on">
-          <div className="partnership-box">
-            {user && <div className="profile-chip"><img src={user.picture} alt="" />{user.name}</div>}
-            <div className="partnership-box-inner">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,marginTop:1}}><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-              <span><strong>Google won't let us stalk you. Yet.</strong> Hoping for a Google partnership soon so we can spy on your Gmail, Maps, calendar, travel history, and autofill this. Until then, we'll have to ask a few questions, and Gemini handles the rest!</span>
-            </div>
-          </div>
-
           <section className="setup-header">
-            <p className="label">Step 1 / 2</p>
-            <h2>Set the plan.</h2>
-            <p>Tell us where, when, and what constraints matter.</p>
+            <p className="label">Step 1 of 2 - Setup.</p>
+            <h2>Let's get the basics.</h2>
+            <p>Where you are, when you're going, and the few constraints that actually matter.</p>
           </section>
 
           <div className="setup-stack">
@@ -644,12 +635,18 @@ That's the problem we're solving. Tell us your mood and we'll build the day arou
               <span className="setup-card-label">WHERE</span>
               <input
                 value={destination}
-                onChange={(e) => setDestination(e.target.value)}
+                onChange={(e) => {
+                  setDestination(e.target.value);
+                  setShowDestinationSuggestions(true);
+                }}
+                onFocus={() => {
+                  if (destination.trim().length >= 2) setShowDestinationSuggestions(true);
+                }}
                 placeholder="City, neighborhood, or place"
                 autoComplete="off"
                 className="setup-card-input"
               />
-              {destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
+              {showDestinationSuggestions && destination.trim().length >= 2 && destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
                 <div className="setup-suggestions">
                   {destinationOptions.map((item) => (
                     <button
@@ -657,7 +654,7 @@ That's the problem we're solving. Tell us your mood and we'll build the day arou
                       key={item.placeId || item.label}
                       className="setup-sug"
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { setDestination(item.label); setPlacePredictions([]); }}
+                      onClick={() => { setDestination(item.label); setPlacePredictions([]); setShowDestinationSuggestions(false); }}
                     >
                       {item.label}
                     </button>
@@ -703,7 +700,21 @@ That's the problem we're solving. Tell us your mood and we'll build the day arou
               </div>
             </div>
 
-            <button className="btn-accent" onClick={() => goTo("mood")}>Choose today's mood →</button>
+            {user && (
+              <div className="partnership-box">
+                <div className="profile-chip">
+                  <img src={user.picture} alt="" />
+                  <span className="profile-chip-name">{user.name}</span>
+                </div>
+                <p className="partnership-copy">
+                  Soon, with your Google data, we might already know you're in Paris, that you're vegan, and who you're traveling with, so we can skip most of this.
+                  <br /><br />
+                  But one thing we probably shouldn't assume is how you <em>feel today</em>.
+                </p>
+              </div>
+            )}
+
+            <button className="btn-accent" onClick={() => goTo("mood")}>Tell us your mood →</button>
           </div>
         </main>
       )}
@@ -711,9 +722,12 @@ That's the problem we're solving. Tell us your mood and we'll build the day arou
       {step === "mood" && (
         <main className="screen mood-screen on">
           <section className="mood-header">
-            <p className="label">Step 2 / 2 · Choose up to 3</p>
-            <h2>What's your <span className="gem">vibe?</span></h2>
-            <p>This one input reshapes your entire day. It's the variable Gemini can't infer from data alone.</p>
+            <p className="label">Now tell us something Google can't.</p>
+            <h2>What's the <span className="gem">vibe today?</span></h2>
+            <p>
+              We've all had apps assume we wanted the same thing forever because we clicked on it once. Maybe yesterday you wanted museums. Today you want rooftop bars. 
+              That's why we're asking. Pick up to three moods and Gemini will handle the rest.
+            </p>
           </section>
           <section className="mood-grid image-grid">
             {moodVibes.map((vibe, index) => (
@@ -745,7 +759,7 @@ That's the problem we're solving. Tell us your mood and we'll build the day arou
           </div>
 
           <section className="build-cta-row">
-            <button className="btn-accent" onClick={generatePlan}>Build itinerary</button>
+            <button className="btn-accent" onClick={generatePlan}>See today's version of your trip</button>
           </section>
         </main>
       )}
@@ -753,7 +767,7 @@ That's the problem we're solving. Tell us your mood and we'll build the day arou
       {step === "loading" && (
         <main className="loading-screen on">
           <div className="loader-head">
-            <h2 className="loader-headline">Decoding your <span className="gem">Travel DNA</span></h2>
+            <h2 className="loader-headline">Building around <span className="gem">today's version of you</span></h2>
             <p className="loader-sub">{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
           </div>
           <div className="loader-stage">
@@ -1272,7 +1286,7 @@ button { cursor: pointer; }
 .partnership-box-inner strong { color: var(--ink-2); font-weight: 700; }
 .setup-header { margin-bottom: 32px; }
 .setup-stack { display: flex; flex-direction: column; gap: 28px; max-width: 600px; }
-.custom-activity-wrap { margin-top: 48px; max-width: 960px; }
+.custom-activity-wrap { margin-top: 48px; width: 100%; max-width: none; }
 .custom-activity-card { max-width: 100%; }
 .setup-card {
   background: #fff; border-radius: 20px; padding: 20px 24px;
@@ -1460,7 +1474,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .image-tile-content strong { display: block; font-size: clamp(18px,1.8vw,24px); font-weight: 900; line-height: 1; letter-spacing: -.03em; color: #fff; }
 .image-tile-content p { margin: 6px 0 0; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 600; line-height: 1.3; }
 
-.custom-activity-wrap { margin-top: 40px; max-width: 960px; display: grid; gap: 10px; }
+.custom-activity-wrap { margin-top: 40px; width: 100%; max-width: none; display: grid; gap: 10px; }
 .custom-activity-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .custom-activity-input {
   width: 100%; background: #fff; border: none; border-radius: 20px;
@@ -2807,168 +2821,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 @media (max-width: 760px) and (max-height: 760px) {
   .lp-card-left {
-    padding: 22px 24px max(22px, env(safe-area-inset-bottom)) !important;
-  }
-
-  .lp-panel-itin {
-    left: 20px !important;
-    right: 20px !important;
-    bottom: 18px !important;
-    gap: 10px !important;
-  }
-
-  .lp-itin-line {
-    min-height: 52px !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    height: 52px !important;
-  }
-}
-
-
-/* ===== MOBILE EDGE FIX: remove inner vertical line + add bottom breathing room ===== */
-@media (max-width: 760px) {
-  .lp-card-right,
-  .lp-card-right *,
-  .lp-panel,
-  .lp-panel *,
-  .lp-panel-image,
-  .lp-panel-image *,
-  .lp-image,
-  .lp-image *,
-  .lp-bg,
-  .lp-bg * {
-    border-left: 0 !important;
-    border-right: 0 !important;
-    border-inline-start: 0 !important;
-    border-inline-end: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after,
-  .lp-image::before,
-  .lp-image::after,
-  .lp-bg::before,
-  .lp-bg::after {
-    display: none !important;
-    content: none !important;
-    border: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-  }
-
-  .lp-card {
-    border: 3px solid #ffffff !important;
-    border-radius: 42px 42px 0 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    overflow: hidden !important;
-  }
-
-  /* Give the white content tile enough bottom breathing room */
-  .lp-card-left {
-    padding: 28px 28px max(48px, calc(32px + env(safe-area-inset-bottom, 20px))) 28px !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-actions {
-    margin-bottom: 0 !important;
-  }
-
-  /* Show our plain styled button, hide the iframe wrapper */
-  .lp-google-btn-mobile {
-    display: flex !important;
-  }
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  /* Fake content sits inside the wrap in normal flow — can't be clipped out */
-  .lp-google-fake {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 10px !important;
-    width: 100% !important;
-    pointer-events: none !important;
-    position: relative !important;
-    z-index: 1 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  /* SVG and text inside fake must also be visible */
-  .lp-google-fake svg,
-  .lp-google-fake span {
-    opacity: 1 !important;
-    visibility: visible !important;
-    display: block !important;
-  }
-
-  .lp-google-fake span {
-    display: inline !important;
-  }
-
-  .lp-google-fake span {
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    color: #3c4043 !important;
-    letter-spacing: .25px !important;
-  }
-
-  /* Real iframe: absolutely covers the whole wrap, invisible but clickable */
-  .lp-google-real,
-  #googleSignIn {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    opacity: 0 !important;
-    z-index: 2 !important;
-  }
-
-  .lp-google-real > div,
-  #googleSignIn > div {
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-  .lp-google-real iframe,
-  #googleSignIn iframe {
-    width: 100% !important;
-    height: 100% !important;
-    cursor: pointer !important;
-  }
-
-  .lp-shell {
-    padding-bottom: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .lp-card {
-    height: calc(100dvh - 46px) !important;
-  }
-
-
-}
-
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-card-left {
     padding: 22px 24px calc(44px + env(safe-area-inset-bottom)) 24px !important;
   }
 
@@ -2978,6 +2830,84 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
   .lp-card {
     height: 100dvh !important;
+  }
+}
+
+
+/* ===== PROFILE CARD: simple translucent profile note ===== */
+.setup-stack .partnership-box {
+  max-width: 100% !important;
+  margin: 6px 0 0 !important;
+  padding: 20px 22px !important;
+  border-radius: 24px !important;
+  background: rgba(255,255,255,.52) !important;
+  border: 1px solid rgba(0,0,0,.08) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.035) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 16px !important;
+}
+
+.setup-stack .profile-chip {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.setup-stack .profile-chip img {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 12px !important;
+  object-fit: cover !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.8), 0 6px 18px rgba(0,0,0,.08) !important;
+}
+
+.setup-stack .profile-chip-name {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.03em !important;
+  color: var(--ink) !important;
+  white-space: nowrap !important;
+}
+
+.setup-stack .partnership-copy {
+  margin: 0 !important;
+  max-width: 540px !important;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+  color: var(--ink-2) !important;
+  font-weight: 500 !important;
+  letter-spacing: -.015em !important;
+}
+
+.setup-stack .partnership-copy em {
+  font-family: 'DM Serif Display', Georgia, serif !important;
+  font-style: italic !important;
+  color: var(--ink) !important;
+  font-weight: 400 !important;
+}
+
+@media (max-width: 760px) {
+  .setup-stack .partnership-box {
+    padding: 18px 18px !important;
+    border-radius: 20px !important;
+    gap: 14px !important;
+  }
+  .setup-stack .profile-chip img {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 11px !important;
+  }
+  .setup-stack .profile-chip-name {
+    font-size: 14px !important;
+  }
+  .setup-stack .partnership-copy {
+    font-size: 13.5px !important;
+    line-height: 1.5 !important;
   }
 }
 
