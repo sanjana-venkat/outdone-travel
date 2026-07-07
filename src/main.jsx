@@ -1627,14 +1627,6 @@ button { cursor: pointer; }
 .nav-subscribe { min-height: 44px !important; padding: 0 24px !important; font-size: 13px; background: var(--ink) !important; border: none !important; color: #fff !important; font-weight: 700 !important; border-radius: 12px !important; }
 .nav-subscribe:hover { opacity: .85 !important; }
 
-/* Result screen (itinerary) — make the subscribe control outlined white over the photo backdrop */
-.result-active .nav-subscribe { background: transparent !important; border: 1.5px solid rgba(255,255,255,.95) !important; color: #fff !important; box-shadow: 0 8px 24px rgba(0,0,0,.16); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-.result-active .nav-subscribe:hover { background: rgba(255,255,255,.12) !important; border-color: #fff !important; }
-/* Make navbar transparent only on the result screen so buttons float on the image */
-.result-active .navbar { background: transparent !important; box-shadow: none !important; }
-/* Make the shell background transparent on result so the fixed photo shows full-bleed */
-.app-shell.result-active { background: transparent !important; }
-
 /* ── CHIPS (global) ── */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
@@ -2540,8 +2532,32 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
 /* ── Mobile result: image backdrop + floating swipe card + bottom bar ── */
 @media (max-width: 900px) {
+  .app-shell.result-active {
+    background: transparent !important;
+    padding-bottom: 0 !important;
+  }
+  .result-active .navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 60;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .result-active .hamburger span { background: #fff; }
+  .result-active .nav-subscribe {
+    background: rgba(0,0,0,.08) !important;
+    border: 1.5px solid rgba(255,255,255,.92) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .result-active .nav-subscribe:hover {
+    background: rgba(255,255,255,.12) !important;
+    border-color: #fff !important;
+  }
   .rec-screen {
-    height: calc(100dvh - 68px);
+    height: 100dvh;
     padding: 0; /* remove off-white gutters so photo can be full-bleed */
     background: transparent;
   }
@@ -2578,9 +2594,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .rec-card-desc { font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .rec-heart { top: 12px; right: 12px; width: 42px; height: 42px; }
 
-  /* Tap/swipe drives navigation — arrows off, dots stay */
+  /* Tap/swipe drives navigation; hide the scroll dots on mobile */
   .rec-arrow { display: none; }
-  .rec-nav { bottom: 84px; }
+  .rec-nav { display: none; }
 
   .rec-mbar { display: none; }
   .rec-card-actions { display: none; }
