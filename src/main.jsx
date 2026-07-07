@@ -38,6 +38,54 @@ function priceLabel(p) {
   return map[p] || null;
 }
 
+function priceRange(p) {
+  const label = priceLabel(p);
+  const ranges = { "$": "$10–20", "$$": "$20–50", "$$$": "$50–100", "$$$$": "$100+" };
+  return label ? ranges[label] : null;
+}
+
+// Nearest-neighbor ordering by coordinates when available
+function sortByProximity(stops) {
+  const coord = (s) => {
+    const lat = s.lat ?? s.latitude ?? s.location?.lat ?? s.location?.latitude;
+    const lng = s.lng ?? s.longitude ?? s.location?.lng ?? s.location?.longitude;
+    return (lat != null && lng != null) ? { lat: +lat, lng: +lng } : null;
+  };
+  if (stops.filter(s => coord(s)).length < 2) return stops;
+  const dist = (a, b) => {
+    const dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
+    const q = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+    return 2 * 6371 * Math.asin(Math.sqrt(q));
+  };
+  const remaining = [...stops];
+  const ordered = [remaining.shift()];
+  while (remaining.length) {
+    const last = coord(ordered[ordered.length - 1]);
+    if (!last) { ordered.push(remaining.shift()); continue; }
+    let bestI = 0, bestD = Infinity;
+    remaining.forEach((s, i) => {
+      const cc = coord(s);
+      const d = cc ? dist(last, cc) : Infinity;
+      if (d < bestD) { bestD = d; bestI = i; }
+    });
+    ordered.push(remaining.splice(bestI, 1)[0]);
+  }
+  return ordered;
+}
+
+// Activity suggestions per mood — powers the mood-page action search bar
+const moodActivitySuggestions = {
+  adventurous: ["Ziplining", "Cliff jumping", "Paragliding", "White-water rafting", "Bungee jump"],
+  "slow-scenic": ["Sunset boat ride", "Lakeside cafe", "Golden hour picnic", "Scenic ferry crossing"],
+  cultural: ["Museum deep-dive", "Historic walking tour", "Temple visit", "Local artisan market"],
+  culinary: ["Street food crawl", "Cooking class", "Food market tour", "Chef's tasting menu"],
+  offbeat: ["Hidden speakeasy", "Tiny obscure museum", "Secret garden", "Underground art venue"],
+  social: ["Rooftop bar", "Night market", "Live music venue", "Group cooking class"],
+  active: ["Kayaking", "Sunrise hike", "Bike tour", "Paddleboarding"],
+  "night-owl": ["Jazz bar", "Stargazing", "Night market crawl", "Midnight rooftop views"],
+  romantic: ["Sunset beach walk", "Candlelit dinner", "Stargazing", "Golden hour viewpoint"],
+};
+
 function buildGoogleMapsTripUrl(stops = [], travelMode = "walking") {
   const names = stops.map((stop) => stop.googlePlaceName || stop.name || stop.photoQuery).filter(Boolean).slice(0, 10);
   if (!names.length) return "";
@@ -211,6 +259,7 @@ function App() {
   const [cardIndex, setCardIndex] = useState(0);
   const [savedCards, setSavedCards] = useState(new Set());
   const [swipeDir, setSwipeDir] = useState(1);
+  const [activityFocus, setActivityFocus] = useState(false);
   const shellRef = useRef(null);
 
   function goTo(s) {
@@ -293,6 +342,37 @@ function App() {
     return () => { cancelled = true; };
   }, [step]);
 
+  // Anime.js: drive the loading-map traveller along the route with createMotionPath.
+  // Requires `npm install animejs`; falls back silently to the CSS keyframe version.
+  useEffect(() => {
+    if (step !== "loading") return;
+    let cancelled = false;
+    let anims = [];
+    (async () => {
+      try {
+        const { animate, svg } = await import("animejs");
+        // Wait a tick for the SVG to mount
+        await new Promise(r => setTimeout(r, 350));
+        if (cancelled) return;
+        const pathEl = document.querySelector("#loaderMotionPath");
+        const rider = document.querySelector(".map-traveller-anime");
+        if (!pathEl || !rider) return;
+        // Swap: hide CSS-animated traveller, show anime-driven one
+        document.querySelectorAll(".map-traveller, .map-traveller-dot").forEach(el => { el.style.display = "none"; });
+        rider.style.display = "";
+        const { translateX, translateY } = svg.createMotionPath("#loaderMotionPath");
+        anims.push(animate(rider, {
+          translateX, translateY,
+          ease: "inOutQuad",
+          duration: 3400,
+          loop: true,
+          loopDelay: 600,
+        }));
+      } catch (e) { /* animejs not installed — CSS fallback keeps running */ }
+    })();
+    return () => { cancelled = true; anims.forEach(a => a?.cancel?.()); };
+  }, [step]);
+
   useEffect(() => {
     const query = destination.trim();
     if (query.length < 2) { setPlacePredictions([]); return; }
@@ -325,7 +405,9 @@ function App() {
   const selectedMoodObjects = selectedMoods.map((id) => moodVibes.find((vibe) => vibe.id === id)).filter(Boolean);
   const travelArchetype = getTravelArchetype(selectedMoodObjects);
   const googleTravelMode = transportMode === "Car" ? "driving" : transportMode === "Public transit" ? "transit" : "walking";
-  const tripMapsUrl = itinerary?.stops?.length ? buildGoogleMapsTripUrl(itinerary.stops, googleTravelMode) : "";
+  const savedStopsList = (itinerary?.stops || []).filter((_, i) => savedCards.has(i));
+  const mapsStops = savedStopsList.length ? sortByProximity(savedStopsList) : (itinerary?.stops || []);
+  const tripMapsUrl = mapsStops.length ? buildGoogleMapsTripUrl(mapsStops, googleTravelMode) : "";
 
   const loadingItems = useMemo(() => [
     user?.name ? `${user.name}'s lightweight profile` : "Quick feeler profile",
@@ -334,7 +416,7 @@ function App() {
     "Reading the destination context",
     "Looking for places that match today's mood",
     "Pulling real place photos and ratings",
-    "Asking Gemini to think like today's version of you"
+    "Asking AI to think like today's version of you"
   ], [user]);
 
   function toggleMood(id) {
@@ -380,7 +462,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: customActivity.trim() || null, instruction: "Create a real, specific, mood-first day plan. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: customActivity.trim() || null, instruction: "Create a real, specific, mood-first day plan. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -388,7 +470,7 @@ function App() {
     try {
       const res = await geminiPromise;
       const data = await res.json();
-      if (!res.ok || data?.error) throw new Error(data?.error || "Gemini API route failed");
+      if (!res.ok || data?.error) throw new Error(data?.error || "The planning service is unavailable right now.");
       clearInterval(interval);
       setLoadingLine(6);
       setItinerary(data);
@@ -396,7 +478,7 @@ function App() {
     } catch (err) {
       clearInterval(interval);
       console.error(err);
-      setError(err.message || "Gemini could not generate the plan.");
+      setError(err.message || "We could not generate the plan.");
       goTo("apiError");
     }
   }
@@ -578,7 +660,7 @@ function App() {
           <div className="lp-card">
             <div className="lp-card-left">
               <div className="lp-right-text">
-                <p className="lp-eyebrow">Powered by Gemini ✦</p>
+                <p className="lp-eyebrow">Powered by AI ✦</p>
                 <h1 className="lp-h1">Plan<br/><span className="lp-accent">in seconds.</span></h1>
                 <p className="lp-sub"> Just tell us your trip details and your vibe, and get curated recommendations</p>
               </div>
@@ -696,7 +778,7 @@ function App() {
             <div className="setup-card">
               <span className="setup-card-label">GOING WITH</span>
               <div className="chips">
-                {["Solo", "Date", "Friends", "Family", "Workday"].map(o => (
+                {["Solo", "Date", "Friends", "Family", "Colleagues", "Kid friendly"].map(o => (
                   <button key={o} type="button" className={planFor === o ? "chip active" : "chip"} onClick={() => setPlanFor(o)}>{o}</button>
                 ))}
               </div>
@@ -763,17 +845,51 @@ function App() {
           </section>
 
           <div className="custom-activity-wrap">
-            <div className="setup-card custom-activity-card">
-              <span className="setup-card-label">WANT TO CUSTOMIZE FURTHER?</span>
-              <input
-                id="customActivity"
-                className="setup-card-input"
-                type="text"
-                value={customActivity}
-                onChange={e => setCustomActivity(e.target.value)}
-                placeholder="Tell us a specific activity you want — ziplining, a cooking class, sunset at a rooftop bar…"
-                maxLength={200}
-              />
+            <div className="action-search">
+              <span className="action-search-label">WANT SOMETHING SPECIFIC?</span>
+              <div className={`action-search-bar${activityFocus ? " action-search-open" : ""}`}>
+                <svg className="action-search-icon" width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" strokeWidth="1.6"/><path d="M14 14l3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                <input
+                  id="customActivity"
+                  type="text"
+                  value={customActivity}
+                  onChange={e => setCustomActivity(e.target.value)}
+                  onFocus={() => setActivityFocus(true)}
+                  onBlur={() => setTimeout(() => setActivityFocus(false), 150)}
+                  placeholder="Search an activity — ziplining, cooking class, rooftop sunset…"
+                  maxLength={200}
+                  autoComplete="off"
+                />
+                {customActivity && (
+                  <button className="action-search-clear" onMouseDown={(e) => { e.preventDefault(); setCustomActivity(""); }} aria-label="Clear">×</button>
+                )}
+              </div>
+
+              {activityFocus && (() => {
+                const pool = (selectedMoods.length ? selectedMoods : ["romantic", "adventurous", "culinary"])
+                  .flatMap(id => (moodActivitySuggestions[id] || []).map(a => ({ activity: a, mood: moodVibes.find(v => v.id === id)?.title || "" })));
+                const q = customActivity.trim().toLowerCase();
+                const filtered = pool.filter(p => !q || p.activity.toLowerCase().includes(q)).slice(0, 8);
+                if (!filtered.length) return null;
+                return (
+                  <div className="action-search-panel">
+                    <p className="action-search-panel-label">{selectedMoods.length ? "Based on your moods" : "Popular right now"}</p>
+                    {filtered.map((p, i) => (
+                      <button
+                        key={p.activity + i}
+                        type="button"
+                        className="action-search-item"
+                        style={{ animationDelay: `${i * 35}ms` }}
+                        onMouseDown={(e) => { e.preventDefault(); setCustomActivity(p.activity); setActivityFocus(false); }}
+                      >
+                        <span className="asi-spark">✦</span>
+                        <span className="asi-name">{p.activity}</span>
+                        <span className="asi-mood">{p.mood}</span>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -855,8 +971,15 @@ function App() {
                     <circle className="map-dot md2" cx="185" cy="62" r="6"/>
                     <circle className="map-dot md3" cx="275" cy="85" r="6"/>
                     <circle className="map-dot md4" cx="345" cy="42" r="6"/>
+                    <path id="loaderMotionPath" d="M80 118 L185 62 L275 85 L345 42" fill="none" stroke="none"/>
                     <circle className="map-traveller" cx="80" cy="118" r="9" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.6"/>
                     <circle className="map-traveller-dot" cx="80" cy="118" r="4" fill="var(--accent)"/>
+                    <g className="map-traveller-anime" style={{ display: "none" }}>
+                      <circle cx="0" cy="0" r="9" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.6">
+                        <animate attributeName="r" values="9;13;9" dur="1s" repeatCount="indefinite"/>
+                      </circle>
+                      <circle cx="0" cy="0" r="4" fill="var(--accent)"/>
+                    </g>
                   </svg>
                 </div>
               </div>
@@ -903,7 +1026,7 @@ function App() {
                 </div>
                 <div className="wire-gemini-badge">
                   <span className="gorb-core-sm">✦</span>
-                  <span>Gemini writing your plan…</span>
+                  <span>AI is crafting your itinerary…</span>
                 </div>
               </div>
             </div>
@@ -935,7 +1058,7 @@ function App() {
             <p>The prototype could not finish a fresh plan right now. Review your setup or try again in a moment.</p>
             <div className="error-actions">
               <button className="btn-outline" onClick={() => goTo("setup")}>Edit setup</button>
-              <button className="btn-accent" onClick={generatePlan}>Try Gemini again ✦</button>
+              <button className="btn-accent" onClick={generatePlan}>Try again ✦</button>
             </div>
           </div>
         </main>
@@ -1038,11 +1161,12 @@ function App() {
                         <article
                           key={`${s.name}-${i}`}
                           className={`rec-card${off === 0 ? " rec-card-front" : ""}${off < 0 ? " rec-card-gone" : ""}`}
+                          onClick={() => { if (off === 0 && cardIndex < stops.length - 1) { setSwipeDir(1); setCardIndex(cardIndex + 1); } }}
                           style={off > 0 ? {
                             transform: `translateX(${off * 26}px) scale(${1 - off * .055}) rotate(${off * 1.4}deg)`,
                             zIndex: 10 - off,
                             opacity: 1 - off * .25,
-                          } : off === 0 ? { zIndex: 12 } : {
+                          } : off === 0 ? { zIndex: 12, cursor: cardIndex < stops.length - 1 ? "pointer" : "default" } : {
                             transform: `translateX(${swipeDir < 0 ? "" : "-"}115%) rotate(${swipeDir < 0 ? 8 : -8}deg)`,
                             opacity: 0,
                             zIndex: 14,
@@ -1056,7 +1180,7 @@ function App() {
 
                           <button
                             className={`rec-heart${isSaved ? " rec-heart-on" : ""}`}
-                            onClick={() => setSavedCards(prev => { const n = new Set(prev); isSaved ? n.delete(i) : n.add(i); return n; })}
+                            onClick={(e) => { e.stopPropagation(); setSavedCards(prev => { const n = new Set(prev); isSaved ? n.delete(i) : n.add(i); return n; }); }}
                             aria-label={isSaved ? "Unsave" : "Save"}
                           >
                             <svg width="19" height="19" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -1067,13 +1191,19 @@ function App() {
                             <div className="rec-card-timerow">
                               <span className="rec-card-time">{s.time}</span>
                               {s.rating && <span className="rec-card-pill rec-pill-rating">★ {s.rating}</span>}
-                              {price && <span className="rec-card-pill rec-pill-price">{price}</span>}
+                              {price && <span className="rec-card-pill rec-pill-price">{price}{priceRange(s.priceLevel) ? ` · ${priceRange(s.priceLevel)}` : ""}</span>}
                               {s.openNow !== undefined && <span className="rec-card-pill">{s.openNow ? "Open" : "Check hours"}</span>}
                             </div>
                             <h3 className="rec-card-name">{s.name}</h3>
                             <p className="rec-card-desc">{s.description}</p>
+                            {s.bookingUrl && (
+                              <a className="rec-card-book" href={s.bookingUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                                Check availability & book
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              </a>
+                            )}
                             {s.address && (
-                              <a className="rec-card-addr" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`} target="_blank" rel="noreferrer">
+                              <a className="rec-card-addr" onClick={(e) => e.stopPropagation()} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`} target="_blank" rel="noreferrer">
                                 <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
                                 {s.address}
                               </a>
@@ -1084,8 +1214,8 @@ function App() {
                       );
                     })}
 
-                    {/* Nav row */}
-                    <div className="rec-nav">
+                    {/* Nav row — rendered inside the front card via absolute positioning */}
+                    <div className="rec-nav" onClick={(e) => e.stopPropagation()}>
                       <button className="rec-arrow" onClick={() => { setSwipeDir(-1); setCardIndex(i => Math.max(0, i-1)); }} disabled={cardIndex === 0}>
                         <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </button>
@@ -1113,7 +1243,7 @@ function App() {
             <div className="spark">✦</div>
             <p className="label">Early access</p>
             <h2>Like this idea?</h2>
-            <p>Travel DNA is running in demo mode right now. Gemini API credits are limited, so fallback plans keep the experience alive while the product evolves.</p>
+            <p>Travel DNA is running in demo mode right now. AI credits are limited, so fallback plans keep the experience alive while the product evolves.</p>
             <p>Subscribe to get updates when live personalization, better Google Places photos, saved preferences, and richer planning are ready.</p>
             <form className="subscribe-form" onSubmit={(event) => {
               event.preventDefault();
@@ -3086,7 +3216,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 }
 .rec-card {
   position: absolute;
-  inset: 0 0 62px 0;
+  inset: 0;
   border-radius: 24px;
   background: #fff;
   border: 1px solid var(--line-strong);
@@ -3121,9 +3251,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   cursor: pointer;
   transition: transform .35s cubic-bezier(.34,1.9,.64,1), color .2s, border-color .2s, background .2s;
 }
-.rec-heart:hover { transform: scale(1.12); color: #e84393; border-color: #e84393; }
+.rec-heart:hover { transform: scale(1.12); color: var(--accent); border-color: var(--accent); }
 .rec-heart-on {
-  background: #e84393; border-color: #e84393; color: #fff;
+  background: var(--accent); border-color: var(--accent); color: #fff;
   animation: heartPop .45s cubic-bezier(.34,2.2,.64,1);
 }
 @keyframes heartPop {
@@ -3136,7 +3266,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .rec-card-inner {
   flex: 1;
   min-height: 0;
-  padding: clamp(22px,3vw,34px);
+  padding: clamp(22px,3vw,34px) clamp(22px,3vw,34px) 74px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -3173,18 +3303,29 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   text-decoration: none; margin-top: 2px;
 }
 .rec-card-addr:hover { color: var(--accent); }
+.rec-card-book {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-top: 6px; padding: 9px 16px; width: fit-content;
+  border-radius: 11px; background: var(--ink); color: #fff;
+  font-size: 12.5px; font-weight: 700; text-decoration: none;
+  transition: opacity .15s, transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.rec-card-book:hover { opacity: .88; transform: translateY(-1px); }
 .rec-card-route { color: var(--ink-3); font-size: 11.5px; line-height: 1.5; margin-top: auto; padding-top: 8px; }
 
-/* Nav */
+/* Nav — sits INSIDE the front card, bottom center */
 .rec-nav {
-  margin-top: auto;
-  height: 48px;
-  flex-shrink: 0;
+  position: absolute;
+  left: 0; right: 0; bottom: 16px;
+  z-index: 20;
   display: flex; align-items: center; justify-content: center; gap: 14px;
+  pointer-events: none;
 }
+.rec-nav > * { pointer-events: auto; }
 .rec-arrow {
   width: 38px; height: 38px; border-radius: 50%;
   border: 1.5px solid var(--line-strong); background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,.08);
   color: var(--ink-2);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all .15s;
@@ -3199,8 +3340,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   transition: all .35s cubic-bezier(.34,1.56,.64,1);
 }
 .rec-dot-on { background: var(--ink); width: 22px; }
-.rec-dot-heart { background: #e84393; }
-.rec-dot-heart.rec-dot-on { background: #e84393; width: 22px; }
+.rec-dot-heart { background: var(--accent); }
+.rec-dot-heart.rec-dot-on { background: var(--accent); width: 22px; }
 
 /* ── Mobile: stacked cards with in-card image (wireframe 3) ── */
 @media (max-width: 900px) {
@@ -3217,13 +3358,62 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
   .rec-photo { display: none; }
   .rec-card-img { display: block; }
-  .rec-card { inset: 0 0 56px 0; }
+  .rec-card { inset: 0; }
   .rec-card-inner { padding: 18px 20px 20px; gap: 8px; }
   .rec-card-name { font-size: 24px; }
   .rec-card-desc { font-size: 13.5px; -webkit-line-clamp: 4; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
   .rec-heart { top: 12px; right: 12px; width: 42px; height: 42px; }
-  .rec-nav { height: 44px; }
+  .rec-nav { bottom: 12px; }
 }
+
+/* ── ACTION SEARCH BAR (mood page) — kokonutui style ── */
+.action-search { position: relative; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.action-search-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.action-search-bar {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border-radius: 18px;
+  min-height: 60px; padding: 0 20px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  border: 1.5px solid transparent;
+  transition: border-color .2s, box-shadow .25s cubic-bezier(.34,1.56,.64,1);
+}
+.action-search-open { border-color: var(--accent); box-shadow: 0 6px 24px rgba(51,153,137,.14); }
+.action-search-icon { color: var(--ink-3); flex-shrink: 0; }
+.action-search-open .action-search-icon { color: var(--accent); }
+.action-search-bar input {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-size: 15px; font-weight: 500; color: var(--ink); min-width: 0;
+}
+.action-search-bar input::placeholder { color: var(--ink-3); font-weight: 400; }
+.action-search-clear {
+  width: 28px; height: 28px; border-radius: 50%; border: none;
+  background: var(--surface-2); color: var(--ink-2); font-size: 16px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+}
+.action-search-panel {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 300;
+  background: #fff; border-radius: 18px; padding: 10px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.14);
+  border: 1px solid var(--line);
+  animation: panelIn .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes panelIn { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.action-search-panel-label {
+  font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); margin: 4px 0 8px; padding: 0 10px;
+}
+.action-search-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 11px 12px; border: none; border-radius: 12px;
+  background: transparent; text-align: left; cursor: pointer;
+  transition: background .12s;
+  animation: itemIn .35s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes itemIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+.action-search-item:hover { background: var(--surface); }
+.asi-spark { color: var(--accent); font-size: 12px; flex-shrink: 0; }
+.asi-name { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; }
+.asi-mood { font-size: 11px; font-weight: 600; color: var(--ink-3); padding: 2px 9px; border-radius: 999px; background: var(--surface); }
 
 `;
 
