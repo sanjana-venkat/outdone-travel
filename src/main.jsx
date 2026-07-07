@@ -246,7 +246,7 @@ function PlacesCarousel({ moods, places }) {
 function App() {
   const [user, setUser] = useState(null);
   const [step, setStep] = useState("login");
-  const [destination, setDestination] = useState("Paris");
+  const [destination, setDestination] = useState("");
   const [placePredictions, setPlacePredictions] = useState([]);
   const [isAutocompleting, setIsAutocompleting] = useState(false);
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
@@ -275,6 +275,10 @@ function App() {
   const [activityFocus, setActivityFocus] = useState(false);
   const [customActivities, setCustomActivities] = useState([]);
   const [loginSlide, setLoginSlide] = useState(0);
+  const [showTapHint, setShowTapHint] = useState(false);
+  const [heartBurst, setHeartBurst] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const tapTimerRef = useRef(null);
   const shellRef = useRef(null);
 
   function goTo(s) {
@@ -362,6 +366,15 @@ function App() {
     if (step !== "login") return;
     const t = setInterval(() => setLoginSlide(i => (i + 1) % moodVibes.length), 4500);
     return () => clearInterval(t);
+  }, [step]);
+
+  // Mobile result: one-time "double tap to save" hint overlay
+  useEffect(() => {
+    if (step !== "result") return;
+    if (!window.matchMedia("(max-width: 900px)").matches) return;
+    setShowTapHint(true);
+    const t = setTimeout(() => setShowTapHint(false), 3600);
+    return () => clearTimeout(t);
   }, [step]);
 
   useEffect(() => {
@@ -453,7 +466,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a real, specific, mood-first day plan. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a real, specific, mood-first day plan. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the stops across the ENTIRE region — pick the best mood-matching places even if they are hours apart, and do NOT cluster every stop in a single city or town. Only keep stops close together and walkable when the destination is a specific city or neighborhood. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -471,6 +484,72 @@ function App() {
       console.error(err);
       setError(err.message || "We could not generate the plan.");
       goTo("apiError");
+    }
+  }
+
+  async function shareItinerary() {
+    if (shareLoading) return;
+    setShareLoading(true);
+    try {
+      const res = await fetch("/api/save-itinerary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itinerary, destination, date, selectedMoods: selectedMoodObjects, diet, planFor }),
+      });
+      const { id, error } = await res.json();
+      if (!id) throw new Error(error || "No ID returned");
+      const shareUrl = `${window.location.origin}${window.location.pathname}?i=${id}`;
+      if (navigator.share) {
+        await navigator.share({ title: `Travel DNA — ${itinerary?.destination || destination}`, text: itinerary?.summary || "Check out this itinerary.", url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2500);
+      }
+    } catch (e) { console.error("Share failed:", e); }
+    finally { setShareLoading(false); }
+  }
+
+  function startOver() {
+    setDestination(""); setDate(getToday()); setDiet("No preference"); setPlanFor("Date");
+    setTransportMode(""); setTimeRange(""); setSelectedMoods([]); setCustomActivity("");
+    setCustomActivities([]); setItinerary(null); setCardIndex(0); setSavedCards(new Set());
+    goTo("setup");
+  }
+
+  // Front card interaction:
+  // Desktop — single click advances (unchanged behavior).
+  // Mobile  — single tap shuffles to the next card (wraps around),
+  //           double tap hearts/unhearts the current card.
+  function handleCardFrontClick(stops) {
+    setShowTapHint(false);
+    const isMobile = window.matchMedia("(max-width: 900px)").matches;
+    if (!isMobile) {
+      if (cardIndex < stops.length - 1) { setSwipeDir(1); setCardIndex(cardIndex + 1); }
+      return;
+    }
+    if (tapTimerRef.current) {
+      // Double tap → toggle heart
+      clearTimeout(tapTimerRef.current);
+      tapTimerRef.current = null;
+      const idx = cardIndex;
+      const willSave = !savedCards.has(idx);
+      setSavedCards(prev => {
+        const n = new Set(prev);
+        if (willSave) n.add(idx); else n.delete(idx);
+        return n;
+      });
+      if (willSave) {
+        setHeartBurst(true);
+        setTimeout(() => setHeartBurst(false), 750);
+      }
+    } else {
+      // Single tap (after double-tap window passes) → next card
+      tapTimerRef.current = setTimeout(() => {
+        tapTimerRef.current = null;
+        setSwipeDir(1);
+        setCardIndex(i => (i + 1) % stops.length);
+      }, 270);
     }
   }
 
@@ -734,7 +813,7 @@ function App() {
                 onFocus={() => {
                   if (destination.trim().length >= 2) setShowDestinationSuggestions(true);
                 }}
-                placeholder="City, neighborhood, or place"
+                placeholder="City, neighborhood or even country"
                 autoComplete="off"
                 className="setup-card-input"
               />
@@ -806,7 +885,7 @@ function App() {
               </div>
             )}
 
-            <button className="btn-accent" onClick={() => goTo("mood")}>Next, your vibe →</button>
+            <button className="btn-accent" disabled={!destination.trim()} onClick={() => goTo("mood")}>Next, your vibe →</button>
           </div>
         </main>
       )}
@@ -1101,12 +1180,7 @@ function App() {
               <button
                 className="icon-btn-sm"
                 title="Start over"
-                onClick={() => {
-                  setDestination(""); setDate(getToday()); setDiet("No preference"); setPlanFor("Date");
-                  setTransportMode(""); setTimeRange(""); setSelectedMoods([]); setCustomActivity("");
-                  setCustomActivities([]); setItinerary(null); setCardIndex(0); setSavedCards(new Set());
-                  goTo("setup");
-                }}
+                onClick={startOver}
               >
                 <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 3v3M9 3a6 6 0 106 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M6.5 1.5L9 3 6.5 4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
@@ -1116,28 +1190,7 @@ function App() {
               <button
                 className={`icon-btn-sm${shareCopied ? " icon-btn-sm-active" : ""}`}
                 disabled={shareLoading}
-                onClick={async () => {
-                  if (shareLoading) return;
-                  setShareLoading(true);
-                  try {
-                    const res = await fetch("/api/save-itinerary", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ itinerary, destination, date, selectedMoods: selectedMoodObjects, diet, planFor }),
-                    });
-                    const { id, error } = await res.json();
-                    if (!id) throw new Error(error || "No ID returned");
-                    const shareUrl = `${window.location.origin}${window.location.pathname}?i=${id}`;
-                    if (navigator.share) {
-                      await navigator.share({ title: `Travel DNA — ${itinerary?.destination || destination}`, text: itinerary?.summary || "Check out this itinerary.", url: shareUrl });
-                    } else {
-                      await navigator.clipboard.writeText(shareUrl);
-                      setShareCopied(true);
-                      setTimeout(() => setShareCopied(false), 2500);
-                    }
-                  } catch (e) { console.error("Share failed:", e); }
-                  finally { setShareLoading(false); }
-                }}
+                onClick={shareItinerary}
                 title="Share"
               >
                 {shareCopied
@@ -1158,7 +1211,7 @@ function App() {
             </div>
           </header>
 
-          {/* ── SPLIT: image left, card stack right ── */}
+          {/* ── SPLIT: image left/backdrop, card stack right/floating ── */}
           <div className="rec-split">
             {(() => {
               const stops = itinerary?.stops || [];
@@ -1166,7 +1219,7 @@ function App() {
               const imgOf = (s, i) => s.imageUrl || s.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length,1)]?.img || moodVibes[i % moodVibes.length].img;
               return (
                 <>
-                  {/* LEFT: photo pane (desktop) */}
+                  {/* LEFT: photo pane (desktop) / full-bleed backdrop (mobile) — changes with the active card */}
                   <div className="rec-photo">
                     <img key={cardIndex} src={imgOf(stop, cardIndex)} alt={stop.name || ""} className="rec-photo-img" />
                     <div className="rec-photo-ov" />
@@ -1195,18 +1248,18 @@ function App() {
                         <article
                           key={`${s.name}-${i}`}
                           className={`rec-card${off === 0 ? " rec-card-front" : ""}${off < 0 ? " rec-card-gone" : ""}`}
-                          onClick={() => { if (off === 0 && cardIndex < stops.length - 1) { setSwipeDir(1); setCardIndex(cardIndex + 1); } }}
+                          onClick={() => { if (off === 0) handleCardFrontClick(stops); }}
                           style={off > 0 ? {
                             transform: `translateX(${off * 26}px) scale(${1 - off * .055}) rotate(${off * 1.4}deg)`,
                             zIndex: 10 - off,
                             opacity: 1 - off * .25,
-                          } : off === 0 ? { zIndex: 12, cursor: cardIndex < stops.length - 1 ? "pointer" : "default" } : {
+                          } : off === 0 ? { zIndex: 12, cursor: "pointer" } : {
                             transform: `translateX(${swipeDir < 0 ? "" : "-"}115%) rotate(${swipeDir < 0 ? 8 : -8}deg)`,
                             opacity: 0,
                             zIndex: 14,
                           }}
                         >
-                          {/* In-card image (mobile only via CSS) */}
+                          {/* In-card image (hidden — photo backdrop handles mobile now) */}
                           <div className="rec-card-img">
                             <img src={imgOf(s, i)} alt="" loading="lazy" />
                             <div className="rec-card-img-ov" />
@@ -1262,11 +1315,73 @@ function App() {
                         <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M7 4l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </button>
                     </div>
+
+                    {/* Mobile: one-time gesture hint */}
+                    {showTapHint && (
+                      <div className="rec-hint" onClick={() => setShowTapHint(false)}>
+                        <div className="rec-hint-pill">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                          <span>Tap for next · Double tap to save</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Mobile: heart burst on double-tap save */}
+                    {heartBurst && (
+                      <div className="rec-heart-burst">
+                        <svg width="88" height="88" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                      </div>
+                    )}
                   </div>
                 </>
               );
             })()}
           </div>
+
+          {/* ── MOBILE BOTTOM BAR: Share · Maps · More ── */}
+          <div className="rec-mbar">
+            <button className="rec-mbar-btn" onClick={shareItinerary} disabled={shareLoading}>
+              {shareCopied
+                ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="13" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="13" cy="14.5" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="5" cy="9" r="2" stroke="currentColor" strokeWidth="1.5"/><line x1="11.1" y1="4.6" x2="6.9" y2="7.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><line x1="6.9" y1="10.1" x2="11.1" y2="13.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+              <span>{shareCopied ? "Copied" : "Share"}</span>
+            </button>
+            {tripMapsUrl && (
+              <a className="rec-mbar-btn rec-mbar-primary" href={tripMapsUrl} target="_blank" rel="noreferrer">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+                <span>Maps{savedCards.size > 0 ? ` · ${savedCards.size}` : ""}</span>
+              </a>
+            )}
+            <button className="rec-mbar-btn" onClick={() => setMoreOpen(true)}>
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="14" cy="9" r="1.5" fill="currentColor"/></svg>
+              <span>More</span>
+            </button>
+          </div>
+
+          {/* ── MOBILE MORE SHEET ── */}
+          {moreOpen && (
+            <div className="rec-more-backdrop" onClick={() => setMoreOpen(false)}>
+              <div className="rec-more-sheet" onClick={e => e.stopPropagation()}>
+                <div className="rec-more-grab" />
+                <button className="rec-more-item" onClick={() => { setMoreOpen(false); goTo("mood"); }}>
+                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Edit mood
+                </button>
+                <button className="rec-more-item" onClick={() => { setMoreOpen(false); generatePlan(); }}>
+                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0110.5-4M15 9a6 6 0 01-10.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M13 5h2.5V2.5M5 13H2.5V15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Regenerate plan
+                </button>
+                <button className="rec-more-item" onClick={() => { setMoreOpen(false); addToCalendar(); }}>
+                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M2 8h14" stroke="currentColor" strokeWidth="1.5"/><path d="M6 1.5v3M12 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                  {user ? "Add to Google Calendar" : "Download calendar (.ics)"}
+                </button>
+                <button className="rec-more-item rec-more-danger" onClick={() => { setMoreOpen(false); startOver(); }}>
+                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 3v3M9 3a6 6 0 106 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M6.5 1.5L9 3 6.5 4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Start over
+                </button>
+              </div>
+            </div>
+          )}
         </main>
       )}
 
@@ -1472,6 +1587,7 @@ button { cursor: pointer; }
 }
 .btn-accent:hover { opacity: .88; }
 .btn-accent:active { transform: scale(.98); }
+.btn-accent:disabled { opacity: .35; cursor: not-allowed; transform: none; }
 .btn-accent, .btn-outline { text-decoration: none !important; }
 .nav-subscribe { min-height: 44px !important; padding: 0 24px !important; font-size: 13px; background: var(--ink) !important; border: none !important; color: #fff !important; font-weight: 700 !important; border-radius: 12px !important; }
 .nav-subscribe:hover { opacity: .85 !important; }
@@ -1871,8 +1987,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .cal-icon-btn-done  { border-color: var(--accent) !important; color: var(--accent) !important; }
 .cal-icon-btn-error { border-color: #c0392b !important; color: #c0392b !important; }
 .action-primary-cta { width: fit-content; padding: 0 28px; gap: 8px; }
-@keyframes calSpin { to { transform: rotate(360deg); } }
-.cal-spin { animation: calSpin .8s linear infinite; }
 
 .timeline { max-width: 100% !important; margin: 0 auto; padding: 48px 0 32px !important; }
 .timeline > .label { margin-bottom: 40px; }
@@ -1954,1102 +2068,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .showreel-frame { height: 320px; border-radius: 20px; }
   input[type="date"] { font-size: 13px; padding: 0 16px; min-height: 54px; }
 }
-
-/* ===== MOBILE LOGIN FIX: itinerary window top, white intro card bottom ===== */
-@media (max-width: 760px) {
-  /* Login page only: lock scroll via the login-active class */
-  .app-shell.login-active,
-  .login-active {
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-    background: #050807 !important;
-  }
-
-  .lp-shell {
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    padding: 0 !important;
-    display: block !important;
-    overflow: hidden !important;
-    position: relative !important;
-    background: #050807 !important;
-  }
-
-  .lp-bg-outer {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
-  }
-
-  .lp-bg-outer-img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    object-position: center top !important;
-    filter: saturate(1.18) contrast(1.04) brightness(.92) !important;
-    transform: scale(1.02) !important;
-  }
-
-  .lp-bg-outer-dim {
-    position: absolute !important;
-    inset: 0 !important;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,.10) 0%, rgba(0,0,0,.04) 28%, rgba(0,0,0,.50) 100%) !important;
-  }
-
-  .lp-card {
-    position: relative !important;
-    z-index: 2 !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    overflow: hidden !important;
-  }
-
-  /* Itinerary window goes on TOP and gets the visual height */
-  .lp-card-right {
-    order: 1 !important;
-    position: relative !important;
-    flex: 1 1 auto !important;
-    height: 64dvh !important;
-    min-height: 64dvh !important;
-    width: calc(100vw - 28px) !important;
-    margin: 14px auto 0 !important;
-    border: 2px solid rgba(255,255,255,.96) !important;
-    border-radius: 30px !important;
-    overflow: hidden !important;
-    background: rgba(0,0,0,.10) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-panel-overlay {
-    position: absolute !important;
-    inset: 0 !important;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,.02) 0%, rgba(0,0,0,.16) 44%, rgba(0,0,0,.36) 100%) !important;
-    pointer-events: none !important;
-  }
-
-  .lp-panel-itin {
-    position: absolute !important;
-    left: 18px !important;
-    right: 18px !important;
-    bottom: clamp(22px, 5vh, 48px) !important;
-    display: grid !important;
-    gap: 12px !important;
-    padding: 0 !important;
-  }
-
-  .lp-itin-line {
-    min-height: 60px !important;
-    padding: 0 18px !important;
-    display: grid !important;
-    grid-template-columns: 74px 1fr !important;
-    align-items: center !important;
-    gap: 10px !important;
-    border-radius: 18px !important;
-    border: 1px solid rgba(255,255,255,.18) !important;
-    background: rgba(0,0,0,.54) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-itin-time {
-    color: #41A394 !important;
-    font-size: 16px !important;
-    font-weight: 900 !important;
-    letter-spacing: -.02em !important;
-  }
-
-  .lp-itin-label {
-    color: #FFFFFF !important;
-    font-size: 16px !important;
-    font-weight: 800 !important;
-    letter-spacing: -.02em !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  /* White intro/sign-in tile — CHANGE 1: more bottom space */
-  .lp-card-left {
-    order: 2 !important;
-    flex: 0 0 auto !important;
-    position: absolute !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    max-height: 38dvh !important;
-    min-height: 300px !important;
-    padding: 24px 22px max(56px, env(safe-area-inset-bottom, 36px)) !important;
-    background: #FFFFFF !important;
-    color: #080808 !important;
-    border-radius: 30px 30px 0 0 !important;
-    border: 1px solid rgba(255,255,255,.72) !important;
-    box-shadow: 0 -12px 34px rgba(0,0,0,.16) !important;
-    overflow: visible !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: flex-start !important;
-    z-index: 5 !important;
-  }
-
-  .lp-right-text {
-    display: block !important;
-  }
-
-  .lp-eyebrow {
-    margin: 0 0 10px !important;
-    color: #8A897F !important;
-    font-size: 11px !important;
-    font-weight: 900 !important;
-    letter-spacing: .18em !important;
-    text-transform: uppercase !important;
-  }
-
-  .lp-h1 {
-    margin: 0 !important;
-    font-family: 'DM Serif Display', Georgia, serif !important;
-    font-size: clamp(44px, 13vw, 62px) !important;
-    line-height: .88 !important;
-    letter-spacing: -.045em !important;
-    color: #080808 !important;
-  }
-
-  .lp-accent {
-    color: #339989 !important;
-  }
-
-  .lp-sub {
-    margin: 14px 0 0 !important;
-    max-width: 34ch !important;
-    color: #8A897F !important;
-    font-size: 14px !important;
-    line-height: 1.42 !important;
-    letter-spacing: -.01em !important;
-  }
-
-  .lp-actions {
-    width: 100% !important;
-    margin-top: 18px !important;
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
-  }
-
-  /* CHANGE 2: Show the real Google iframe — same as desktop */
-  .lp-google-wrap {
-    position: relative !important;
-    width: 100% !important;
-    min-height: 44px !important;
-        background: transparent !important;
-    display: flex !important;
-    align-items: center !important;
-    overflow: visible !important;
-    box-shadow: none !important;
-  }
-
-  .lp-google-wrap > div,
-  #googleSignIn {
-    width: 100% !important;
-    opacity: 1 !important;
-    position: relative !important;
-    inset: auto !important;
-    height: auto !important;
-    z-index: auto !important;
-    cursor: auto !important;
-  }
-
-  .lp-google-wrap iframe {
-    width: 100% !important;
-    border-radius: 14px !important;
-  }
-
-  .google-loading {
-    width: 100% !important;
-    text-align: center !important;
-    color: var(--ink-3) !important;
-    font-size: 13px !important;
-    padding: 10px 0 !important;
-  }
-
-  .lp-ghost-btn {
-    width: 100% !important;
-    height: 50px !important;
-    min-height: 50px !important;
-    border-radius: 999px !important;
-    border: 1px solid rgba(0,0,0,.12) !important;
-    background: transparent !important;
-    color: #080808 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-fine {
-    display: none !important;
-  }
-}
-
-/* Extra small phones: keep CTAs visible */
-@media (max-width: 380px) {
-  .lp-card-right {
-    height: 62dvh !important;
-    min-height: 62dvh !important;
-  }
-
-  .lp-card-left {
-    max-height: 40dvh !important;
-    min-height: 292px !important;
-    padding-top: 20px !important;
-  }
-
-  .lp-h1 {
-    font-size: 42px !important;
-  }
-
-  .lp-sub {
-    font-size: 13px !important;
-    margin-top: 10px !important;
-  }
-
-  .lp-actions {
-    margin-top: 14px !important;
-  }
-
-  .lp-itin-line {
-    min-height: 54px !important;
-  }
-}
-
-
-/* ===== MOBILE LOGIN CONNECTED WINDOW FIX ===== */
-@media (max-width: 760px) {
-  .login-active {
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    overflow: hidden !important;
-  }
-
-  .login-active .navbar,
-  .login-active .nav-mark,
-  .login-active .nav-logo,
-  .login-active .drawer-title {
-    display: none !important;
-  }
-
-  .lp-shell {
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    padding: 8px 12px 8px !important;
-    display: flex !important;
-    align-items: stretch !important;
-    justify-content: center !important;
-    overflow: hidden !important;
-    background: #dcefeb !important;
-  }
-
-  .lp-bg-outer {
-    position: absolute !important;
-    inset: 0 !important;
-    opacity: 1 !important;
-  }
-
-  .lp-bg-outer-img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    filter: saturate(1.12) contrast(1.02) brightness(.98) !important;
-  }
-
-  .lp-bg-outer-dim {
-    background: rgba(0, 0, 0, .06) !important;
-  }
-
-  .lp-card {
-    position: relative !important;
-    z-index: 2 !important;
-    width: 100% !important;
-    height: 100dvh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    border: 4px solid rgba(255,255,255,.96) !important;
-    border-radius: 42px 42px 0 0 !important;
-    overflow: hidden !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-right {
-    order: 1 !important;
-    position: relative !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    height: auto !important;
-    border-radius: 0 !important;
-    overflow: hidden !important;
-    background: transparent !important;
-  }
-
-  .lp-card-right::before,
-  .lp-card-right::after {
-    display: none !important;
-  }
-
-  .lp-panel-overlay {
-    position: absolute !important;
-    inset: 0 !important;
-    background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.32)) !important;
-    pointer-events: none !important;
-  }
-
-  .lp-panel-itin {
-    position: absolute !important;
-    left: 24px !important;
-    right: 24px !important;
-    bottom: 24px !important;
-    display: grid !important;
-    gap: 12px !important;
-    z-index: 2 !important;
-  }
-
-  .lp-itin-line {
-    min-height: 58px !important;
-    display: grid !important;
-    grid-template-columns: 82px 1fr !important;
-    align-items: center !important;
-    padding: 0 18px !important;
-    border-radius: 18px !important;
-    background: rgba(0,0,0,.45) !important;
-    border: 1px solid rgba(255,255,255,.16) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-itin-time {
-    color: #3CA394 !important;
-    font-weight: 800 !important;
-    font-size: 15px !important;
-  }
-
-  .lp-itin-label {
-    color: #fff !important;
-    font-weight: 800 !important;
-    font-size: 15px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  .lp-card-left {
-    order: 2 !important;
-    position: relative !important;
-    flex: 0 0 auto !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    padding: 28px 28px 22px !important;
-    background: #ffffff !important;
-    border-radius: 0 !important;
-    border: 0 !important;
-    border-top: 1px solid rgba(0,0,0,.08) !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-  }
-
-  .lp-right-text {
-    margin: 0 !important;
-  }
-
-  .lp-eyebrow {
-    margin: 0 0 12px !important;
-    color: #89877f !important;
-    font-size: 11px !important;
-    letter-spacing: .22em !important;
-    font-weight: 900 !important;
-    text-transform: uppercase !important;
-  }
-
-  .lp-h1 {
-    margin: 0 !important;
-    font-family: "DM Serif Display", Georgia, serif !important;
-    font-size: clamp(50px, 14vw, 68px) !important;
-    line-height: .88 !important;
-    letter-spacing: -.06em !important;
-    color: #060606 !important;
-  }
-
-  .lp-accent {
-    color: #3CA394 !important;
-    -webkit-text-fill-color: #3CA394 !important;
-  }
-
-  .lp-sub {
-    margin: 18px 0 0 !important;
-    font-size: 16px !important;
-    line-height: 1.42 !important;
-    color: #8a877f !important;
-    max-width: 31ch !important;
-  }
-
-  .lp-actions {
-    margin-top: 24px !important;
-    display: grid !important;
-    gap: 12px !important;
-    width: 100% !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-google-wrap iframe,
-  .lp-google-wrap > div,
-  #googleSignIn,
-  #googleSignIn > div {
-    opacity: 0 !important;
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 3 !important;
-  }
-
-  .lp-ghost-btn {
-    height: 58px !important;
-    border-radius: 999px !important;
-    background: #fff !important;
-    border: 1px solid #dedbd4 !important;
-    color: #080808 !important;
-    font-size: 16px !important;
-    font-weight: 800 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 10px !important;
-    box-shadow: none !important;
-  }
-
-  .lp-fine {
-    display: none !important;
-  }
-
-  .lp-logo,
-  .lp-brand,
-  .lp-logo-text,
-  .login-logo,
-  .login-brand,
-  .drawer-header .drawer-title {
-    display: none !important;
-  }
-}
-
-/* Slightly shorter phones */
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-card-left {
-    padding: 22px 24px 18px !important;
-  }
-
-  .lp-h1 {
-    font-size: clamp(44px, 12.5vw, 58px) !important;
-  }
-
-  .lp-sub {
-    margin-top: 12px !important;
-    font-size: 14px !important;
-  }
-
-  .lp-actions {
-    margin-top: 18px !important;
-    gap: 10px !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    height: 52px !important;
-  }
-
-  .lp-panel-itin {
-    left: 20px !important;
-    right: 20px !important;
-    bottom: 18px !important;
-    gap: 10px !important;
-  }
-
-  .lp-itin-line {
-    min-height: 52px !important;
-  }
-}
-
-
-/* ===== MOBILE FINAL POLISH: remove top seam, translucent itinerary, desktop-style CTAs, no drawer X ===== */
-@media (max-width: 760px) {
-  .lp-card::before,
-  .lp-card::after,
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after {
-    display: none !important;
-    content: none !important;
-    border: 0 !important;
-  }
-
-  .lp-card {
-    border-top-color: rgba(255,255,255,.96) !important;
-    background-clip: padding-box !important;
-  }
-
-  .lp-card-right {
-    border-top: 0 !important;
-    outline: 0 !important;
-  }
-
-  .lp-panel,
-  .lp-panel-image,
-  .lp-panel img {
-    border-top: 0 !important;
-    outline: 0 !important;
-  }
-
-  .lp-shell {
-    padding-bottom: 0 !important;
-  }
-
-  .lp-card {
-    height: 100dvh !important;
-  }
-
-  .lp-card-left {
-    padding-bottom: max(28px, env(safe-area-inset-bottom)) !important;
-  }
-
-  .lp-itin-line {
-    background: rgba(255,255,255,.22) !important;
-    border: 1px solid rgba(255,255,255,.30) !important;
-    border-radius: 18px !important;
-    backdrop-filter: blur(18px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-  }
-
-  .lp-itin-time {
-    color: #3CA394 !important;
-    font-weight: 900 !important;
-  }
-
-  .lp-itin-label {
-    color: #FFFFFF !important;
-    font-weight: 850 !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    border-radius: 22px !important;
-    height: 58px !important;
-  }
-
-  .lp-ghost-btn {
-    background: #ffffff !important;
-    border: 1px solid #dedbd4 !important;
-    color: #080808 !important;
-  }
-
-  .lp-ghost-btn:hover {
-    background: #F6F3ED !important;
-    color: #080808 !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-google-wrap:hover {
-    background: #F8F5EF !important;
-    border-color: #d9d4ca !important;
-  }
-
-  .drawer-close,
-  .menu-close,
-  .hamburger-close,
-  .mobile-menu-close,
-  .drawer-header button,
-  .drawer button[aria-label="Close"],
-  .mobile-drawer button[aria-label="Close"],
-  .menu-panel button[aria-label="Close"],
-  .mobile-menu button[aria-label="Close"] {
-    display: none !important;
-  }
-
-  .hamburger.open span,
-  .hamburger.is-open span,
-  .menu-toggle.open span,
-  .menu-toggle.is-open span {
-    transform: none !important;
-    opacity: 1 !important;
-  }
-}
-
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-shell {
-    padding-bottom: 0 !important;
-  }
-
-  .lp-card {
-    height: 100dvh !important;
-  }
-
-  .lp-card-left {
-    padding-bottom: max(22px, env(safe-area-inset-bottom)) !important;
-  }
-}
-
-
-/* ===== FINAL POLISH: single border + desktop translucent itinerary + desktop-matched mobile buttons ===== */
-@media (max-width: 760px) {
-  .lp-card {
-    border: 3px solid rgba(255,255,255,.96) !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-  }
-
-  .lp-card *,
-  .lp-card-right,
-  .lp-card-left,
-  .lp-panel,
-  .lp-panel-image,
-  .lp-panel img {
-    outline: 0 !important;
-  }
-
-  .lp-card-right,
-  .lp-panel,
-  .lp-panel-image {
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after {
-    display: none !important;
-    content: none !important;
-  }
-
-  .lp-card-left {
-    border-left: 0 !important;
-    border-right: 0 !important;
-    border-bottom: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    height: 58px !important;
-    border-radius: 18px !important;
-    font-size: 16px !important;
-    font-weight: 750 !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-ghost-btn {
-    background: #FFFFFF !important;
-    border: 1px solid #D9D4CA !important;
-    color: #080808 !important;
-    box-shadow: none !important;
-  }
-}
-
-.itinerary-line,
-.lp-itin-line {
-  background: rgba(255,255,255,.24) !important;
-  border: 1px solid rgba(255,255,255,.34) !important;
-  backdrop-filter: blur(18px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-  box-shadow: none !important;
-}
-
-.itinerary-line b,
-.lp-itin-time {
-  color: #3CA394 !important;
-  font-weight: 900 !important;
-}
-
-.itinerary-line span,
-.lp-itin-label {
-  color: #FFFFFF !important;
-  font-weight: 850 !important;
-}
-
-.showreel-overlay,
-.lp-panel-overlay {
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.28)),
-    linear-gradient(90deg, rgba(0,0,0,.16), rgba(0,0,0,.02)) !important;
-}
-
-.google-wrap,
-.lp-google-wrap {
-  }
-
-.lp-ghost-btn,
-.google-connect-btn,
-.continue-guest-btn {
-  border-radius: 18px !important;
-}
-
-
-/* ===== CLEAN MOBILE WINDOW: no shade seam, unified white tile, exact desktop-style buttons ===== */
-@media (max-width: 760px) {
-  .lp-card::before,
-  .lp-card::after,
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after,
-  .lp-panel-overlay {
-    display: none !important;
-    content: none !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card {
-    border: 3px solid #ffffff !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: #ffffff !important;
-    overflow: hidden !important;
-  }
-
-  .lp-card-right,
-  .lp-panel,
-  .lp-panel-image,
-  .lp-panel img {
-    border: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-left {
-    background: #ffffff !important;
-    border: 0 !important;
-    border-top: 0 !important;
-    box-shadow: none !important;
-    margin-top: 0 !important;
-  }
-
-  .lp-card-left::before,
-  .lp-card-left::after {
-    display: none !important;
-    content: none !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-right {
-    margin-bottom: 0 !important;
-  }
-
-  .lp-card-left {
-    transform: translateY(0) !important;
-    border-radius: 0 !important;
-  }
-
-  .lp-itin-line {
-    background: rgba(255,255,255,.24) !important;
-    border: 1px solid rgba(255,255,255,.34) !important;
-    backdrop-filter: blur(18px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-itin-time {
-    color: #3CA394 !important;
-    font-weight: 900 !important;
-  }
-
-  .lp-itin-label {
-    color: #ffffff !important;
-    font-weight: 850 !important;
-  }
-
-  .lp-actions {
-    gap: 12px !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    height: 56px !important;
-    border-radius: 18px !important;
-    border: 1px solid #D9D4CA !important;
-    box-shadow: none !important;
-  }
-
-  .lp-google-wrap {
-      }
-
-  .lp-ghost-btn {
-    background: #ffffff !important;
-    color: #080808 !important;
-    font-size: 16px !important;
-    font-weight: 750 !important;
-  }
-
-  .lp-google-wrap:hover,
-  .lp-ghost-btn:hover {
-    background: #F8F5EF !important;
-    border-color: #D9D4CA !important;
-    color: #080808 !important;
-  }
-
-  .lp-google-wrap *,
-  .lp-ghost-btn * {
-    border-radius: inherit !important;
-  }
-}
-
-.itinerary-line {
-  background: rgba(255,255,255,.24) !important;
-  border: 1px solid rgba(255,255,255,.34) !important;
-  backdrop-filter: blur(18px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-  box-shadow: none !important;
-}
-
-.itinerary-line b {
-  color: #3CA394 !important;
-  font-weight: 900 !important;
-}
-
-.itinerary-line span {
-  color: #ffffff !important;
-  font-weight: 850 !important;
-}
-
-.showreel-overlay {
-  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.20)) !important;
-}
-
-
-/* ===== EMERGENCY MOBILE RESTORE: image window visible + desktop button style ===== */
-@media (max-width: 760px) {
-  .lp-card {
-    background: transparent !important;
-    border: 3px solid #ffffff !important;
-    border-radius: 42px 42px 0 0 !important;
-    overflow: hidden !important;
-    box-shadow: none !important;
-    outline: none !important;
-  }
-
-  .lp-card-right {
-    order: 1 !important;
-    position: relative !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .lp-card-right,
-  .lp-card-right * {
-    visibility: visible !important;
-  }
-
-  .lp-panel,
-  .lp-panel-image {
-    position: absolute !important;
-    inset: 0 !important;
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    overflow: hidden !important;
-  }
-
-  .lp-panel img,
-  .lp-panel-image img,
-  .lp-bg,
-  .lp-bg img,
-  .lp-image,
-  .lp-image img {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    filter: saturate(1.12) contrast(1.02) brightness(.98) !important;
-  }
-
-  .lp-card::before,
-  .lp-card::after,
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after,
-  .lp-panel-overlay {
-    display: none !important;
-    content: none !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-panel-itin {
-    position: absolute !important;
-    left: 24px !important;
-    right: 24px !important;
-    bottom: 24px !important;
-    z-index: 5 !important;
-    display: grid !important;
-    gap: 12px !important;
-  }
-
-  .lp-itin-line {
-    min-height: 58px !important;
-    display: grid !important;
-    grid-template-columns: 82px 1fr !important;
-    align-items: center !important;
-    padding: 0 18px !important;
-    border-radius: 18px !important;
-    background: rgba(255,255,255,.24) !important;
-    border: 1px solid rgba(255,255,255,.34) !important;
-    backdrop-filter: blur(18px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-itin-time {
-    color: #3CA394 !important;
-    font-weight: 900 !important;
-  }
-
-  .lp-itin-label {
-    color: #ffffff !important;
-    font-weight: 850 !important;
-  }
-
-  .lp-card-left {
-    order: 2 !important;
-    position: relative !important;
-    flex: 0 0 auto !important;
-    background: #ffffff !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-    padding: 28px 28px max(28px, env(safe-area-inset-bottom)) !important;
-  }
-
-  .lp-card-left::before,
-  .lp-card-left::after {
-    display: none !important;
-    content: none !important;
-  }
-
-  .lp-actions {
-    display: grid !important;
-    gap: 12px !important;
-    margin-top: 24px !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-ghost-btn {
-    width: 100% !important;
-    height: 56px !important;
-    border-radius: 18px !important;
-    border: 1px solid #D9D4CA !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
-  .lp-google-wrap iframe,
-  .lp-google-wrap > div,
-  #googleSignIn,
-  #googleSignIn > div {
-    opacity: 0 !important;
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 3 !important;
-  }
-
-  .lp-ghost-btn {
-    background: #ffffff !important;
-    color: #080808 !important;
-    font-size: 16px !important;
-    font-weight: 750 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  .lp-google-wrap:hover,
-  .lp-ghost-btn:hover {
-    background: #F8F5EF !important;
-    border-color: #D9D4CA !important;
-    color: #080808 !important;
-  }
-}
-
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-card-left {
-    padding: 22px 24px calc(44px + env(safe-area-inset-bottom)) 24px !important;
-  }
-
-  .lp-shell {
-    padding-bottom: 0 !important;
-  }
-
-  .lp-card {
-    height: 100dvh !important;
-  }
-}
-
 
 /* ===== PROFILE CARD: simple translucent profile note ===== */
 .setup-stack .partnership-box {
@@ -3270,7 +2288,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 }
 .rec-card-gone { pointer-events: none; }
 
-/* In-card image — hidden on desktop, shown on mobile */
+/* In-card image — hidden everywhere now that the photo pane doubles as the mobile backdrop */
 .rec-card-img { display: none; position: relative; height: 200px; flex-shrink: 0; }
 .rec-card-img img { width: 100%; height: 100%; object-fit: cover; }
 .rec-card-img-ov { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.35), transparent 55%); }
@@ -3381,27 +2399,143 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .rec-dot-heart { background: var(--accent); }
 .rec-dot-heart.rec-dot-on { background: var(--accent); width: 22px; }
 
-/* ── Mobile: stacked cards with in-card image (wireframe 3) ── */
+/* ── MOBILE BOTTOM BAR + GESTURE UI (hidden on desktop) ── */
+.rec-mbar {
+  display: none;
+  grid-template-columns: 1fr 1.35fr 1fr;
+  gap: 10px;
+  padding-top: 12px;
+  flex-shrink: 0;
+}
+.rec-mbar-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 54px; border-radius: 18px;
+  border: 1.5px solid var(--line-strong); background: #fff;
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  text-decoration: none; cursor: pointer;
+  box-shadow: 0 1px 6px rgba(0,0,0,.06);
+  transition: transform .15s, opacity .15s;
+}
+.rec-mbar-btn:active { transform: scale(.97); }
+.rec-mbar-btn:disabled { opacity: .5; cursor: wait; }
+.rec-mbar-primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.rec-hint {
+  display: none;
+  position: absolute; inset: 0; z-index: 30;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,.22);
+  border-radius: 24px;
+  animation: hintFade .35s ease both;
+  cursor: pointer;
+}
+@keyframes hintFade { from { opacity: 0; } to { opacity: 1; } }
+.rec-hint-pill {
+  display: flex; align-items: center; gap: 9px;
+  padding: 13px 20px; border-radius: 999px;
+  background: rgba(8,8,8,.78);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  color: #fff; font-size: 13px; font-weight: 700;
+  animation: hintPillIn .5s cubic-bezier(.34,1.56,.64,1) both;
+}
+.rec-hint-pill svg { color: var(--accent); flex-shrink: 0; }
+@keyframes hintPillIn {
+  from { opacity: 0; transform: translateY(12px) scale(.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.rec-heart-burst {
+  position: absolute; inset: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.rec-heart-burst svg {
+  color: #fff;
+  filter: drop-shadow(0 10px 28px rgba(0,0,0,.35));
+  animation: burstPop .75s cubic-bezier(.34,1.8,.64,1) both;
+}
+@keyframes burstPop {
+  0%   { transform: scale(.25); opacity: 0; }
+  30%  { transform: scale(1.25); opacity: 1; }
+  60%  { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.05); opacity: 0; }
+}
+
+.rec-more-backdrop {
+  position: fixed; inset: 0; z-index: 700;
+  background: rgba(10,10,10,.45);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: flex-end;
+  animation: drawerBgIn .2s ease both;
+}
+.rec-more-sheet {
+  width: 100%;
+  background: var(--bg);
+  border-radius: 26px 26px 0 0;
+  padding: 12px 16px max(22px, env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 2px;
+  animation: sheetUp .32s var(--ease) both;
+}
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.rec-more-grab {
+  width: 40px; height: 4px; border-radius: 999px;
+  background: var(--surface-3); margin: 0 auto 12px;
+}
+.rec-more-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; min-height: 54px; padding: 0 14px;
+  border: none; border-radius: 14px;
+  background: transparent;
+  font-size: 15px; font-weight: 700; color: var(--ink);
+  text-align: left; cursor: pointer;
+  transition: background .12s;
+}
+.rec-more-item:active { background: var(--surface-2); }
+.rec-more-item svg { flex-shrink: 0; color: var(--ink-2); }
+.rec-more-danger { color: #c0392b; }
+.rec-more-danger svg { color: #c0392b; }
+
+/* ── Mobile result: image backdrop + floating swipe card + bottom bar ── */
 @media (max-width: 900px) {
   .rec-screen {
     height: calc(100dvh - 68px);
-    padding: 4px 16px 12px;
+    padding: 4px 14px calc(10px + env(safe-area-inset-bottom));
   }
   .rec-head { padding-bottom: 10px; align-items: center; }
   .rec-head-dest { font-size: 24px; }
-  .rec-head-actions .rec-maps-cta { display: none; }
-  .rec-split {
-    grid-template-columns: 1fr;
-    gap: 0;
+  .rec-head-actions { display: none; }
+
+  /* Photo becomes the full backdrop; it changes with the active card */
+  .rec-split { position: relative; display: block; }
+  .rec-photo {
+    display: block;
+    position: absolute; inset: 0;
+    border-radius: 24px;
   }
-  .rec-photo { display: none; }
-  .rec-card-img { display: block; }
-  .rec-card { inset: 0; }
-  .rec-card-inner { padding: 18px 20px 20px; gap: 8px; }
+  .rec-photo-ov { background: linear-gradient(to bottom, rgba(0,0,0,.52) 0%, rgba(0,0,0,.04) 46%); }
+  .rec-photo-meta { top: 16px; bottom: auto; left: 18px; right: 18px; }
+  .rec-photo-name { font-size: 20px; }
+
+  /* Card floats over the image with the photo peeking around it */
+  .rec-stack {
+    position: absolute;
+    left: 14px; right: 14px;
+    top: 27%; bottom: 14px;
+    display: block;
+  }
+  .rec-card { cursor: pointer; }
+  .rec-card-img { display: none; }
+  .rec-card-inner { padding: 20px 20px 50px; gap: 8px; }
   .rec-card-name { font-size: 24px; }
-  .rec-card-desc { font-size: 13.5px; -webkit-line-clamp: 4; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+  .rec-card-desc { font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .rec-heart { top: 12px; right: 12px; width: 42px; height: 42px; }
+
+  /* Tap/swipe drives navigation — arrows off, dots stay */
+  .rec-arrow { display: none; }
   .rec-nav { bottom: 12px; }
+
+  .rec-mbar { display: grid; }
+  .rec-hint { display: flex; }
 }
 
 /* ── ACTION SEARCH BAR (mood page) — kokonutui style ── */
@@ -3565,6 +2699,225 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .lp-bg-outer .lp-bg-slide { transition: opacity .6s ease; }
 }
 
+/* ═══════════════════════════════════════════
+   MOBILE LANDING — consolidated, full-bleed
+   Replaces the stacked emergency override blocks.
+   The image window fills edge-to-edge (no outer gap),
+   and the white sign-in sheet rises over it.
+═══════════════════════════════════════════ */
+@media (max-width: 760px) {
+  .app-shell.login-active,
+  .login-active {
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    background: #050807 !important;
+  }
+  .login-active .navbar { display: none !important; }
+
+  /* Full bleed — no padding, no frame, no gap */
+  .lp-shell {
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+    background: #050807 !important;
+  }
+
+  .lp-bg-outer { display: none !important; }
+
+  .lp-card {
+    position: relative !important;
+    z-index: 2 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #050807 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  /* Image window: fills all the space above the sheet, edge to edge */
+  .lp-card-right {
+    order: 1 !important;
+    position: relative !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: #050807 !important;
+  }
+
+  .lp-window-img {
+    object-position: center !important;
+    filter: saturate(1.12) contrast(1.02) !important;
+  }
+
+  .lp-panel-overlay {
+    display: block !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.02) 34%, rgba(0,0,0,.34) 100%) !important;
+    pointer-events: none !important;
+  }
+
+  .lp-window-mood {
+    top: max(16px, env(safe-area-inset-top)) !important;
+    left: 18px !important;
+  }
+
+  .lp-panel-itin {
+    position: absolute !important;
+    left: 18px !important;
+    right: 18px !important;
+    bottom: 46px !important; /* clears the sheet's rounded overlap */
+    display: grid !important;
+    gap: 11px !important;
+    z-index: 2 !important;
+  }
+
+  .lp-itin-line {
+    min-height: 56px !important;
+    display: grid !important;
+    grid-template-columns: 78px 1fr !important;
+    align-items: center !important;
+    padding: 0 18px !important;
+    border-radius: 18px !important;
+    background: rgba(255,255,255,.24) !important;
+    border: 1px solid rgba(255,255,255,.34) !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+    box-shadow: none !important;
+  }
+
+  .lp-itin-time {
+    color: #3CA394 !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    letter-spacing: -.02em !important;
+  }
+
+  .lp-itin-label {
+    color: #FFFFFF !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: -.02em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* White sign-in sheet rises over the image */
+  .lp-card-left {
+    order: 2 !important;
+    position: relative !important;
+    z-index: 5 !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    margin: -28px 0 0 !important;
+    padding: 26px 26px max(28px, env(safe-area-inset-bottom)) !important;
+    background: #FFFFFF !important;
+    border: 0 !important;
+    border-radius: 28px 28px 0 0 !important;
+    box-shadow: 0 -12px 34px rgba(0,0,0,.16) !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  .lp-eyebrow {
+    margin: 0 0 10px !important;
+    color: #8A897F !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    letter-spacing: .18em !important;
+    text-transform: uppercase !important;
+  }
+
+  .lp-h1 {
+    margin: 0 !important;
+    font-size: clamp(46px, 13vw, 62px) !important;
+    line-height: .88 !important;
+    letter-spacing: -.045em !important;
+    color: #080808 !important;
+  }
+
+  .lp-accent { color: #3CA394 !important; -webkit-text-fill-color: #3CA394 !important; }
+
+  .lp-sub {
+    margin: 14px 0 0 !important;
+    max-width: 34ch !important;
+    color: #8A897F !important;
+    font-size: 14px !important;
+    line-height: 1.42 !important;
+    letter-spacing: -.01em !important;
+  }
+
+  .lp-actions {
+    width: 100% !important;
+    margin-top: 20px !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 11px !important;
+  }
+
+  /* Google iframe stays desktop-only; mobile uses the styled prompt() button */
+  .lp-google-wrap { display: none !important; }
+  .lp-google-btn-mobile {
+    display: flex !important;
+    height: 56px !important;
+    border-radius: 18px !important;
+    border: 1px solid #D9D4CA !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+  }
+
+  .lp-ghost-btn {
+    width: 100% !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    border-radius: 18px !important;
+    border: 1px solid #D9D4CA !important;
+    background: #FFFFFF !important;
+    color: #080808 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    font-size: 15px !important;
+    font-weight: 750 !important;
+    box-shadow: none !important;
+  }
+  .lp-ghost-btn:hover { background: #F8F5EF !important; border-color: #D9D4CA !important; color: #080808 !important; }
+
+  .lp-fine { display: none !important; }
+
+  .drawer-close { display: none !important; }
+}
+
+/* Shorter phones: keep CTAs visible */
+@media (max-width: 760px) and (max-height: 760px) {
+  .lp-card-left { padding: 20px 22px max(22px, env(safe-area-inset-bottom)) !important; }
+  .lp-h1 { font-size: clamp(42px, 12vw, 54px) !important; }
+  .lp-sub { margin-top: 10px !important; font-size: 13px !important; }
+  .lp-actions { margin-top: 15px !important; gap: 9px !important; }
+  .lp-google-btn-mobile, .lp-ghost-btn { height: 50px !important; min-height: 50px !important; }
+  .lp-panel-itin { bottom: 40px !important; gap: 9px !important; }
+  .lp-itin-line { min-height: 50px !important; }
+}
 `;
 
 createRoot(document.getElementById("root")).render(<App />);
