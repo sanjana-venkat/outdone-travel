@@ -2592,6 +2592,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     z-index: 0;
     border-radius: 0;
   }
+  .rec-photo-img { object-position: center bottom; }
   .rec-photo-ov { background: linear-gradient(to bottom, rgba(0,0,0,.62) 0%, rgba(0,0,0,.04) 46%); }
   .rec-photo { border-radius: 0; border: none; }
   .rec-photo-meta { top: calc(76px + env(safe-area-inset-top, 0px)); bottom: auto; left: 18px; right: 18px; }
