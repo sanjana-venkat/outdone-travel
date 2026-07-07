@@ -1328,7 +1328,6 @@ function App() {
                                 </a>
                               )}
                               <button className="rec-mbar-btn" onClick={() => setMoreOpen(true)}>
-                                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="9" r="1.5" fill="currentColor" /><circle cx="9" cy="9" r="1.5" fill="currentColor" /><circle cx="14" cy="9" r="1.5" fill="currentColor" /></svg>
                                 <span>More</span>
                               </button>
                             </div>
@@ -1633,6 +1632,8 @@ button { cursor: pointer; }
 .result-active .nav-subscribe:hover { background: rgba(255,255,255,.12) !important; border-color: #fff !important; }
 /* Make navbar transparent only on the result screen so buttons float on the image */
 .result-active .navbar { background: transparent !important; box-shadow: none !important; }
+/* Make the shell background transparent on result so the fixed photo shows full-bleed */
+.app-shell.result-active { background: transparent !important; }
 
 /* ── CHIPS (global) ── */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
