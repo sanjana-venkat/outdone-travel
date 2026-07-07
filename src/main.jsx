@@ -2610,7 +2610,14 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .rec-card { cursor: pointer; }
   .rec-card-img { display: none; }
   .rec-card-inner { padding: 18px 18px 56px; gap: 8px; overflow: hidden; }
-  .rec-card-name { font-size: 24px; }
+  .rec-card-name {
+    font-size: 24px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .rec-card-desc { font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .rec-heart { top: 12px; right: 12px; width: 42px; height: 42px; }
 
