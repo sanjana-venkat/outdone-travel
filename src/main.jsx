@@ -342,36 +342,6 @@ function App() {
     return () => { cancelled = true; };
   }, [step]);
 
-  // Anime.js: drive the loading-map traveller along the route with createMotionPath.
-  // Requires `npm install animejs`; falls back silently to the CSS keyframe version.
-  useEffect(() => {
-    if (step !== "loading") return;
-    let cancelled = false;
-    let anims = [];
-    (async () => {
-      try {
-        const { animate, svg } = await import("animejs");
-        // Wait a tick for the SVG to mount
-        await new Promise(r => setTimeout(r, 350));
-        if (cancelled) return;
-        const pathEl = document.querySelector("#loaderMotionPath");
-        const rider = document.querySelector(".map-traveller-anime");
-        if (!pathEl || !rider) return;
-        // Swap: hide CSS-animated traveller, show anime-driven one
-        document.querySelectorAll(".map-traveller, .map-traveller-dot").forEach(el => { el.style.display = "none"; });
-        rider.style.display = "";
-        const { translateX, translateY } = svg.createMotionPath("#loaderMotionPath");
-        anims.push(animate(rider, {
-          translateX, translateY,
-          ease: "inOutQuad",
-          duration: 3400,
-          loop: true,
-          loopDelay: 600,
-        }));
-      } catch (e) { /* animejs not installed — CSS fallback keeps running */ }
-    })();
-    return () => { cancelled = true; anims.forEach(a => a?.cancel?.()); };
-  }, [step]);
 
   useEffect(() => {
     const query = destination.trim();
