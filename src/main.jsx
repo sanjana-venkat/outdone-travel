@@ -354,7 +354,8 @@ function App() {
         // renderButton still needed to initialize but hidden
         window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: 1 });
       } else {
-        window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: 320 });
+        const googleWidth = Math.max(280, Math.min(640, Math.round(buttonContainer.getBoundingClientRect().width || 320)));
+        window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: googleWidth });
       }
     };
     loadGoogleButton();
@@ -480,7 +481,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a real, specific, mood-first day plan. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the stops across the ENTIRE region — pick the best mood-matching places even if they are hours apart, and do NOT cluster every stop in a single city or town. Only keep stops close together and walkable when the destination is a specific city or neighborhood. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, recommendationCount: 8, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a real, specific, mood-first day plan with exactly 8 recommendations/stops. Return 8 concrete places, no fewer. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the stops across the ENTIRE region — pick the best mood-matching places even if they are hours apart, and do NOT cluster every stop in a single city or town. Only keep stops close together and walkable when the destination is a specific city or neighborhood. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -1190,6 +1191,7 @@ function App() {
             <div className="rec-head-actions">
               <button className="icon-btn-sm" onClick={() => goTo("mood")} title="Edit mood">
                 <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span>Edit</span>
               </button>
               <button
                 className="icon-btn-sm"
@@ -1197,31 +1199,14 @@ function App() {
                 onClick={startOver}
               >
                 <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 3v3M9 3a6 6 0 106 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M6.5 1.5L9 3 6.5 4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </button>
-              <button className="icon-btn-sm" onClick={generatePlan} title="Regenerate">
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0110.5-4M15 9a6 6 0 01-10.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M13 5h2.5V2.5M5 13H2.5V15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </button>
-              <button
-                className={`icon-btn-sm${shareCopied ? " icon-btn-sm-active" : ""}`}
-                disabled={shareLoading}
-                onClick={shareItinerary}
-                title="Share"
-              >
-                {shareCopied
-                  ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="13" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="13" cy="14.5" r="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="5" cy="9" r="2" stroke="currentColor" strokeWidth="1.5" /><line x1="11.1" y1="4.6" x2="6.9" y2="7.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><line x1="6.9" y1="10.1" x2="11.1" y2="13.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
+                <span>Start over</span>
               </button>
               <button className={`icon-btn-sm cal-icon-btn-${calendarState}`} onClick={addToCalendar} disabled={calendarState === "loading"} title={user ? "Add to Google Calendar" : "Download .ics"}>
                 {calendarState === "loading" ? <svg className="cal-spin" width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round" /></svg>
                   : calendarState === "done" ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" /><path d="M2 8h14" stroke="currentColor" strokeWidth="1.5" /><path d="M6 1.5v3M12 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
+                <span>{user ? "Add calendar" : "Download .ics"}</span>
               </button>
-              {tripMapsUrl && (
-                <a className="rec-maps-cta" href={tripMapsUrl} target="_blank" rel="noreferrer">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5" /><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5" /></svg>
-                  Maps
-                </a>
-              )}
             </div>
           </header>
 
@@ -1741,7 +1726,23 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-accent { color: var(--accent) !important; }
 .lp-sub { font-size: 12px; line-height: 1.5; color: var(--ink-3); margin: 0; }
 .lp-actions { display: flex; flex-direction: column; gap: 6px; }
-.lp-google-wrap { min-height: 36px; display: flex; align-items: center; position: relative; width: 100%; }
+.lp-google-wrap {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  padding: 0;
+  background: #fff;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 11px;
+  overflow: hidden;
+  transition: all .18s;
+}
+.lp-google-wrap:hover { border-color: var(--ink); background: var(--surface); }
+.lp-google-wrap #googleSignIn { width: 100%; display: flex; align-items: center; }
+.lp-google-wrap #googleSignIn > div { width: 100% !important; }
+.lp-google-wrap iframe { width: 100% !important; }
 /* Desktop: hide fake, show real */
 .lp-google-fake { display: none; }
 .lp-google-real { width: 100%; }
@@ -1749,13 +1750,14 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 /* Mobile Google button — plain styled, no iframe */
 .lp-google-btn-mobile {
   display: none;
-  width: 100%; align-items: center; justify-content: center; gap: 10px;
-  background: #fff; color: #3c4043;
-  border: 1px solid #d8d8d8; border-radius: 13px;
-  padding: 13px; font-size: 14px; font-weight: 500;
-  cursor: pointer; font-family: inherit; letter-spacing: .25px;
+  width: 100%; align-items: center; justify-content: space-between; gap: 10px;
+  background: #fff; color: var(--ink);
+  border: 1.5px solid var(--line-strong); border-radius: 11px;
+  padding: 0 14px; min-height: 40px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; letter-spacing: 0;
+  transition: all .18s;
 }
-.lp-google-btn-mobile:hover { background: #f7f7f7; }
+.lp-google-btn-mobile:hover { border-color: var(--ink); background: var(--surface); }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
 .lp-fine { font-size: 10px; color: var(--ink-3); line-height: 1.4; }
 
@@ -1809,9 +1811,10 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
   .lp-google-wrap {
     min-height: 52px;
-    background: transparent;
-    border: none;
-    overflow: visible;
+    background: #fff;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 14px;
+    overflow: hidden;
     position: relative;
   }
   .lp-ghost-btn {
@@ -2227,8 +2230,19 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   width: 38px; height: 38px; border-radius: 12px;
   border: 1.5px solid var(--line-strong); background: transparent;
   color: var(--ink-2); display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all .15s;
+  gap: 7px; overflow: hidden; white-space: nowrap;
+  cursor: pointer; transition: all .18s;
 }
+.icon-btn-sm span {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  transition: max-width .18s, opacity .12s;
+}
+.icon-btn-sm:hover:not(:disabled) { width: auto; padding: 0 12px; }
+.icon-btn-sm:hover:not(:disabled) span { max-width: 110px; opacity: 1; }
 .icon-btn-sm:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); background: var(--surface); }
 .icon-btn-sm:disabled { opacity: .4; cursor: wait; }
 .icon-btn-sm-active { border-color: var(--accent) !important; color: var(--accent) !important; }
@@ -2354,7 +2368,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .rec-card-inner {
   flex: 1;
   min-height: 0;
-  padding: clamp(22px,3vw,34px) clamp(22px,3vw,34px) 74px;
+  padding: clamp(22px,3vw,34px) clamp(22px,3vw,34px) 190px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -2455,6 +2469,23 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .rec-mbar-btn:active { transform: scale(.97); }
 .rec-mbar-btn:disabled { opacity: .5; cursor: wait; }
 .rec-mbar-primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.rec-card-actions {
+  position: absolute;
+  left: 22px; right: 22px; bottom: 74px;
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+}
+.rec-card-actions .rec-mbar-btn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 16px;
+  font-size: 14px;
+  box-shadow: none;
+}
+.rec-card-actions > .rec-mbar-btn:last-child { display: none; }
 
 .rec-hint {
   display: none;
@@ -2602,6 +2633,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .rec-mbar { display: none; }
   .rec-card-actions { display: none; }
   .rec-card-actions .rec-mbar-btn { width: 100%; min-height: 46px; justify-content: center; }
+  .rec-card-actions > .rec-mbar-btn:last-child { display: flex; }
   .rec-card-actions { display: flex; flex-direction: column; gap: 12px; padding: 12px 18px calc(20px + env(safe-area-inset-bottom)); background: transparent; }
   .rec-card { overflow: visible; }
   .rec-hint { display: flex; }
@@ -2948,12 +2980,21 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .lp-google-wrap { display: none !important; }
   .lp-google-btn-mobile {
     display: flex !important;
+    width: 100% !important;
     height: 56px !important;
+    min-height: 56px !important;
     border-radius: 18px !important;
     border: 1px solid #D9D4CA !important;
+    background: #FFFFFF !important;
+    color: #080808 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
     font-size: 15px !important;
-    font-weight: 600 !important;
+    font-weight: 750 !important;
+    box-shadow: none !important;
   }
+  .lp-google-btn-mobile:hover { background: #F8F5EF !important; border-color: #D9D4CA !important; color: #080808 !important; }
 
   .lp-ghost-btn {
     width: 100% !important;
