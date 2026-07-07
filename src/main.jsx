@@ -354,8 +354,7 @@ function App() {
         // renderButton still needed to initialize but hidden
         window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: 1 });
       } else {
-        const googleWidth = Math.max(280, Math.min(640, Math.round(buttonContainer.getBoundingClientRect().width || 320)));
-        window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: googleWidth });
+        window.google.accounts.id.renderButton(buttonContainer, { theme: "outline", size: "large", shape: "pill", text: "continue_with", width: 320 });
       }
     };
     loadGoogleButton();
@@ -1189,9 +1188,9 @@ function App() {
               <h2 className="rec-head-dest">{itinerary?.destination || destination}</h2>
             </div>
             <div className="rec-head-actions">
-              <button className="icon-btn-sm" onClick={() => goTo("mood")} title="Edit mood">
+              <button className="icon-btn-sm" onClick={() => goTo("mood")} title="Edit vibe">
                 <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                <span>Edit</span>
+                <span>Edit vibe</span>
               </button>
               <button
                 className="icon-btn-sm"
@@ -1201,11 +1200,11 @@ function App() {
                 <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 3v3M9 3a6 6 0 106 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M6.5 1.5L9 3 6.5 4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 <span>Start over</span>
               </button>
-              <button className={`icon-btn-sm cal-icon-btn-${calendarState}`} onClick={addToCalendar} disabled={calendarState === "loading"} title={user ? "Add to Google Calendar" : "Download .ics"}>
+              <button className={`icon-btn-sm cal-icon-btn-${calendarState}`} onClick={addToCalendar} disabled={calendarState === "loading"} title="Add to calendar">
                 {calendarState === "loading" ? <svg className="cal-spin" width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round" /></svg>
                   : calendarState === "done" ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" /><path d="M2 8h14" stroke="currentColor" strokeWidth="1.5" /><path d="M6 1.5v3M12 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
-                <span>{user ? "Add calendar" : "Download .ics"}</span>
+                <span>Add to calendar</span>
               </button>
             </div>
           </header>
@@ -1727,22 +1726,12 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-sub { font-size: 12px; line-height: 1.5; color: var(--ink-3); margin: 0; }
 .lp-actions { display: flex; flex-direction: column; gap: 6px; }
 .lp-google-wrap {
-  min-height: 40px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   position: relative;
   width: 100%;
-  padding: 0;
-  background: #fff;
-  border: 1.5px solid var(--line-strong);
-  border-radius: 11px;
-  overflow: hidden;
-  transition: all .18s;
 }
-.lp-google-wrap:hover { border-color: var(--ink); background: var(--surface); }
-.lp-google-wrap #googleSignIn { width: 100%; display: flex; align-items: center; }
-.lp-google-wrap #googleSignIn > div { width: 100% !important; }
-.lp-google-wrap iframe { width: 100% !important; }
 /* Desktop: hide fake, show real */
 .lp-google-fake { display: none; }
 .lp-google-real { width: 100%; }
@@ -1750,14 +1739,13 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 /* Mobile Google button — plain styled, no iframe */
 .lp-google-btn-mobile {
   display: none;
-  width: 100%; align-items: center; justify-content: space-between; gap: 10px;
-  background: #fff; color: var(--ink);
-  border: 1.5px solid var(--line-strong); border-radius: 11px;
-  padding: 0 14px; min-height: 40px; font-size: 12px; font-weight: 600;
-  cursor: pointer; font-family: inherit; letter-spacing: 0;
-  transition: all .18s;
+  width: 100%; align-items: center; justify-content: center; gap: 10px;
+  background: #fff; color: #3c4043;
+  border: 1px solid #d8d8d8; border-radius: 13px;
+  padding: 13px; font-size: 14px; font-weight: 500;
+  cursor: pointer; font-family: inherit; letter-spacing: .25px;
 }
-.lp-google-btn-mobile:hover { border-color: var(--ink); background: var(--surface); }
+.lp-google-btn-mobile:hover { background: #f7f7f7; }
 .lp-ghost-btn:hover { border-color: var(--ink); background: var(--surface); }
 .lp-fine { font-size: 10px; color: var(--ink-3); line-height: 1.4; }
 
@@ -1811,10 +1799,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
   .lp-google-wrap {
     min-height: 52px;
-    background: #fff;
-    border: 1.5px solid var(--line-strong);
-    border-radius: 14px;
-    overflow: hidden;
+    background: transparent;
+    border: none;
+    overflow: visible;
     position: relative;
   }
   .lp-ghost-btn {
@@ -2230,7 +2217,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   width: 38px; height: 38px; border-radius: 12px;
   border: 1.5px solid var(--line-strong); background: transparent;
   color: var(--ink-2); display: flex; align-items: center; justify-content: center;
-  gap: 7px; overflow: hidden; white-space: nowrap;
+  gap: 0; overflow: hidden; white-space: nowrap;
   cursor: pointer; transition: all .18s;
 }
 .icon-btn-sm span {
@@ -2241,7 +2228,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   font-weight: 700;
   transition: max-width .18s, opacity .12s;
 }
-.icon-btn-sm:hover:not(:disabled) { width: auto; padding: 0 12px; }
+.icon-btn-sm:hover:not(:disabled) { width: auto; padding: 0 12px; gap: 7px; }
 .icon-btn-sm:hover:not(:disabled) span { max-width: 110px; opacity: 1; }
 .icon-btn-sm:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); background: var(--surface); }
 .icon-btn-sm:disabled { opacity: .4; cursor: wait; }
@@ -2634,8 +2621,17 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .rec-card-actions { display: none; }
   .rec-card-actions .rec-mbar-btn { width: 100%; min-height: 46px; justify-content: center; }
   .rec-card-actions > .rec-mbar-btn:last-child { display: flex; }
-  .rec-card-actions { display: flex; flex-direction: column; gap: 12px; padding: 12px 18px calc(20px + env(safe-area-inset-bottom)); background: transparent; }
-  .rec-card { overflow: visible; }
+  .rec-card-actions {
+    position: static;
+    left: auto; right: auto; bottom: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 18px calc(20px + env(safe-area-inset-bottom));
+    background: transparent;
+  }
+  .rec-card { overflow: hidden; }
+  .rec-card-inner { flex: 1; padding-bottom: 12px; overflow-y: auto; }
   .rec-hint { display: flex; }
   .rec-hint { display: flex; }
 }
@@ -2981,20 +2977,21 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .lp-google-btn-mobile {
     display: flex !important;
     width: 100% !important;
-    height: 56px !important;
-    min-height: 56px !important;
-    border-radius: 18px !important;
-    border: 1px solid #D9D4CA !important;
+    min-height: 50px !important;
+    border-radius: 13px !important;
+    border: 1px solid #D8D8D8 !important;
     background: #FFFFFF !important;
-    color: #080808 !important;
+    color: #3C4043 !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
-    font-size: 15px !important;
-    font-weight: 750 !important;
+    gap: 10px !important;
+    padding: 13px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    letter-spacing: .25px !important;
     box-shadow: none !important;
   }
-  .lp-google-btn-mobile:hover { background: #F8F5EF !important; border-color: #D9D4CA !important; color: #080808 !important; }
+  .lp-google-btn-mobile:hover { background: #F7F7F7 !important; border-color: #D8D8D8 !important; color: #3C4043 !important; }
 
   .lp-ghost-btn {
     width: 100% !important;
