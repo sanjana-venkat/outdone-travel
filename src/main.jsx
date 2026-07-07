@@ -407,6 +407,20 @@ function App() {
     : fallbackFilteredDestinations.slice(0, 6).map((item) => ({ label: item.label, source: "fallback" }));
 
   const selectedMoodObjects = selectedMoods.map((id) => moodVibes.find((vibe) => vibe.id === id)).filter(Boolean);
+  // Preload all itinerary images so switching cards feels instant on mobile
+  useEffect(() => {
+    if (!itinerary?.stops?.length) return;
+    const imgs = [];
+    const stops = itinerary.stops;
+    stops.forEach((s, i) => {
+      const url = s.imageUrl || s.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length, 1)]?.img || moodVibes[i % moodVibes.length].img;
+      if (!url) return;
+      const img = new Image();
+      img.src = url;
+      imgs.push(img);
+    });
+    return () => { /* allow garbage collection */ };
+  }, [itinerary, selectedMoods]);
   const travelArchetype = getTravelArchetype(selectedMoodObjects);
   const googleTravelMode = transportMode === "Car" ? "driving" : transportMode === "Public transit" ? "transit" : "walking";
   const savedStopsList = (itinerary?.stops || []).filter((_, i) => savedCards.has(i));
@@ -2526,7 +2540,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 @media (max-width: 900px) {
   .rec-screen {
     height: calc(100dvh - 68px);
-    padding: 4px 14px calc(10px + env(safe-area-inset-bottom));
+    padding: 0; /* remove off-white gutters so photo can be full-bleed */
+    background: transparent;
   }
   .rec-head { padding-bottom: 10px; align-items: center; }
   .rec-head-dest { display: none; }
@@ -2536,8 +2551,9 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .rec-split { position: relative; display: block; }
   .rec-photo {
     display: block;
-    position: absolute; inset: 0;
-    border-radius: 24px;
+    position: fixed; inset: 0; /* full-bleed background */
+    z-index: 0;
+    border-radius: 0;
   }
   .rec-photo-ov { background: linear-gradient(to bottom, rgba(0,0,0,.62) 0%, rgba(0,0,0,.04) 46%); }
   .rec-photo { border-radius: 0; border: none; }
@@ -2549,12 +2565,13 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     position: absolute;
     left: 14px; right: 14px;
     bottom: 14px; top: auto;
-    height: 46vh;
+    height: 50vh;
     display: block;
+    z-index: 2;
   }
   .rec-card { cursor: pointer; }
   .rec-card-img { display: none; }
-  .rec-card-inner { padding: 18px 18px 56px; gap: 8px; overflow: visible; }
+  .rec-card-inner { padding: 18px 18px 56px; gap: 8px; overflow: hidden; }
   .rec-card-name { font-size: 24px; }
   .rec-card-desc { font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .rec-heart { top: 12px; right: 12px; width: 42px; height: 42px; }
@@ -2566,7 +2583,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .rec-mbar { display: none; }
   .rec-card-actions { display: none; }
   .rec-card-actions .rec-mbar-btn { width: 100%; min-height: 46px; justify-content: center; }
-  .rec-card-actions { display: flex; flex-direction: column; gap: 10px; padding: 12px 18px 20px; background: transparent; }
+  .rec-card-actions { display: flex; flex-direction: column; gap: 12px; padding: 12px 18px calc(20px + env(safe-area-inset-bottom)); background: transparent; }
+  .rec-card { overflow: visible; }
   .rec-hint { display: flex; }
   .rec-hint { display: flex; }
 }
