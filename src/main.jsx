@@ -74,6 +74,19 @@ function sortByProximity(stops) {
 }
 
 // Activity suggestions per mood — powers the mood-page action search bar
+// Landing-page preview itineraries — one per mood, cycled with the background
+const loginItins = {
+  adventurous: [["07:00", "Sunrise ridge hike"], ["12:30", "Cliffside lunch"], ["16:00", "Zipline over the valley"]],
+  "slow-scenic": [["09:00", "Slow lakeside morning"], ["13:00", "Picnic under the pines"], ["18:00", "Golden-hour drift"]],
+  cultural: [["08:30", "Quiet temple morning"], ["12:00", "Old-town walking tour"], ["17:30", "Evening gallery hop"]],
+  culinary: [["09:30", "Farmers market graze"], ["13:00", "Chef's counter lunch"], ["19:30", "Tasting menu finale"]],
+  offbeat: [["10:00", "Tiny obscure museum"], ["14:00", "Secret garden detour"], ["21:00", "Hidden speakeasy"]],
+  social: [["11:00", "Brunch with the crew"], ["16:00", "Night market warm-up"], ["20:00", "Rooftop golden hour"]],
+  active: [["06:30", "Sunrise paddle"], ["11:00", "Coastal bike loop"], ["15:30", "Boulder & stretch"]],
+  "night-owl": [["17:00", "Aperitivo hour"], ["21:00", "Live jazz basement"], ["00:30", "Midnight street food"]],
+  romantic: [["10:00", "Slow café morning"], ["17:45", "Golden hour viewpoint"], ["20:30", "Candlelit dinner"]],
+};
+
 const moodActivitySuggestions = {
   adventurous: ["Ziplining", "Cliff jumping", "Paragliding", "White-water rafting", "Bungee jump"],
   "slow-scenic": ["Sunset boat ride", "Lakeside cafe", "Golden hour picnic", "Scenic ferry crossing"],
@@ -260,6 +273,8 @@ function App() {
   const [savedCards, setSavedCards] = useState(new Set());
   const [swipeDir, setSwipeDir] = useState(1);
   const [activityFocus, setActivityFocus] = useState(false);
+  const [customActivities, setCustomActivities] = useState([]);
+  const [loginSlide, setLoginSlide] = useState(0);
   const shellRef = useRef(null);
 
   function goTo(s) {
@@ -342,6 +357,12 @@ function App() {
     return () => { cancelled = true; };
   }, [step]);
 
+  // Landing page: cinematic cycle through mood imagery + itinerary lines
+  useEffect(() => {
+    if (step !== "login") return;
+    const t = setInterval(() => setLoginSlide(i => (i + 1) % moodVibes.length), 4500);
+    return () => clearInterval(t);
+  }, [step]);
 
   useEffect(() => {
     const query = destination.trim();
@@ -432,7 +453,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: customActivity.trim() || null, instruction: "Create a real, specific, mood-first day plan. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a real, specific, mood-first day plan. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -623,7 +644,14 @@ function App() {
       {step === "login" && (
         <div className="lp-shell">
           <div className="lp-bg-outer">
-            <img src="https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            {moodVibes.map((v, i) => (
+              <img
+                key={v.id}
+                src={v.img}
+                alt=""
+                className={`lp-bg-outer-img lp-bg-slide${i === loginSlide ? " lp-bg-live" : ""}`}
+              />
+            ))}
             <div className="lp-bg-outer-dim" />
           </div>
 
@@ -666,20 +694,20 @@ function App() {
             </div>
 
             <div className="lp-card-right">
+              {/* The "captured" wallpaper — condenses into the frame on each cycle */}
+              <img key={`win-${loginSlide}`} src={moodVibes[loginSlide].img} alt="" className="lp-window-img" />
               <div className="lp-panel-overlay" />
-              <div className="lp-panel-itin">
-                <div className="lp-itin-line lp-itin-1">
-                  <span className="lp-itin-time">08:30</span>
-                  <span className="lp-itin-label">Quiet temple morning</span>
-                </div>
-                <div className="lp-itin-line lp-itin-2">
-                  <span className="lp-itin-time">12:00</span>
-                  <span className="lp-itin-label">Vegetarian lunch nearby</span>
-                </div>
-                <div className="lp-itin-line lp-itin-3">
-                  <span className="lp-itin-time">17:30</span>
-                  <span className="lp-itin-label">Golden-hour walk</span>
-                </div>
+              <span key={`tag-${loginSlide}`} className="lp-window-mood">
+                <span className="lp-window-mood-icon">{moodVibes[loginSlide].icon}</span>
+                {moodVibes[loginSlide].title}
+              </span>
+              <div className="lp-panel-itin" key={`itin-${loginSlide}`}>
+                {(loginItins[moodVibes[loginSlide].id] || loginItins.cultural).map(([time, label], i) => (
+                  <div key={label} className={`lp-itin-line lp-itin-drop`} style={{ animationDelay: `${.25 + i * .16}s` }}>
+                    <span className="lp-itin-time">{time}</span>
+                    <span className="lp-itin-label">{label}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -817,21 +845,45 @@ function App() {
           <div className="custom-activity-wrap">
             <div className="action-search">
               <span className="action-search-label">WANT SOMETHING SPECIFIC?</span>
-              <div className={`action-search-bar${activityFocus ? " action-search-open" : ""}`}>
+              <div className={`action-search-bar${activityFocus ? " action-search-open" : ""}${customActivities.length ? " action-search-has-chips" : ""}`}>
                 <svg className="action-search-icon" width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" strokeWidth="1.6"/><path d="M14 14l3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-                <input
-                  id="customActivity"
-                  type="text"
-                  value={customActivity}
-                  onChange={e => setCustomActivity(e.target.value)}
-                  onFocus={() => setActivityFocus(true)}
-                  onBlur={() => setTimeout(() => setActivityFocus(false), 150)}
-                  placeholder="Search an activity — ziplining, cooking class, rooftop sunset…"
-                  maxLength={200}
-                  autoComplete="off"
-                />
-                {customActivity && (
-                  <button className="action-search-clear" onMouseDown={(e) => { e.preventDefault(); setCustomActivity(""); }} aria-label="Clear">×</button>
+                <div className="action-search-field">
+                  {customActivities.map((a) => (
+                    <span key={a} className="activity-chip">
+                      {a}
+                      <button
+                        type="button"
+                        className="activity-chip-x"
+                        onMouseDown={(e) => { e.preventDefault(); setCustomActivities(list => list.filter(x => x !== a)); }}
+                        aria-label={`Remove ${a}`}
+                      >×</button>
+                    </span>
+                  ))}
+                  <input
+                    id="customActivity"
+                    type="text"
+                    value={customActivity}
+                    onChange={e => setCustomActivity(e.target.value)}
+                    onFocus={() => setActivityFocus(true)}
+                    onBlur={() => setTimeout(() => setActivityFocus(false), 150)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter" && customActivity.trim()) {
+                        e.preventDefault();
+                        const v = customActivity.trim();
+                        setCustomActivities(list => list.includes(v) ? list : [...list, v]);
+                        setCustomActivity("");
+                      }
+                      if (e.key === "Backspace" && !customActivity && customActivities.length) {
+                        setCustomActivities(list => list.slice(0, -1));
+                      }
+                    }}
+                    placeholder={customActivities.length ? "Add another…" : "Search activities — ziplining, cooking class, rooftop sunset…"}
+                    maxLength={200}
+                    autoComplete="off"
+                  />
+                </div>
+                {(customActivity || customActivities.length > 0) && (
+                  <button className="action-search-clear" onMouseDown={(e) => { e.preventDefault(); setCustomActivity(""); setCustomActivities([]); }} aria-label="Clear all">×</button>
                 )}
               </div>
 
@@ -844,19 +896,26 @@ function App() {
                 return (
                   <div className="action-search-panel">
                     <p className="action-search-panel-label">{selectedMoods.length ? "Based on your moods" : "Popular right now"}</p>
-                    {filtered.map((p, i) => (
-                      <button
-                        key={p.activity + i}
-                        type="button"
-                        className="action-search-item"
-                        style={{ animationDelay: `${i * 35}ms` }}
-                        onMouseDown={(e) => { e.preventDefault(); setCustomActivity(p.activity); setActivityFocus(false); }}
-                      >
-                        <span className="asi-spark">✦</span>
-                        <span className="asi-name">{p.activity}</span>
-                        <span className="asi-mood">{p.mood}</span>
-                      </button>
-                    ))}
+                    {filtered.map((p, i) => {
+                      const picked = customActivities.includes(p.activity);
+                      return (
+                        <button
+                          key={p.activity + i}
+                          type="button"
+                          className={`action-search-item${picked ? " asi-picked" : ""}`}
+                          style={{ animationDelay: `${i * 35}ms` }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setCustomActivities(list => picked ? list.filter(x => x !== p.activity) : [...list, p.activity]);
+                            setCustomActivity("");
+                          }}
+                        >
+                          <span className="asi-spark">{picked ? "✓" : "✦"}</span>
+                          <span className="asi-name">{p.activity}</span>
+                          <span className="asi-mood">{p.mood}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 );
               })()}
@@ -941,15 +1000,8 @@ function App() {
                     <circle className="map-dot md2" cx="185" cy="62" r="6"/>
                     <circle className="map-dot md3" cx="275" cy="85" r="6"/>
                     <circle className="map-dot md4" cx="345" cy="42" r="6"/>
-                    <path id="loaderMotionPath" d="M80 118 L185 62 L275 85 L345 42" fill="none" stroke="none"/>
                     <circle className="map-traveller" cx="80" cy="118" r="9" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.6"/>
                     <circle className="map-traveller-dot" cx="80" cy="118" r="4" fill="var(--accent)"/>
-                    <g className="map-traveller-anime" style={{ display: "none" }}>
-                      <circle cx="0" cy="0" r="9" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.6">
-                        <animate attributeName="r" values="9;13;9" dur="1s" repeatCount="indefinite"/>
-                      </circle>
-                      <circle cx="0" cy="0" r="4" fill="var(--accent)"/>
-                    </g>
                   </svg>
                 </div>
               </div>
@@ -1043,8 +1095,20 @@ function App() {
               <h2 className="rec-head-dest">{itinerary?.destination || destination}</h2>
             </div>
             <div className="rec-head-actions">
-              <button className="icon-btn-sm" onClick={() => goTo("setup")} title="Edit setup">
+              <button className="icon-btn-sm" onClick={() => goTo("mood")} title="Edit mood">
                 <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <button
+                className="icon-btn-sm"
+                title="Start over"
+                onClick={() => {
+                  setDestination(""); setDate(getToday()); setDiet("No preference"); setPlanFor("Date");
+                  setTransportMode(""); setTimeRange(""); setSelectedMoods([]); setCustomActivity("");
+                  setCustomActivities([]); setItinerary(null); setCardIndex(0); setSavedCards(new Set());
+                  goTo("setup");
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 3v3M9 3a6 6 0 106 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M6.5 1.5L9 3 6.5 4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <button className="icon-btn-sm" onClick={generatePlan} title="Regenerate">
                 <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0110.5-4M15 9a6 6 0 01-10.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M13 5h2.5V2.5M5 13H2.5V15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -1159,26 +1223,26 @@ function App() {
                           <div className="rec-card-inner">
                             <p className="rec-card-cat">{s.category}</p>
                             <div className="rec-card-timerow">
-                              <span className="rec-card-time">{s.time}</span>
                               {s.rating && <span className="rec-card-pill rec-pill-rating">★ {s.rating}</span>}
                               {price && <span className="rec-card-pill rec-pill-price">{price}{priceRange(s.priceLevel) ? ` · ${priceRange(s.priceLevel)}` : ""}</span>}
                               {s.openNow !== undefined && <span className="rec-card-pill">{s.openNow ? "Open" : "Check hours"}</span>}
                             </div>
                             <h3 className="rec-card-name">{s.name}</h3>
-                            <p className="rec-card-desc">{s.description}</p>
-                            {s.bookingUrl && (
-                              <a className="rec-card-book" href={s.bookingUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-                                Check availability & book
-                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                              </a>
-                            )}
                             {s.address && (
                               <a className="rec-card-addr" onClick={(e) => e.stopPropagation()} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`} target="_blank" rel="noreferrer">
                                 <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
                                 {s.address}
                               </a>
                             )}
+                            {s.time && <p className="rec-card-suggested">Suggested time · {s.time}{s.period ? ` ${s.period}` : ""}</p>}
+                            <p className="rec-card-desc">{s.description}</p>
                             {s.routeFromPrevious && <small className="rec-card-route">{s.routeFromPrevious}</small>}
+                            {s.bookingUrl && (
+                              <a className="rec-card-book" href={s.bookingUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                                Check availability & book
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              </a>
+                            )}
                           </div>
                         </article>
                       );
@@ -3251,6 +3315,10 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   font-size: 13px; font-weight: 800; color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
+.rec-card-suggested {
+  font-size: 12px; font-weight: 600; color: var(--ink-3);
+  margin: 10px 0 0; font-variant-numeric: tabular-nums;
+}
 .rec-card-pill {
   font-size: 11px; font-weight: 700; color: var(--ink-2);
   padding: 3px 10px; border-radius: 999px;
@@ -3265,7 +3333,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   color: var(--ink); margin: 2px 0 0;
 }
 .rec-card-desc {
-  font-size: 14px; line-height: 1.65; color: var(--ink-2); margin: 4px 0 0;
+  font-size: 14px; line-height: 1.65; color: var(--ink-2); margin: 6px 0 0;
 }
 .rec-card-addr {
   display: inline-flex; align-items: center; gap: 6px;
@@ -3281,7 +3349,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   transition: opacity .15s, transform .2s cubic-bezier(.34,1.56,.64,1);
 }
 .rec-card-book:hover { opacity: .88; transform: translateY(-1px); }
-.rec-card-route { color: var(--ink-3); font-size: 11.5px; line-height: 1.5; margin-top: auto; padding-top: 8px; }
+.rec-card-route { color: var(--ink-3); font-size: 11.5px; line-height: 1.5; margin-top: 4px; display: block; }
 
 /* Nav — sits INSIDE the front card, bottom center */
 .rec-nav {
@@ -3355,6 +3423,26 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   font-size: 15px; font-weight: 500; color: var(--ink); min-width: 0;
 }
 .action-search-bar input::placeholder { color: var(--ink-3); font-weight: 400; }
+.action-search-field { flex: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 7px; min-width: 0; padding: 10px 0; }
+.action-search-field input { flex: 1; min-width: 140px; border: none; background: transparent; outline: none; font-size: 15px; font-weight: 500; color: var(--ink); }
+.action-search-has-chips { min-height: 60px; height: auto; }
+.activity-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 8px 6px 13px; border-radius: 999px;
+  background: rgba(51,153,137,.1); border: 1px solid rgba(51,153,137,.3);
+  color: var(--accent-strong, #237a6d); font-size: 13px; font-weight: 700;
+  animation: chipIn .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes chipIn { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+.activity-chip-x {
+  width: 18px; height: 18px; border-radius: 50%; border: none;
+  background: rgba(51,153,137,.18); color: var(--accent-strong, #237a6d);
+  font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+}
+.activity-chip-x:hover { background: var(--accent); color: #fff; }
+.asi-picked .asi-spark { color: var(--accent); font-weight: 800; }
+.asi-picked { background: rgba(51,153,137,.07); }
 .action-search-clear {
   width: 28px; height: 28px; border-radius: 50%; border: none;
   background: var(--surface-2); color: var(--ink-2); font-size: 16px;
@@ -3384,6 +3472,98 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .asi-spark { color: var(--accent); font-size: 12px; flex-shrink: 0; }
 .asi-name { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; }
 .asi-mood { font-size: 11px; font-weight: 600; color: var(--ink-3); padding: 2px 9px; border-radius: 999px; background: var(--surface); }
+
+/* ═══════════════════════════════════════════
+   LANDING MOTION — cinematic mood cycle
+   wallpaper zooms out → gets "captured" into the
+   itinerary window → plan lines drop in, staggered
+═══════════════════════════════════════════ */
+
+/* Stacked crossfading backgrounds */
+.lp-bg-outer .lp-bg-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+  will-change: opacity, transform;
+}
+.lp-bg-outer .lp-bg-live {
+  opacity: 1;
+  animation: lpZoomOut 5.2s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes lpZoomOut {
+  from { transform: scale(1.14); }
+  to   { transform: scale(1.0); }
+}
+
+/* The captured wallpaper inside the itinerary window:
+   starts huge + blurred (same as wallpaper), condenses into the frame */
+.lp-window-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  animation: lpCapture 1.35s cubic-bezier(.22,.9,.32,1) both;
+}
+@keyframes lpCapture {
+  0%   { transform: scale(1.55); filter: blur(14px) saturate(1.25); opacity: 0; }
+  35%  { opacity: 1; }
+  100% { transform: scale(1); filter: blur(0) saturate(1); opacity: 1; }
+}
+
+/* Keep overlay + content above the captured image */
+.lp-panel-overlay { z-index: 1; }
+.lp-panel-itin { z-index: 2; }
+
+/* Mood tag — glass pill, slides in after the capture settles */
+.lp-window-mood {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.32);
+  border: 1px solid rgba(255,255,255,.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  animation: lpTagIn .6s cubic-bezier(.34,1.56,.64,1) .55s both;
+}
+.lp-window-mood-icon { font-size: 13px; opacity: .9; }
+@keyframes lpTagIn {
+  from { opacity: 0; transform: translateY(-10px) scale(.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Itinerary lines drop in from above, staggered, springy */
+.lp-itin-drop {
+  animation: lpLineDrop .65s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes lpLineDrop {
+  from { opacity: 0; transform: translateY(-22px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .lp-bg-outer .lp-bg-live,
+  .lp-window-img,
+  .lp-window-mood,
+  .lp-itin-drop { animation: none !important; }
+  .lp-bg-outer .lp-bg-slide { transition: opacity .6s ease; }
+}
 
 `;
 
