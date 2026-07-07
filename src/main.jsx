@@ -31,6 +31,74 @@ function getTravelArchetype(moods = []) {
   return { name: "The Mood-Led Traveler", line: "You know what you want today — and you're building a day around exactly that feeling." };
 }
 
+function priceLabel(p) {
+  if (p == null) return null;
+  if (typeof p === "number") return p > 0 ? "$".repeat(Math.min(4, p)) : null;
+  const map = { PRICE_LEVEL_INEXPENSIVE: "$", PRICE_LEVEL_MODERATE: "$$", PRICE_LEVEL_EXPENSIVE: "$$$", PRICE_LEVEL_VERY_EXPENSIVE: "$$$$" };
+  return map[p] || null;
+}
+
+function priceRange(p) {
+  const label = priceLabel(p);
+  const ranges = { "$": "$10–20", "$$": "$20–50", "$$$": "$50–100", "$$$$": "$100+" };
+  return label ? ranges[label] : null;
+}
+
+// Nearest-neighbor ordering by coordinates when available
+function sortByProximity(stops) {
+  const coord = (s) => {
+    const lat = s.lat ?? s.latitude ?? s.location?.lat ?? s.location?.latitude;
+    const lng = s.lng ?? s.longitude ?? s.location?.lng ?? s.location?.longitude;
+    return (lat != null && lng != null) ? { lat: +lat, lng: +lng } : null;
+  };
+  if (stops.filter(s => coord(s)).length < 2) return stops;
+  const dist = (a, b) => {
+    const dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
+    const q = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return 2 * 6371 * Math.asin(Math.sqrt(q));
+  };
+  const remaining = [...stops];
+  const ordered = [remaining.shift()];
+  while (remaining.length) {
+    const last = coord(ordered[ordered.length - 1]);
+    if (!last) { ordered.push(remaining.shift()); continue; }
+    let bestI = 0, bestD = Infinity;
+    remaining.forEach((s, i) => {
+      const cc = coord(s);
+      const d = cc ? dist(last, cc) : Infinity;
+      if (d < bestD) { bestD = d; bestI = i; }
+    });
+    ordered.push(remaining.splice(bestI, 1)[0]);
+  }
+  return ordered;
+}
+
+// Activity suggestions per mood — powers the mood-page action search bar
+// Landing-page preview itineraries — one per mood, cycled with the background
+const loginItins = {
+  adventurous: [["07:00", "Sunrise ridge hike"], ["12:30", "Cliffside lunch"], ["16:00", "Zipline over the valley"]],
+  "slow-scenic": [["09:00", "Slow lakeside morning"], ["13:00", "Picnic under the pines"], ["18:00", "Golden-hour drift"]],
+  cultural: [["08:30", "Quiet temple morning"], ["12:00", "Old-town walking tour"], ["17:30", "Evening gallery hop"]],
+  culinary: [["09:30", "Farmers market graze"], ["13:00", "Chef's counter lunch"], ["19:30", "Tasting menu finale"]],
+  offbeat: [["10:00", "Tiny obscure museum"], ["14:00", "Secret garden detour"], ["21:00", "Hidden speakeasy"]],
+  social: [["11:00", "Brunch with the crew"], ["16:00", "Night market warm-up"], ["20:00", "Rooftop golden hour"]],
+  active: [["06:30", "Sunrise paddle"], ["11:00", "Coastal bike loop"], ["15:30", "Boulder & stretch"]],
+  "night-owl": [["17:00", "Aperitivo hour"], ["21:00", "Live jazz basement"], ["00:30", "Midnight street food"]],
+  romantic: [["10:00", "Slow café morning"], ["17:45", "Golden hour viewpoint"], ["20:30", "Candlelit dinner"]],
+};
+
+const moodActivitySuggestions = {
+  adventurous: ["Ziplining", "Cliff jumping", "Paragliding", "White-water rafting", "Bungee jump"],
+  "slow-scenic": ["Sunset boat ride", "Lakeside cafe", "Golden hour picnic", "Scenic ferry crossing"],
+  cultural: ["Museum deep-dive", "Historic walking tour", "Temple visit", "Local artisan market"],
+  culinary: ["Street food crawl", "Cooking class", "Food market tour", "Chef's tasting menu"],
+  offbeat: ["Hidden speakeasy", "Tiny obscure museum", "Secret garden", "Underground art venue"],
+  social: ["Rooftop bar", "Night market", "Live music venue", "Group cooking class"],
+  active: ["Kayaking", "Sunrise hike", "Bike tour", "Paddleboarding"],
+  "night-owl": ["Jazz bar", "Stargazing", "Night market crawl", "Midnight rooftop views"],
+  romantic: ["Sunset beach walk", "Candlelit dinner", "Stargazing", "Golden hour viewpoint"],
+};
+
 function buildGoogleMapsTripUrl(stops = [], travelMode = "walking") {
   const names = stops.map((stop) => stop.googlePlaceName || stop.name || stop.photoQuery).filter(Boolean).slice(0, 10);
   if (!names.length) return "";
@@ -157,7 +225,7 @@ function PlacesCarousel({ moods, places }) {
         return (
           <div key={m.id + i} className={`pc-slide${i === idx ? " pc-active" : i === (idx - 1 + moods.length) % moods.length ? " pc-prev" : ""}`}>
             <img src={m.img} alt="" />
-            <div className="pc-ov"/>
+            <div className="pc-ov" />
             <div className="pc-meta">
               <span className="pc-name">{name}</span>
               <div className="pc-chips">
@@ -169,7 +237,7 @@ function PlacesCarousel({ moods, places }) {
         );
       })}
       <div className="pc-dots">
-        {moods.map((_, i) => <span key={i} className={`pc-dot${i === idx ? " pc-dot-active" : ""}`}/>)}
+        {moods.map((_, i) => <span key={i} className={`pc-dot${i === idx ? " pc-dot-active" : ""}`} />)}
       </div>
     </div>
   );
@@ -178,7 +246,7 @@ function PlacesCarousel({ moods, places }) {
 function App() {
   const [user, setUser] = useState(null);
   const [step, setStep] = useState("login");
-  const [destination, setDestination] = useState("Paris");
+  const [destination, setDestination] = useState("");
   const [placePredictions, setPlacePredictions] = useState([]);
   const [isAutocompleting, setIsAutocompleting] = useState(false);
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
@@ -201,6 +269,16 @@ function App() {
   const [shareLoading, setShareLoading] = useState(false);
   const [calendarState, setCalendarState] = useState("idle");
   const [customActivity, setCustomActivity] = useState("");
+  const [cardIndex, setCardIndex] = useState(0);
+  const [savedCards, setSavedCards] = useState(new Set());
+  const [swipeDir, setSwipeDir] = useState(1);
+  const [activityFocus, setActivityFocus] = useState(false);
+  const [customActivities, setCustomActivities] = useState([]);
+  const [loginSlide, setLoginSlide] = useState(0);
+  const [showTapHint, setShowTapHint] = useState(false);
+  const [heartBurst, setHeartBurst] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const tapTimerRef = useRef(null);
   const shellRef = useRef(null);
 
   function goTo(s) {
@@ -283,6 +361,22 @@ function App() {
     return () => { cancelled = true; };
   }, [step]);
 
+  // Landing page: cinematic cycle through mood imagery + itinerary lines
+  useEffect(() => {
+    if (step !== "login") return;
+    const t = setInterval(() => setLoginSlide(i => (i + 1) % moodVibes.length), 4500);
+    return () => clearInterval(t);
+  }, [step]);
+
+  // Mobile result: one-time "double tap to save" hint overlay
+  useEffect(() => {
+    if (step !== "result") return;
+    if (!window.matchMedia("(max-width: 900px)").matches) return;
+    setShowTapHint(true);
+    const t = setTimeout(() => setShowTapHint(false), 3600);
+    return () => clearTimeout(t);
+  }, [step]);
+
   useEffect(() => {
     const query = destination.trim();
     if (query.length < 2) { setPlacePredictions([]); return; }
@@ -313,9 +407,25 @@ function App() {
     : fallbackFilteredDestinations.slice(0, 6).map((item) => ({ label: item.label, source: "fallback" }));
 
   const selectedMoodObjects = selectedMoods.map((id) => moodVibes.find((vibe) => vibe.id === id)).filter(Boolean);
+  // Preload all itinerary images so switching cards feels instant on mobile
+  useEffect(() => {
+    if (!itinerary?.stops?.length) return;
+    const imgs = [];
+    const stops = itinerary.stops;
+    stops.forEach((s, i) => {
+      const url = s.imageUrl || s.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length, 1)]?.img || moodVibes[i % moodVibes.length].img;
+      if (!url) return;
+      const img = new Image();
+      img.src = url;
+      imgs.push(img);
+    });
+    return () => { /* allow garbage collection */ };
+  }, [itinerary, selectedMoods]);
   const travelArchetype = getTravelArchetype(selectedMoodObjects);
   const googleTravelMode = transportMode === "Car" ? "driving" : transportMode === "Public transit" ? "transit" : "walking";
-  const tripMapsUrl = itinerary?.stops?.length ? buildGoogleMapsTripUrl(itinerary.stops, googleTravelMode) : "";
+  const savedStopsList = (itinerary?.stops || []).filter((_, i) => savedCards.has(i));
+  const mapsStops = savedStopsList.length ? sortByProximity(savedStopsList) : (itinerary?.stops || []);
+  const tripMapsUrl = mapsStops.length ? buildGoogleMapsTripUrl(mapsStops, googleTravelMode) : "";
 
   const loadingItems = useMemo(() => [
     user?.name ? `${user.name}'s lightweight profile` : "Quick feeler profile",
@@ -324,7 +434,7 @@ function App() {
     "Reading the destination context",
     "Looking for places that match today's mood",
     "Pulling real place photos and ratings",
-    "Asking Gemini to think like today's version of you"
+    "Asking AI to think like today's version of you"
   ], [user]);
 
   function toggleMood(id) {
@@ -341,6 +451,8 @@ function App() {
     setLoadingLine(0);
     setItinerary(null);
     setPlacesPhotos([]);
+    setCardIndex(0);
+    setSavedCards(new Set());
 
     const CLAMP_AT = 5;
     const interval = setInterval(() => {
@@ -362,13 +474,13 @@ function App() {
           })
         );
         setPlacesPhotos(photos.filter(Boolean));
-      } catch (e) {}
+      } catch (e) { }
     };
 
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: customActivity.trim() || null, instruction: "Create a real, specific, mood-first day plan. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a real, specific, mood-first day plan. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the stops across the ENTIRE region — pick the best mood-matching places even if they are hours apart, and do NOT cluster every stop in a single city or town. Only keep stops close together and walkable when the destination is a specific city or neighborhood. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -376,7 +488,7 @@ function App() {
     try {
       const res = await geminiPromise;
       const data = await res.json();
-      if (!res.ok || data?.error) throw new Error(data?.error || "Gemini API route failed");
+      if (!res.ok || data?.error) throw new Error(data?.error || "The planning service is unavailable right now.");
       clearInterval(interval);
       setLoadingLine(6);
       setItinerary(data);
@@ -384,8 +496,74 @@ function App() {
     } catch (err) {
       clearInterval(interval);
       console.error(err);
-      setError(err.message || "Gemini could not generate the plan.");
+      setError(err.message || "We could not generate the plan.");
       goTo("apiError");
+    }
+  }
+
+  async function shareItinerary() {
+    if (shareLoading) return;
+    setShareLoading(true);
+    try {
+      const res = await fetch("/api/save-itinerary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itinerary, destination, date, selectedMoods: selectedMoodObjects, diet, planFor }),
+      });
+      const { id, error } = await res.json();
+      if (!id) throw new Error(error || "No ID returned");
+      const shareUrl = `${window.location.origin}${window.location.pathname}?i=${id}`;
+      if (navigator.share) {
+        await navigator.share({ title: `Travel DNA — ${itinerary?.destination || destination}`, text: itinerary?.summary || "Check out this itinerary.", url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2500);
+      }
+    } catch (e) { console.error("Share failed:", e); }
+    finally { setShareLoading(false); }
+  }
+
+  function startOver() {
+    setDestination(""); setDate(getToday()); setDiet("No preference"); setPlanFor("Date");
+    setTransportMode(""); setTimeRange(""); setSelectedMoods([]); setCustomActivity("");
+    setCustomActivities([]); setItinerary(null); setCardIndex(0); setSavedCards(new Set());
+    goTo("setup");
+  }
+
+  // Front card interaction:
+  // Desktop — single click advances (unchanged behavior).
+  // Mobile  — single tap shuffles to the next card (wraps around),
+  //           double tap hearts/unhearts the current card.
+  function handleCardFrontClick(stops) {
+    setShowTapHint(false);
+    const isMobile = window.matchMedia("(max-width: 900px)").matches;
+    if (!isMobile) {
+      if (cardIndex < stops.length - 1) { setSwipeDir(1); setCardIndex(cardIndex + 1); }
+      return;
+    }
+    if (tapTimerRef.current) {
+      // Double tap → toggle heart
+      clearTimeout(tapTimerRef.current);
+      tapTimerRef.current = null;
+      const idx = cardIndex;
+      const willSave = !savedCards.has(idx);
+      setSavedCards(prev => {
+        const n = new Set(prev);
+        if (willSave) n.add(idx); else n.delete(idx);
+        return n;
+      });
+      if (willSave) {
+        setHeartBurst(true);
+        setTimeout(() => setHeartBurst(false), 750);
+      }
+    } else {
+      // Single tap (after double-tap window passes) → next card
+      tapTimerRef.current = setTimeout(() => {
+        tapTimerRef.current = null;
+        setSwipeDir(1);
+        setCardIndex(i => (i + 1) % stops.length);
+      }, 270);
     }
   }
 
@@ -416,7 +594,7 @@ function App() {
                   description: `${itinerary.summary || ""}\n\n${stopsText}\n\nGenerated by Travel DNA`,
                   location: destName,
                   start: { date: tripDate },
-                  end:   { date: tripDate },
+                  end: { date: tripDate },
                 };
 
                 const res = await fetch(
@@ -477,17 +655,17 @@ function App() {
   }
 
   return (
-    <div className={`app-shell${step === "login" ? " login-active" : ""}`} ref={shellRef}>
+    <div className={`app-shell${step === "login" ? " login-active" : ""}${step === "result" ? " result-active" : ""}`} ref={shellRef}>
       <style>{css}</style>
 
       <nav className="navbar">
         <div className="nav-left-group nav-desktop">
           <svg className="nav-mark" width="24" height="24" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-label="Travel DNA">
-            <path d="M8 4 C8 10,24 10,24 16 C24 22,8 22,8 28" fill="none" stroke="#339989" strokeWidth="2.5" strokeLinecap="round"/>
-            <path d="M24 4 C24 10,8 10,8 16 C8 22,24 22,24 28" fill="none" stroke="#5EC4B5" strokeWidth="2.5" strokeLinecap="round" opacity="0.55"/>
-            <circle cx="16" cy="8.5" r="2" fill="#339989"/>
-            <circle cx="16" cy="16" r="2" fill="#339989"/>
-            <circle cx="16" cy="23.5" r="2" fill="#339989"/>
+            <path d="M8 4 C8 10,24 10,24 16 C24 22,8 22,8 28" fill="none" stroke="#339989" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M24 4 C24 10,8 10,8 16 C8 22,24 22,24 28" fill="none" stroke="#5EC4B5" strokeWidth="2.5" strokeLinecap="round" opacity="0.55" />
+            <circle cx="16" cy="8.5" r="2" fill="#339989" />
+            <circle cx="16" cy="16" r="2" fill="#339989" />
+            <circle cx="16" cy="23.5" r="2" fill="#339989" />
           </svg>
           <div className="nav-steps nav-left">
             {[{ label: "Setup", value: "setup" }, { label: "Mood", value: "mood" }, { label: "Result", value: "result" }].map((item, i) => {
@@ -523,11 +701,11 @@ function App() {
             <div className="mobile-drawer-inner" onClick={e => e.stopPropagation()}>
               <div className="drawer-header">
                 <svg width="22" height="22" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 4 C8 10,24 10,24 16 C24 22,8 22,8 28" fill="none" stroke="#339989" strokeWidth="2.5" strokeLinecap="round"/>
-                  <path d="M24 4 C24 10,8 10,8 16 C8 22,24 22,24 28" fill="none" stroke="#5EC4B5" strokeWidth="2.5" strokeLinecap="round" opacity="0.55"/>
-                  <circle cx="16" cy="8.5" r="2" fill="#339989"/>
-                  <circle cx="16" cy="16" r="2" fill="#339989"/>
-                  <circle cx="16" cy="23.5" r="2" fill="#339989"/>
+                  <path d="M8 4 C8 10,24 10,24 16 C24 22,8 22,8 28" fill="none" stroke="#339989" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M24 4 C24 10,8 10,8 16 C8 22,24 22,24 28" fill="none" stroke="#5EC4B5" strokeWidth="2.5" strokeLinecap="round" opacity="0.55" />
+                  <circle cx="16" cy="8.5" r="2" fill="#339989" />
+                  <circle cx="16" cy="16" r="2" fill="#339989" />
+                  <circle cx="16" cy="23.5" r="2" fill="#339989" />
                 </svg>
                 <button className="drawer-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button>
               </div>
@@ -559,15 +737,22 @@ function App() {
       {step === "login" && (
         <div className="lp-shell">
           <div className="lp-bg-outer">
-            <img src="https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="" className="lp-bg-outer-img" />
+            {moodVibes.map((v, i) => (
+              <img
+                key={v.id}
+                src={v.img}
+                alt=""
+                className={`lp-bg-outer-img lp-bg-slide${i === loginSlide ? " lp-bg-live" : ""}`}
+              />
+            ))}
             <div className="lp-bg-outer-dim" />
           </div>
 
           <div className="lp-card">
             <div className="lp-card-left">
               <div className="lp-right-text">
-                <p className="lp-eyebrow">Powered by Gemini ✦</p>
-                <h1 className="lp-h1">Plan<br/><span className="lp-accent">in seconds.</span></h1>
+                <p className="lp-eyebrow">Powered by AI ✦</p>
+                <h1 className="lp-h1">Plan<br /><span className="lp-accent">in seconds.</span></h1>
                 <p className="lp-sub"> Just tell us your trip details and your vibe, and get curated recommendations</p>
               </div>
 
@@ -583,18 +768,18 @@ function App() {
                     className="lp-google-btn-mobile"
                     onClick={() => window.google?.accounts?.id?.prompt()}
                   >
-                    <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}>
-                      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-                      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-                      <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-                      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                    <svg width="18" height="18" viewBox="0 0 18 18" style={{ flexShrink: 0 }}>
+                      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4" />
+                      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853" />
+                      <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" />
+                      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335" />
                     </svg>
                     Continue with Google
                   </button>
                 )}
                 <button className="lp-ghost-btn" onClick={() => goTo("setup")}>
                   Continue without sign in
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </button>
               </div>
 
@@ -602,20 +787,20 @@ function App() {
             </div>
 
             <div className="lp-card-right">
+              {/* The "captured" wallpaper — condenses into the frame on each cycle */}
+              <img key={`win-${loginSlide}`} src={moodVibes[loginSlide].img} alt="" className="lp-window-img" />
               <div className="lp-panel-overlay" />
-              <div className="lp-panel-itin">
-                <div className="lp-itin-line lp-itin-1">
-                  <span className="lp-itin-time">08:30</span>
-                  <span className="lp-itin-label">Quiet temple morning</span>
-                </div>
-                <div className="lp-itin-line lp-itin-2">
-                  <span className="lp-itin-time">12:00</span>
-                  <span className="lp-itin-label">Vegetarian lunch nearby</span>
-                </div>
-                <div className="lp-itin-line lp-itin-3">
-                  <span className="lp-itin-time">17:30</span>
-                  <span className="lp-itin-label">Golden-hour walk</span>
-                </div>
+              <span key={`tag-${loginSlide}`} className="lp-window-mood">
+                <span className="lp-window-mood-icon">{moodVibes[loginSlide].icon}</span>
+                {moodVibes[loginSlide].title}
+              </span>
+              <div className="lp-panel-itin" key={`itin-${loginSlide}`}>
+                {(loginItins[moodVibes[loginSlide].id] || loginItins.cultural).map(([time, label], i) => (
+                  <div key={label} className={`lp-itin-line lp-itin-drop`} style={{ animationDelay: `${.25 + i * .16}s` }}>
+                    <span className="lp-itin-time">{time}</span>
+                    <span className="lp-itin-label">{label}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -642,7 +827,7 @@ function App() {
                 onFocus={() => {
                   if (destination.trim().length >= 2) setShowDestinationSuggestions(true);
                 }}
-                placeholder="City, neighborhood, or place"
+                placeholder="City, neighborhood or even country"
                 autoComplete="off"
                 className="setup-card-input"
               />
@@ -684,7 +869,7 @@ function App() {
             <div className="setup-card">
               <span className="setup-card-label">GOING WITH</span>
               <div className="chips">
-                {["Solo", "Date", "Friends", "Family", "Workday"].map(o => (
+                {["Solo", "Date", "Friends", "Family", "Colleagues", "Kid friendly"].map(o => (
                   <button key={o} type="button" className={planFor === o ? "chip active" : "chip"} onClick={() => setPlanFor(o)}>{o}</button>
                 ))}
               </div>
@@ -714,7 +899,7 @@ function App() {
               </div>
             )}
 
-            <button className="btn-accent" onClick={() => goTo("mood")}>Next, your vibe →</button>
+            <button className="btn-accent" disabled={!destination.trim()} onClick={() => goTo("mood")}>Next, your vibe →</button>
           </div>
         </main>
       )}
@@ -725,7 +910,7 @@ function App() {
             <p className="label">Step 2 of 2 - Mood</p>
             <h2>What's the <span className="gem">vibe today?</span></h2>
             <p>
-              Maybe yesterday you wanted museums. Today you want beach sunsets. 
+              Maybe yesterday you wanted museums. Today you want beach sunsets.
               That's why we're asking. Pick up to three moods and we'll do the magic.
             </p>
           </section>
@@ -751,17 +936,82 @@ function App() {
           </section>
 
           <div className="custom-activity-wrap">
-            <div className="setup-card custom-activity-card">
-              <span className="setup-card-label">WANT TO CUSTOMIZE FURTHER?</span>
-              <input
-                id="customActivity"
-                className="setup-card-input"
-                type="text"
-                value={customActivity}
-                onChange={e => setCustomActivity(e.target.value)}
-                placeholder="Tell us a specific activity you want — ziplining, a cooking class, sunset at a rooftop bar…"
-                maxLength={200}
-              />
+            <div className="action-search">
+              <span className="action-search-label">WANT SOMETHING SPECIFIC?</span>
+              <div className={`action-search-bar${activityFocus ? " action-search-open" : ""}${customActivities.length ? " action-search-has-chips" : ""}`}>
+                <svg className="action-search-icon" width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" strokeWidth="1.6" /><path d="M14 14l3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                <div className="action-search-field">
+                  {customActivities.map((a) => (
+                    <span key={a} className="activity-chip">
+                      {a}
+                      <button
+                        type="button"
+                        className="activity-chip-x"
+                        onMouseDown={(e) => { e.preventDefault(); setCustomActivities(list => list.filter(x => x !== a)); }}
+                        aria-label={`Remove ${a}`}
+                      >×</button>
+                    </span>
+                  ))}
+                  <input
+                    id="customActivity"
+                    type="text"
+                    value={customActivity}
+                    onChange={e => setCustomActivity(e.target.value)}
+                    onFocus={() => setActivityFocus(true)}
+                    onBlur={() => setTimeout(() => setActivityFocus(false), 150)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter" && customActivity.trim()) {
+                        e.preventDefault();
+                        const v = customActivity.trim();
+                        setCustomActivities(list => list.includes(v) ? list : [...list, v]);
+                        setCustomActivity("");
+                      }
+                      if (e.key === "Backspace" && !customActivity && customActivities.length) {
+                        setCustomActivities(list => list.slice(0, -1));
+                      }
+                    }}
+                    placeholder={customActivities.length ? "Add another…" : "Search activities — ziplining, cooking class, rooftop sunset…"}
+                    maxLength={200}
+                    autoComplete="off"
+                  />
+                </div>
+                {(customActivity || customActivities.length > 0) && (
+                  <button className="action-search-clear" onMouseDown={(e) => { e.preventDefault(); setCustomActivity(""); setCustomActivities([]); }} aria-label="Clear all">×</button>
+                )}
+              </div>
+
+              {activityFocus && (() => {
+                const pool = (selectedMoods.length ? selectedMoods : ["romantic", "adventurous", "culinary"])
+                  .flatMap(id => (moodActivitySuggestions[id] || []).map(a => ({ activity: a, mood: moodVibes.find(v => v.id === id)?.title || "" })));
+                const q = customActivity.trim().toLowerCase();
+                const filtered = pool.filter(p => !q || p.activity.toLowerCase().includes(q)).slice(0, 8);
+                if (!filtered.length) return null;
+                return (
+                  <div className="action-search-panel">
+                    <p className="action-search-panel-label">{selectedMoods.length ? "Based on your moods" : "Popular right now"}</p>
+                    {filtered.map((p, i) => {
+                      const picked = customActivities.includes(p.activity);
+                      return (
+                        <button
+                          key={p.activity + i}
+                          type="button"
+                          className={`action-search-item${picked ? " asi-picked" : ""}`}
+                          style={{ animationDelay: `${i * 35}ms` }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setCustomActivities(list => picked ? list.filter(x => x !== p.activity) : [...list, p.activity]);
+                            setCustomActivity("");
+                          }}
+                        >
+                          <span className="asi-spark">{picked ? "✓" : "✦"}</span>
+                          <span className="asi-name">{p.activity}</span>
+                          <span className="asi-mood">{p.mood}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -782,17 +1032,17 @@ function App() {
               <div className="ls-profile">
                 <div className="profile-ring-wrap">
                   <svg className="profile-ring-svg" viewBox="0 0 120 120">
-                    <circle className="ring-bg" cx="60" cy="60" r="54"/>
-                    <circle className="ring-fill" cx="60" cy="60" r="54"/>
+                    <circle className="ring-bg" cx="60" cy="60" r="54" />
+                    <circle className="ring-fill" cx="60" cy="60" r="54" />
                   </svg>
                   {user?.picture
                     ? <img className="profile-pic" src={user.picture} alt={user.name} />
                     : <div className="profile-pic profile-pic-fallback">
-                        <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <circle cx="19" cy="14" r="7" fill="var(--ink-3)" opacity="0.6"/>
-                          <path d="M4 34c0-8.284 6.716-13 15-13s15 4.716 15 13" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" opacity="0.6"/>
-                        </svg>
-                      </div>
+                      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="19" cy="14" r="7" fill="var(--ink-3)" opacity="0.6" />
+                        <path d="M4 34c0-8.284 6.716-13 15-13s15 4.716 15 13" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
+                      </svg>
+                    </div>
                   }
                 </div>
                 <div className="profile-meta">
@@ -824,27 +1074,27 @@ function App() {
                 <div className="map-dest-label">{destination}</div>
                 <div className="map-sketch">
                   <svg viewBox="0 0 420 155" xmlns="http://www.w3.org/2000/svg" className="map-svg">
-                    <path d="M 0 95 Q 60 88 110 98 Q 160 108 200 100 Q 260 90 300 96 Q 360 104 420 98" fill="none" stroke="rgba(51,153,137,.18)" strokeWidth="8" strokeLinecap="round"/>
-                    <circle cx="50" cy="60" r="10" fill="rgba(51,153,137,.12)"/>
-                    <circle cx="62" cy="54" r="8" fill="rgba(51,153,137,.1)"/>
-                    <circle cx="150" cy="130" r="9" fill="rgba(51,153,137,.1)"/>
-                    <circle cx="163" cy="136" r="7" fill="rgba(51,153,137,.08)"/>
-                    <circle cx="360" cy="110" r="11" fill="rgba(51,153,137,.1)"/>
-                    <circle cx="374" cy="116" r="8" fill="rgba(51,153,137,.08)"/>
-                    <line x1="0" y1="50" x2="420" y2="50" stroke="rgba(0,0,0,.04)" strokeWidth="1"/>
-                    <line x1="0" y1="100" x2="420" y2="100" stroke="rgba(0,0,0,.04)" strokeWidth="1"/>
-                    <line x1="105" y1="0" x2="105" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1"/>
-                    <line x1="210" y1="0" x2="210" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1"/>
-                    <line x1="315" y1="0" x2="315" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1"/>
-                    <line className="map-line ml1" x1="80" y1="118" x2="185" y2="62"/>
-                    <line className="map-line ml2" x1="185" y1="62" x2="275" y2="85"/>
-                    <line className="map-line ml3" x1="275" y1="85" x2="345" y2="42"/>
-                    <circle className="map-dot md1" cx="80" cy="118" r="6"/>
-                    <circle className="map-dot md2" cx="185" cy="62" r="6"/>
-                    <circle className="map-dot md3" cx="275" cy="85" r="6"/>
-                    <circle className="map-dot md4" cx="345" cy="42" r="6"/>
-                    <circle className="map-traveller" cx="80" cy="118" r="9" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.6"/>
-                    <circle className="map-traveller-dot" cx="80" cy="118" r="4" fill="var(--accent)"/>
+                    <path d="M 0 95 Q 60 88 110 98 Q 160 108 200 100 Q 260 90 300 96 Q 360 104 420 98" fill="none" stroke="rgba(51,153,137,.18)" strokeWidth="8" strokeLinecap="round" />
+                    <circle cx="50" cy="60" r="10" fill="rgba(51,153,137,.12)" />
+                    <circle cx="62" cy="54" r="8" fill="rgba(51,153,137,.1)" />
+                    <circle cx="150" cy="130" r="9" fill="rgba(51,153,137,.1)" />
+                    <circle cx="163" cy="136" r="7" fill="rgba(51,153,137,.08)" />
+                    <circle cx="360" cy="110" r="11" fill="rgba(51,153,137,.1)" />
+                    <circle cx="374" cy="116" r="8" fill="rgba(51,153,137,.08)" />
+                    <line x1="0" y1="50" x2="420" y2="50" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
+                    <line x1="0" y1="100" x2="420" y2="100" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
+                    <line x1="105" y1="0" x2="105" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
+                    <line x1="210" y1="0" x2="210" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
+                    <line x1="315" y1="0" x2="315" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
+                    <line className="map-line ml1" x1="80" y1="118" x2="185" y2="62" />
+                    <line className="map-line ml2" x1="185" y1="62" x2="275" y2="85" />
+                    <line className="map-line ml3" x1="275" y1="85" x2="345" y2="42" />
+                    <circle className="map-dot md1" cx="80" cy="118" r="6" />
+                    <circle className="map-dot md2" cx="185" cy="62" r="6" />
+                    <circle className="map-dot md3" cx="275" cy="85" r="6" />
+                    <circle className="map-dot md4" cx="345" cy="42" r="6" />
+                    <circle className="map-traveller" cx="80" cy="118" r="9" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.6" />
+                    <circle className="map-traveller-dot" cx="80" cy="118" r="4" fill="var(--accent)" />
                   </svg>
                 </div>
               </div>
@@ -874,24 +1124,24 @@ function App() {
             <div className={`ls${loadingLine >= 5 ? " ls-active" : ""}`}>
               <div className="wire-frame">
                 <div className="wire-meta">
-                  <div className="wire-tag"/>
-                  <div className="wire-title"/>
+                  <div className="wire-tag" />
+                  <div className="wire-title" />
                 </div>
                 <div className="wire-stops">
-                  {[0,1].map(i => (
+                  {[0, 1].map(i => (
                     <div className="wire-stop" key={i}>
-                      <div className="wire-dot"/>
+                      <div className="wire-dot" />
                       <div className="wire-lines">
-                        <div className="wire-line wl-a" style={{animationDelay:`${i*0.2}s`}}/>
-                        <div className="wire-line wl-b" style={{animationDelay:`${i*0.2+0.1}s`}}/>
+                        <div className="wire-line wl-a" style={{ animationDelay: `${i * 0.2}s` }} />
+                        <div className="wire-line wl-b" style={{ animationDelay: `${i * 0.2 + 0.1}s` }} />
                       </div>
-                      <div className="wire-img" style={{animationDelay:`${i*0.15}s`}}/>
+                      <div className="wire-img" style={{ animationDelay: `${i * 0.15}s` }} />
                     </div>
                   ))}
                 </div>
                 <div className="wire-gemini-badge">
                   <span className="gorb-core-sm">✦</span>
-                  <span>Gemini writing your plan…</span>
+                  <span>AI is crafting your itinerary…</span>
                 </div>
               </div>
             </div>
@@ -923,142 +1173,251 @@ function App() {
             <p>The prototype could not finish a fresh plan right now. Review your setup or try again in a moment.</p>
             <div className="error-actions">
               <button className="btn-outline" onClick={() => goTo("setup")}>Edit setup</button>
-              <button className="btn-accent" onClick={generatePlan}>Try Gemini again ✦</button>
+              <button className="btn-accent" onClick={generatePlan}>Try again ✦</button>
             </div>
           </div>
         </main>
       )}
 
       {step === "result" && (
-        <main className="result-screen on">
-          <section className="res-hero">
-            <img
-              className="res-bg-img"
-              src={itinerary?.heroImageUrl || selectedMoodObjects[0]?.img || moodVibes[0].img}
-              alt=""
-            />
-            <div className="res-glass-panel">
-              <div className="res-glass-top">
-                <p className="archetype-line">{travelArchetype.line}</p>
-                <span className="res-date-tag">{itinerary?.dates || prettyDate(date)}</span>
-              </div>
-              <h2 className="res-dest">{itinerary?.destination || destination}</h2>
-              {itinerary?.summary && (
-                <p className="res-summary">{itinerary.summary}</p>
-              )}
-              {itinerary?.generatedBy === "fallback" && (
-                <div className="fallback-banner">
-                  <span>Preview mode</span>
-                  <p>Live planning is temporarily capped, so Travel DNA is showing a designed preview while place details continue to enrich.</p>
-                  <button type="button" onClick={() => setShowSubscribe(true)}>Like this idea? Get updates</button>
-                </div>
-              )}
+        <main className="rec-screen on">
+          {/* ── HEADER ROW ── */}
+          <header className="rec-head">
+            <div className="rec-head-left">
+              <p className="rec-head-eyebrow">{itinerary?.dates || prettyDate(date)} · {savedCards.size > 0 ? `${savedCards.size} saved` : "Your picks"}</p>
+              <h2 className="rec-head-dest">{itinerary?.destination || destination}</h2>
             </div>
-          </section>
-
-          <section className="action-bar">
-            <div className="action-icons-row">
-              <button className="icon-btn" onClick={() => goTo("setup")} title="Edit setup">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span>Edit</span>
-              </button>
-              <button className="icon-btn" onClick={generatePlan} title="Regenerate">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0110.5-4M15 9a6 6 0 01-10.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M13 5h2.5V2.5M5 13H2.5V15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span>Redo</span>
+            <div className="rec-head-actions">
+              <button className="icon-btn-sm" onClick={() => goTo("mood")} title="Edit mood">
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </button>
               <button
-                className={`icon-btn${shareCopied ? " icon-btn-active" : ""}${shareLoading ? " icon-btn-loading" : ""}`}
+                className="icon-btn-sm"
+                title="Start over"
+                onClick={startOver}
+              >
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 3v3M9 3a6 6 0 106 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M6.5 1.5L9 3 6.5 4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+              <button className="icon-btn-sm" onClick={generatePlan} title="Regenerate">
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0110.5-4M15 9a6 6 0 01-10.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M13 5h2.5V2.5M5 13H2.5V15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+              <button
+                className={`icon-btn-sm${shareCopied ? " icon-btn-sm-active" : ""}`}
                 disabled={shareLoading}
-                onClick={async () => {
-                  if (shareLoading) return;
-                  setShareLoading(true);
-                  try {
-                    const res = await fetch("/api/save-itinerary", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ itinerary, destination, date, selectedMoods: selectedMoodObjects, diet, planFor }),
-                    });
-                    const { id, error } = await res.json();
-                    if (!id) throw new Error(error || "No ID returned");
-                    const shareUrl = `${window.location.origin}${window.location.pathname}?i=${id}`;
-                    if (navigator.share) {
-                      await navigator.share({ title: `Travel DNA — ${itinerary?.destination || destination}`, text: itinerary?.summary || "Check out this itinerary.", url: shareUrl });
-                    } else {
-                      await navigator.clipboard.writeText(shareUrl);
-                      setShareCopied(true);
-                      setTimeout(() => setShareCopied(false), 2500);
-                    }
-                  } catch (e) { console.error("Share failed:", e); }
-                  finally { setShareLoading(false); }
-                }}
-                title="Share itinerary"
+                onClick={shareItinerary}
+                title="Share"
               >
-                {shareLoading ? (
-                  <svg className="cal-spin" width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round"/></svg>
-                ) : shareCopied ? (
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="13" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="13" cy="14.5" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="5" cy="9" r="2" stroke="currentColor" strokeWidth="1.5"/><line x1="11.1" y1="4.6" x2="6.9" y2="7.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><line x1="6.9" y1="10.1" x2="11.1" y2="13.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                )}
-                <span>{shareLoading ? "Saving…" : shareCopied ? "Copied!" : "Share"}</span>
+                {shareCopied
+                  ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="13" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="13" cy="14.5" r="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="5" cy="9" r="2" stroke="currentColor" strokeWidth="1.5" /><line x1="11.1" y1="4.6" x2="6.9" y2="7.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><line x1="6.9" y1="10.1" x2="11.1" y2="13.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
               </button>
-              <button
-                className={`icon-btn cal-icon-btn-${calendarState}`}
-                onClick={addToCalendar}
-                disabled={calendarState === "loading"}
-                title={user ? "Add to Google Calendar" : "Download .ics"}
-              >
-                {calendarState === "loading" && <svg className="cal-spin" width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round"/></svg>}
-                {calendarState === "done"    && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                {calendarState === "error"   && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 6v4M9 12v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5"/></svg>}
-                {calendarState === "idle"    && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M2 8h14" stroke="currentColor" strokeWidth="1.5"/><path d="M6 1.5v3M12 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-                <span>
-                  {calendarState === "loading" ? "Adding…" :
-                   calendarState === "done"    ? (user ? "Added!" : "Saved!") :
-                   calendarState === "error"   ? "Failed" : "Calendar"}
-                </span>
+              <button className={`icon-btn-sm cal-icon-btn-${calendarState}`} onClick={addToCalendar} disabled={calendarState === "loading"} title={user ? "Add to Google Calendar" : "Download .ics"}>
+                {calendarState === "loading" ? <svg className="cal-spin" width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round" /></svg>
+                  : calendarState === "done" ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" /><path d="M2 8h14" stroke="currentColor" strokeWidth="1.5" /><path d="M6 1.5v3M12 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
               </button>
+              {tripMapsUrl && (
+                <a className="rec-maps-cta" href={tripMapsUrl} target="_blank" rel="noreferrer">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5" /><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5" /></svg>
+                  Maps
+                </a>
+              )}
             </div>
+          </header>
+
+          {/* ── SPLIT: image left/backdrop, card stack right/floating ── */}
+          <div className="rec-split">
+            {(() => {
+              const stops = itinerary?.stops || [];
+              const stop = stops[cardIndex] || {};
+              const imgOf = (s, i) => s.imageUrl || s.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length, 1)]?.img || moodVibes[i % moodVibes.length].img;
+              const photoTitle = itinerary?.destination || destination || stop.googlePlaceName || stop.name;
+              return (
+                <>
+                  {/* LEFT: photo pane (desktop) / full-bleed backdrop (mobile) — changes with the active card */}
+                  <div className="rec-photo">
+                    <img key={cardIndex} src={imgOf(stop, cardIndex)} alt={stop.name || ""} className="rec-photo-img" />
+                    <div className="rec-photo-ov" />
+                    <div className="rec-photo-meta">
+                      <span className="rec-photo-count">{String(cardIndex + 1).padStart(2, "0")} / {String(stops.length).padStart(2, "0")}</span>
+                      <span className="rec-photo-name">{photoTitle}</span>
+                    </div>
+                  </div>
+
+                  {/* RIGHT: card stack */}
+                  <div
+                    className="rec-stack"
+                    onTouchStart={e => { window._recX = e.touches[0].clientX; }}
+                    onTouchEnd={e => {
+                      const dx = e.changedTouches[0].clientX - (window._recX ?? e.changedTouches[0].clientX);
+                      if (dx < -48) { setSwipeDir(1); setCardIndex(i => Math.min(stops.length - 1, i + 1)); }
+                      if (dx > 48) { setSwipeDir(-1); setCardIndex(i => Math.max(0, i - 1)); }
+                    }}
+                  >
+                    {stops.map((s, i) => {
+                      const off = i - cardIndex;
+                      if (off < -1 || off > 2) return null;
+                      const isSaved = savedCards.has(i);
+                      const price = priceLabel(s.priceLevel);
+                      return (
+                        <article
+                          key={`${s.name}-${i}`}
+                          className={`rec-card${off === 0 ? " rec-card-front" : ""}${off < 0 ? " rec-card-gone" : ""}`}
+                          onClick={() => { if (off === 0) handleCardFrontClick(stops); }}
+                          style={off > 0 ? {
+                            transform: `translateX(${off * 26}px) scale(${1 - off * .055}) rotate(${off * 1.4}deg)`,
+                            zIndex: 10 - off,
+                            opacity: 1 - off * .25,
+                          } : off === 0 ? { zIndex: 12, cursor: "pointer" } : {
+                            transform: `translateX(${swipeDir < 0 ? "" : "-"}115%) rotate(${swipeDir < 0 ? 8 : -8}deg)`,
+                            opacity: 0,
+                            zIndex: 14,
+                          }}
+                        >
+                          {/* In-card image (hidden — photo backdrop handles mobile now) */}
+                          <div className="rec-card-img">
+                            <img src={imgOf(s, i)} alt="" loading="lazy" />
+                            <div className="rec-card-img-ov" />
+                          </div>
+
+                          <button
+                            className={`rec-heart${isSaved ? " rec-heart-on" : ""}`}
+                            onClick={(e) => { e.stopPropagation(); setSavedCards(prev => { const n = new Set(prev); isSaved ? n.delete(i) : n.add(i); return n; }); }}
+                            aria-label={isSaved ? "Unsave" : "Save"}
+                          >
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+                          </button>
+
+                          <div className="rec-card-inner">
+                            <p className="rec-card-cat">{s.category}</p>
+                            <div className="rec-card-timerow">
+                              {s.rating && <span className="rec-card-pill rec-pill-rating">★ {s.rating}</span>}
+                              {price && <span className="rec-card-pill rec-pill-price">{price}{priceRange(s.priceLevel) ? ` · ${priceRange(s.priceLevel)}` : ""}</span>}
+                              {s.openNow !== undefined && <span className="rec-card-pill">{s.openNow ? "Open" : "Check hours"}</span>}
+                            </div>
+                            <h3 className="rec-card-name">{s.name}</h3>
+                            {s.routeFromPrevious && <small className="rec-card-route rec-card-route-top">{s.routeFromPrevious}</small>}
+                            {s.address && (
+                              <a className="rec-card-addr" onClick={(e) => e.stopPropagation()} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`} target="_blank" rel="noreferrer">
+                                <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5" /><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5" /></svg>
+                                {s.address}
+                              </a>
+                            )}
+                            <p className="rec-card-desc">{s.description}</p>
+                            {s.bookingUrl && (
+                              <a className="rec-card-book" href={s.bookingUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                                Check availability & book
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                              </a>
+                            )}
+                          </div>
+                          {/* Mobile: actions moved into the front card (hidden on desktop) */}
+                          {off === 0 && (
+                            <div className="rec-card-actions">
+                              <button className="rec-mbar-btn" onClick={shareItinerary} disabled={shareLoading}>
+                                {shareCopied
+                                  ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                  : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="13" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="13" cy="14.5" r="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="5" cy="9" r="2" stroke="currentColor" strokeWidth="1.5" /><line x1="11.1" y1="4.6" x2="6.9" y2="7.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><line x1="6.9" y1="10.1" x2="11.1" y2="13.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                                }
+                                <span>{shareCopied ? "Copied" : "Share"}</span>
+                              </button>
+                              {tripMapsUrl && (
+                                <a className="rec-mbar-btn rec-mbar-primary" href={tripMapsUrl} target="_blank" rel="noreferrer">
+                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5" /><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5" /></svg>
+                                  <span>Maps{savedCards.size > 0 ? ` · ${savedCards.size}` : ""}</span>
+                                </a>
+                              )}
+                              <button className="rec-mbar-btn" onClick={() => setMoreOpen(true)}>
+                                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="9" r="1.5" fill="currentColor" /><circle cx="9" cy="9" r="1.5" fill="currentColor" /><circle cx="14" cy="9" r="1.5" fill="currentColor" /></svg>
+                                <span>More</span>
+                              </button>
+                            </div>
+                          )}
+                        </article>
+                      );
+                    })}
+
+                    {/* Nav row — rendered inside the front card via absolute positioning */}
+                    <div className="rec-nav" onClick={(e) => e.stopPropagation()}>
+                      <button className="rec-arrow" onClick={() => { setSwipeDir(-1); setCardIndex(i => Math.max(0, i - 1)); }} disabled={cardIndex === 0}>
+                        <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </button>
+                      <div className="rec-dots">
+                        {stops.map((_, i) => (
+                          <button key={i} className={`rec-dot${i === cardIndex ? " rec-dot-on" : ""}${savedCards.has(i) ? " rec-dot-heart" : ""}`} onClick={() => { setSwipeDir(i > cardIndex ? 1 : -1); setCardIndex(i); }} />
+                        ))}
+                      </div>
+                      <button className="rec-arrow" onClick={() => { setSwipeDir(1); setCardIndex(i => Math.min(stops.length - 1, i + 1)); }} disabled={cardIndex === stops.length - 1}>
+                        <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M7 4l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </button>
+                    </div>
+
+                    {/* Mobile: one-time gesture hint */}
+                    {showTapHint && (
+                      <div className="rec-hint" onClick={() => setShowTapHint(false)}>
+                        <div className="rec-hint-pill">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+                          <span>Tap for next · Double tap to save</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Mobile: heart burst on double-tap save */}
+                    {heartBurst && (
+                      <div className="rec-heart-burst">
+                        <svg width="88" height="88" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+
+          {/* ── MOBILE BOTTOM BAR: Share · Maps · More ── */}
+          <div className="rec-mbar">
+            <button className="rec-mbar-btn" onClick={shareItinerary} disabled={shareLoading}>
+              {shareCopied
+                ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="13" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="13" cy="14.5" r="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="5" cy="9" r="2" stroke="currentColor" strokeWidth="1.5" /><line x1="11.1" y1="4.6" x2="6.9" y2="7.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><line x1="6.9" y1="10.1" x2="11.1" y2="13.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
+              <span>{shareCopied ? "Copied" : "Share"}</span>
+            </button>
             {tripMapsUrl && (
-              <a className="btn-accent maps-trip-btn action-primary-cta" href={tripMapsUrl} target="_blank" rel="noreferrer">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
-                Open trip in Google Maps
+              <a className="rec-mbar-btn rec-mbar-primary" href={tripMapsUrl} target="_blank" rel="noreferrer">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5" /><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5" /></svg>
+                <span>Maps{savedCards.size > 0 ? ` · ${savedCards.size}` : ""}</span>
               </a>
             )}
-          </section>
+            <button className="rec-mbar-btn" onClick={() => setMoreOpen(true)}>
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="9" r="1.5" fill="currentColor" /><circle cx="9" cy="9" r="1.5" fill="currentColor" /><circle cx="14" cy="9" r="1.5" fill="currentColor" /></svg>
+              <span>More</span>
+            </button>
+          </div>
 
-          <section className="timeline">
-            <p className="label">Today's flow</p>
-            {(itinerary?.stops || []).map((stop, i) => (
-              <article className="stop" key={`${stop.name}-${i}`}>
-                <div className={i === 0 ? "s-pin s-pin-featured" : "s-pin"}>
-                  <span className="s-pin-index">{String(i + 1).padStart(2, "0")}</span>
-                </div>
-                <div className="s-body">
-                  <p className="s-cat">{stop.category}</p>
-                  <h3>{stop.time} <span>{stop.period}</span></h3>
-                  <h4>{stop.name}</h4>
-                  <div className="place-meta prominent">
-                    {stop.rating && (
-                      <a className="rating-pill" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.googlePlaceName || stop.name)}`} target="_blank" rel="noreferrer">★ {stop.rating}{stop.userRatingCount ? ` · ${stop.userRatingCount.toLocaleString()} reviews` : ""}</a>
-                    )}
-                    {stop.openNow !== undefined && <span>{stop.openNow ? "Open now" : "Hours vary"}</span>}
-                    {stop.address && (
-                      <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`} target="_blank" rel="noreferrer">{stop.address}</a>
-                    )}
-                    {!stop.rating && stop.placesStatus !== "google-places" && <span className="demo-pill">Places details unavailable in fallback</span>}
-                  </div>
-                  <p>{stop.description}</p>
-                  <div className="s-photo">
-                    <img src={stop.imageUrl || stop.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length, 1)]?.img || moodVibes[i % moodVibes.length].img} alt={stop.name} loading="lazy" />
-                    <div className="s-photo-ov" />
-                    <span>{stop.googlePlaceName || stop.address || stop.category || stop.name}</span>
-                  </div>
-                  <small>{stop.routeFromPrevious}</small>
-                </div>
-              </article>
-            ))}
-          </section>
+          {/* ── MOBILE MORE SHEET ── */}
+          {moreOpen && (
+            <div className="rec-more-backdrop" onClick={() => setMoreOpen(false)}>
+              <div className="rec-more-sheet" onClick={e => e.stopPropagation()}>
+                <div className="rec-more-grab" />
+                <button className="rec-more-item" onClick={() => { setMoreOpen(false); goTo("mood"); }}>
+                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  Edit mood
+                </button>
+                <button className="rec-more-item" onClick={() => { setMoreOpen(false); generatePlan(); }}>
+                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0110.5-4M15 9a6 6 0 01-10.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M13 5h2.5V2.5M5 13H2.5V15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  Regenerate plan
+                </button>
+                <button className="rec-more-item" onClick={() => { setMoreOpen(false); addToCalendar(); }}>
+                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" /><path d="M2 8h14" stroke="currentColor" strokeWidth="1.5" /><path d="M6 1.5v3M12 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                  {user ? "Add to Google Calendar" : "Download calendar (.ics)"}
+                </button>
+                <button className="rec-more-item rec-more-danger" onClick={() => { setMoreOpen(false); startOver(); }}>
+                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 3v3M9 3a6 6 0 106 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M6.5 1.5L9 3 6.5 4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  Start over
+                </button>
+              </div>
+            </div>
+          )}
         </main>
       )}
 
@@ -1069,7 +1428,7 @@ function App() {
             <div className="spark">✦</div>
             <p className="label">Early access</p>
             <h2>Like this idea?</h2>
-            <p>Travel DNA is running in demo mode right now. Gemini API credits are limited, so fallback plans keep the experience alive while the product evolves.</p>
+            <p>Travel DNA is running in demo mode right now. AI credits are limited, so fallback plans keep the experience alive while the product evolves.</p>
             <p>Subscribe to get updates when live personalization, better Google Places photos, saved preferences, and richer planning are ready.</p>
             <form className="subscribe-form" onSubmit={(event) => {
               event.preventDefault();
@@ -1264,6 +1623,7 @@ button { cursor: pointer; }
 }
 .btn-accent:hover { opacity: .88; }
 .btn-accent:active { transform: scale(.98); }
+.btn-accent:disabled { opacity: .35; cursor: not-allowed; transform: none; }
 .btn-accent, .btn-outline { text-decoration: none !important; }
 .nav-subscribe { min-height: 44px !important; padding: 0 24px !important; font-size: 13px; background: var(--ink) !important; border: none !important; color: #fff !important; font-weight: 700 !important; border-radius: 12px !important; }
 .nav-subscribe:hover { opacity: .85 !important; }
@@ -1663,8 +2023,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .cal-icon-btn-done  { border-color: var(--accent) !important; color: var(--accent) !important; }
 .cal-icon-btn-error { border-color: #c0392b !important; color: #c0392b !important; }
 .action-primary-cta { width: fit-content; padding: 0 28px; gap: 8px; }
-@keyframes calSpin { to { transform: rotate(360deg); } }
-.cal-spin { animation: calSpin .8s linear infinite; }
 
 .timeline { max-width: 100% !important; margin: 0 auto; padding: 48px 0 32px !important; }
 .timeline > .label { margin-bottom: 40px; }
@@ -1747,1102 +2105,6 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   input[type="date"] { font-size: 13px; padding: 0 16px; min-height: 54px; }
 }
 
-/* ===== MOBILE LOGIN FIX: itinerary window top, white intro card bottom ===== */
-@media (max-width: 760px) {
-  /* Login page only: lock scroll via the login-active class */
-  .app-shell.login-active,
-  .login-active {
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-    background: #050807 !important;
-  }
-
-  .lp-shell {
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    padding: 0 !important;
-    display: block !important;
-    overflow: hidden !important;
-    position: relative !important;
-    background: #050807 !important;
-  }
-
-  .lp-bg-outer {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
-  }
-
-  .lp-bg-outer-img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    object-position: center top !important;
-    filter: saturate(1.18) contrast(1.04) brightness(.92) !important;
-    transform: scale(1.02) !important;
-  }
-
-  .lp-bg-outer-dim {
-    position: absolute !important;
-    inset: 0 !important;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,.10) 0%, rgba(0,0,0,.04) 28%, rgba(0,0,0,.50) 100%) !important;
-  }
-
-  .lp-card {
-    position: relative !important;
-    z-index: 2 !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    overflow: hidden !important;
-  }
-
-  /* Itinerary window goes on TOP and gets the visual height */
-  .lp-card-right {
-    order: 1 !important;
-    position: relative !important;
-    flex: 1 1 auto !important;
-    height: 64dvh !important;
-    min-height: 64dvh !important;
-    width: calc(100vw - 28px) !important;
-    margin: 14px auto 0 !important;
-    border: 2px solid rgba(255,255,255,.96) !important;
-    border-radius: 30px !important;
-    overflow: hidden !important;
-    background: rgba(0,0,0,.10) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-panel-overlay {
-    position: absolute !important;
-    inset: 0 !important;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,.02) 0%, rgba(0,0,0,.16) 44%, rgba(0,0,0,.36) 100%) !important;
-    pointer-events: none !important;
-  }
-
-  .lp-panel-itin {
-    position: absolute !important;
-    left: 18px !important;
-    right: 18px !important;
-    bottom: clamp(22px, 5vh, 48px) !important;
-    display: grid !important;
-    gap: 12px !important;
-    padding: 0 !important;
-  }
-
-  .lp-itin-line {
-    min-height: 60px !important;
-    padding: 0 18px !important;
-    display: grid !important;
-    grid-template-columns: 74px 1fr !important;
-    align-items: center !important;
-    gap: 10px !important;
-    border-radius: 18px !important;
-    border: 1px solid rgba(255,255,255,.18) !important;
-    background: rgba(0,0,0,.54) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-itin-time {
-    color: #41A394 !important;
-    font-size: 16px !important;
-    font-weight: 900 !important;
-    letter-spacing: -.02em !important;
-  }
-
-  .lp-itin-label {
-    color: #FFFFFF !important;
-    font-size: 16px !important;
-    font-weight: 800 !important;
-    letter-spacing: -.02em !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  /* White intro/sign-in tile — CHANGE 1: more bottom space */
-  .lp-card-left {
-    order: 2 !important;
-    flex: 0 0 auto !important;
-    position: absolute !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    max-height: 38dvh !important;
-    min-height: 300px !important;
-    padding: 24px 22px max(56px, env(safe-area-inset-bottom, 36px)) !important;
-    background: #FFFFFF !important;
-    color: #080808 !important;
-    border-radius: 30px 30px 0 0 !important;
-    border: 1px solid rgba(255,255,255,.72) !important;
-    box-shadow: 0 -12px 34px rgba(0,0,0,.16) !important;
-    overflow: visible !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: flex-start !important;
-    z-index: 5 !important;
-  }
-
-  .lp-right-text {
-    display: block !important;
-  }
-
-  .lp-eyebrow {
-    margin: 0 0 10px !important;
-    color: #8A897F !important;
-    font-size: 11px !important;
-    font-weight: 900 !important;
-    letter-spacing: .18em !important;
-    text-transform: uppercase !important;
-  }
-
-  .lp-h1 {
-    margin: 0 !important;
-    font-family: 'DM Serif Display', Georgia, serif !important;
-    font-size: clamp(44px, 13vw, 62px) !important;
-    line-height: .88 !important;
-    letter-spacing: -.045em !important;
-    color: #080808 !important;
-  }
-
-  .lp-accent {
-    color: #339989 !important;
-  }
-
-  .lp-sub {
-    margin: 14px 0 0 !important;
-    max-width: 34ch !important;
-    color: #8A897F !important;
-    font-size: 14px !important;
-    line-height: 1.42 !important;
-    letter-spacing: -.01em !important;
-  }
-
-  .lp-actions {
-    width: 100% !important;
-    margin-top: 18px !important;
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
-  }
-
-  /* CHANGE 2: Show the real Google iframe — same as desktop */
-  .lp-google-wrap {
-    position: relative !important;
-    width: 100% !important;
-    min-height: 44px !important;
-        background: transparent !important;
-    display: flex !important;
-    align-items: center !important;
-    overflow: visible !important;
-    box-shadow: none !important;
-  }
-
-  .lp-google-wrap > div,
-  #googleSignIn {
-    width: 100% !important;
-    opacity: 1 !important;
-    position: relative !important;
-    inset: auto !important;
-    height: auto !important;
-    z-index: auto !important;
-    cursor: auto !important;
-  }
-
-  .lp-google-wrap iframe {
-    width: 100% !important;
-    border-radius: 14px !important;
-  }
-
-  .google-loading {
-    width: 100% !important;
-    text-align: center !important;
-    color: var(--ink-3) !important;
-    font-size: 13px !important;
-    padding: 10px 0 !important;
-  }
-
-  .lp-ghost-btn {
-    width: 100% !important;
-    height: 50px !important;
-    min-height: 50px !important;
-    border-radius: 999px !important;
-    border: 1px solid rgba(0,0,0,.12) !important;
-    background: transparent !important;
-    color: #080808 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-fine {
-    display: none !important;
-  }
-}
-
-/* Extra small phones: keep CTAs visible */
-@media (max-width: 380px) {
-  .lp-card-right {
-    height: 62dvh !important;
-    min-height: 62dvh !important;
-  }
-
-  .lp-card-left {
-    max-height: 40dvh !important;
-    min-height: 292px !important;
-    padding-top: 20px !important;
-  }
-
-  .lp-h1 {
-    font-size: 42px !important;
-  }
-
-  .lp-sub {
-    font-size: 13px !important;
-    margin-top: 10px !important;
-  }
-
-  .lp-actions {
-    margin-top: 14px !important;
-  }
-
-  .lp-itin-line {
-    min-height: 54px !important;
-  }
-}
-
-
-/* ===== MOBILE LOGIN CONNECTED WINDOW FIX ===== */
-@media (max-width: 760px) {
-  .login-active {
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    overflow: hidden !important;
-  }
-
-  .login-active .navbar,
-  .login-active .nav-mark,
-  .login-active .nav-logo,
-  .login-active .drawer-title {
-    display: none !important;
-  }
-
-  .lp-shell {
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    padding: 8px 12px 8px !important;
-    display: flex !important;
-    align-items: stretch !important;
-    justify-content: center !important;
-    overflow: hidden !important;
-    background: #dcefeb !important;
-  }
-
-  .lp-bg-outer {
-    position: absolute !important;
-    inset: 0 !important;
-    opacity: 1 !important;
-  }
-
-  .lp-bg-outer-img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    filter: saturate(1.12) contrast(1.02) brightness(.98) !important;
-  }
-
-  .lp-bg-outer-dim {
-    background: rgba(0, 0, 0, .06) !important;
-  }
-
-  .lp-card {
-    position: relative !important;
-    z-index: 2 !important;
-    width: 100% !important;
-    height: 100dvh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    border: 4px solid rgba(255,255,255,.96) !important;
-    border-radius: 42px 42px 0 0 !important;
-    overflow: hidden !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-right {
-    order: 1 !important;
-    position: relative !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    height: auto !important;
-    border-radius: 0 !important;
-    overflow: hidden !important;
-    background: transparent !important;
-  }
-
-  .lp-card-right::before,
-  .lp-card-right::after {
-    display: none !important;
-  }
-
-  .lp-panel-overlay {
-    position: absolute !important;
-    inset: 0 !important;
-    background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.32)) !important;
-    pointer-events: none !important;
-  }
-
-  .lp-panel-itin {
-    position: absolute !important;
-    left: 24px !important;
-    right: 24px !important;
-    bottom: 24px !important;
-    display: grid !important;
-    gap: 12px !important;
-    z-index: 2 !important;
-  }
-
-  .lp-itin-line {
-    min-height: 58px !important;
-    display: grid !important;
-    grid-template-columns: 82px 1fr !important;
-    align-items: center !important;
-    padding: 0 18px !important;
-    border-radius: 18px !important;
-    background: rgba(0,0,0,.45) !important;
-    border: 1px solid rgba(255,255,255,.16) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-itin-time {
-    color: #3CA394 !important;
-    font-weight: 800 !important;
-    font-size: 15px !important;
-  }
-
-  .lp-itin-label {
-    color: #fff !important;
-    font-weight: 800 !important;
-    font-size: 15px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  .lp-card-left {
-    order: 2 !important;
-    position: relative !important;
-    flex: 0 0 auto !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    padding: 28px 28px 22px !important;
-    background: #ffffff !important;
-    border-radius: 0 !important;
-    border: 0 !important;
-    border-top: 1px solid rgba(0,0,0,.08) !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-  }
-
-  .lp-right-text {
-    margin: 0 !important;
-  }
-
-  .lp-eyebrow {
-    margin: 0 0 12px !important;
-    color: #89877f !important;
-    font-size: 11px !important;
-    letter-spacing: .22em !important;
-    font-weight: 900 !important;
-    text-transform: uppercase !important;
-  }
-
-  .lp-h1 {
-    margin: 0 !important;
-    font-family: "DM Serif Display", Georgia, serif !important;
-    font-size: clamp(50px, 14vw, 68px) !important;
-    line-height: .88 !important;
-    letter-spacing: -.06em !important;
-    color: #060606 !important;
-  }
-
-  .lp-accent {
-    color: #3CA394 !important;
-    -webkit-text-fill-color: #3CA394 !important;
-  }
-
-  .lp-sub {
-    margin: 18px 0 0 !important;
-    font-size: 16px !important;
-    line-height: 1.42 !important;
-    color: #8a877f !important;
-    max-width: 31ch !important;
-  }
-
-  .lp-actions {
-    margin-top: 24px !important;
-    display: grid !important;
-    gap: 12px !important;
-    width: 100% !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-google-wrap iframe,
-  .lp-google-wrap > div,
-  #googleSignIn,
-  #googleSignIn > div {
-    opacity: 0 !important;
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 3 !important;
-  }
-
-  .lp-ghost-btn {
-    height: 58px !important;
-    border-radius: 999px !important;
-    background: #fff !important;
-    border: 1px solid #dedbd4 !important;
-    color: #080808 !important;
-    font-size: 16px !important;
-    font-weight: 800 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 10px !important;
-    box-shadow: none !important;
-  }
-
-  .lp-fine {
-    display: none !important;
-  }
-
-  .lp-logo,
-  .lp-brand,
-  .lp-logo-text,
-  .login-logo,
-  .login-brand,
-  .drawer-header .drawer-title {
-    display: none !important;
-  }
-}
-
-/* Slightly shorter phones */
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-card-left {
-    padding: 22px 24px 18px !important;
-  }
-
-  .lp-h1 {
-    font-size: clamp(44px, 12.5vw, 58px) !important;
-  }
-
-  .lp-sub {
-    margin-top: 12px !important;
-    font-size: 14px !important;
-  }
-
-  .lp-actions {
-    margin-top: 18px !important;
-    gap: 10px !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    height: 52px !important;
-  }
-
-  .lp-panel-itin {
-    left: 20px !important;
-    right: 20px !important;
-    bottom: 18px !important;
-    gap: 10px !important;
-  }
-
-  .lp-itin-line {
-    min-height: 52px !important;
-  }
-}
-
-
-/* ===== MOBILE FINAL POLISH: remove top seam, translucent itinerary, desktop-style CTAs, no drawer X ===== */
-@media (max-width: 760px) {
-  .lp-card::before,
-  .lp-card::after,
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after {
-    display: none !important;
-    content: none !important;
-    border: 0 !important;
-  }
-
-  .lp-card {
-    border-top-color: rgba(255,255,255,.96) !important;
-    background-clip: padding-box !important;
-  }
-
-  .lp-card-right {
-    border-top: 0 !important;
-    outline: 0 !important;
-  }
-
-  .lp-panel,
-  .lp-panel-image,
-  .lp-panel img {
-    border-top: 0 !important;
-    outline: 0 !important;
-  }
-
-  .lp-shell {
-    padding-bottom: 0 !important;
-  }
-
-  .lp-card {
-    height: 100dvh !important;
-  }
-
-  .lp-card-left {
-    padding-bottom: max(28px, env(safe-area-inset-bottom)) !important;
-  }
-
-  .lp-itin-line {
-    background: rgba(255,255,255,.22) !important;
-    border: 1px solid rgba(255,255,255,.30) !important;
-    border-radius: 18px !important;
-    backdrop-filter: blur(18px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-  }
-
-  .lp-itin-time {
-    color: #3CA394 !important;
-    font-weight: 900 !important;
-  }
-
-  .lp-itin-label {
-    color: #FFFFFF !important;
-    font-weight: 850 !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    border-radius: 22px !important;
-    height: 58px !important;
-  }
-
-  .lp-ghost-btn {
-    background: #ffffff !important;
-    border: 1px solid #dedbd4 !important;
-    color: #080808 !important;
-  }
-
-  .lp-ghost-btn:hover {
-    background: #F6F3ED !important;
-    color: #080808 !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-google-wrap:hover {
-    background: #F8F5EF !important;
-    border-color: #d9d4ca !important;
-  }
-
-  .drawer-close,
-  .menu-close,
-  .hamburger-close,
-  .mobile-menu-close,
-  .drawer-header button,
-  .drawer button[aria-label="Close"],
-  .mobile-drawer button[aria-label="Close"],
-  .menu-panel button[aria-label="Close"],
-  .mobile-menu button[aria-label="Close"] {
-    display: none !important;
-  }
-
-  .hamburger.open span,
-  .hamburger.is-open span,
-  .menu-toggle.open span,
-  .menu-toggle.is-open span {
-    transform: none !important;
-    opacity: 1 !important;
-  }
-}
-
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-shell {
-    padding-bottom: 0 !important;
-  }
-
-  .lp-card {
-    height: 100dvh !important;
-  }
-
-  .lp-card-left {
-    padding-bottom: max(22px, env(safe-area-inset-bottom)) !important;
-  }
-}
-
-
-/* ===== FINAL POLISH: single border + desktop translucent itinerary + desktop-matched mobile buttons ===== */
-@media (max-width: 760px) {
-  .lp-card {
-    border: 3px solid rgba(255,255,255,.96) !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-  }
-
-  .lp-card *,
-  .lp-card-right,
-  .lp-card-left,
-  .lp-panel,
-  .lp-panel-image,
-  .lp-panel img {
-    outline: 0 !important;
-  }
-
-  .lp-card-right,
-  .lp-panel,
-  .lp-panel-image {
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after {
-    display: none !important;
-    content: none !important;
-  }
-
-  .lp-card-left {
-    border-left: 0 !important;
-    border-right: 0 !important;
-    border-bottom: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    height: 58px !important;
-    border-radius: 18px !important;
-    font-size: 16px !important;
-    font-weight: 750 !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-ghost-btn {
-    background: #FFFFFF !important;
-    border: 1px solid #D9D4CA !important;
-    color: #080808 !important;
-    box-shadow: none !important;
-  }
-}
-
-.itinerary-line,
-.lp-itin-line {
-  background: rgba(255,255,255,.24) !important;
-  border: 1px solid rgba(255,255,255,.34) !important;
-  backdrop-filter: blur(18px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-  box-shadow: none !important;
-}
-
-.itinerary-line b,
-.lp-itin-time {
-  color: #3CA394 !important;
-  font-weight: 900 !important;
-}
-
-.itinerary-line span,
-.lp-itin-label {
-  color: #FFFFFF !important;
-  font-weight: 850 !important;
-}
-
-.showreel-overlay,
-.lp-panel-overlay {
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.28)),
-    linear-gradient(90deg, rgba(0,0,0,.16), rgba(0,0,0,.02)) !important;
-}
-
-.google-wrap,
-.lp-google-wrap {
-  }
-
-.lp-ghost-btn,
-.google-connect-btn,
-.continue-guest-btn {
-  border-radius: 18px !important;
-}
-
-
-/* ===== CLEAN MOBILE WINDOW: no shade seam, unified white tile, exact desktop-style buttons ===== */
-@media (max-width: 760px) {
-  .lp-card::before,
-  .lp-card::after,
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after,
-  .lp-panel-overlay {
-    display: none !important;
-    content: none !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card {
-    border: 3px solid #ffffff !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    background: #ffffff !important;
-    overflow: hidden !important;
-  }
-
-  .lp-card-right,
-  .lp-panel,
-  .lp-panel-image,
-  .lp-panel img {
-    border: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-left {
-    background: #ffffff !important;
-    border: 0 !important;
-    border-top: 0 !important;
-    box-shadow: none !important;
-    margin-top: 0 !important;
-  }
-
-  .lp-card-left::before,
-  .lp-card-left::after {
-    display: none !important;
-    content: none !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-card-right {
-    margin-bottom: 0 !important;
-  }
-
-  .lp-card-left {
-    transform: translateY(0) !important;
-    border-radius: 0 !important;
-  }
-
-  .lp-itin-line {
-    background: rgba(255,255,255,.24) !important;
-    border: 1px solid rgba(255,255,255,.34) !important;
-    backdrop-filter: blur(18px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-itin-time {
-    color: #3CA394 !important;
-    font-weight: 900 !important;
-  }
-
-  .lp-itin-label {
-    color: #ffffff !important;
-    font-weight: 850 !important;
-  }
-
-  .lp-actions {
-    gap: 12px !important;
-  }
-
-  .lp-google-wrap,
-  .lp-ghost-btn {
-    height: 56px !important;
-    border-radius: 18px !important;
-    border: 1px solid #D9D4CA !important;
-    box-shadow: none !important;
-  }
-
-  .lp-google-wrap {
-      }
-
-  .lp-ghost-btn {
-    background: #ffffff !important;
-    color: #080808 !important;
-    font-size: 16px !important;
-    font-weight: 750 !important;
-  }
-
-  .lp-google-wrap:hover,
-  .lp-ghost-btn:hover {
-    background: #F8F5EF !important;
-    border-color: #D9D4CA !important;
-    color: #080808 !important;
-  }
-
-  .lp-google-wrap *,
-  .lp-ghost-btn * {
-    border-radius: inherit !important;
-  }
-}
-
-.itinerary-line {
-  background: rgba(255,255,255,.24) !important;
-  border: 1px solid rgba(255,255,255,.34) !important;
-  backdrop-filter: blur(18px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-  box-shadow: none !important;
-}
-
-.itinerary-line b {
-  color: #3CA394 !important;
-  font-weight: 900 !important;
-}
-
-.itinerary-line span {
-  color: #ffffff !important;
-  font-weight: 850 !important;
-}
-
-.showreel-overlay {
-  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.20)) !important;
-}
-
-
-/* ===== EMERGENCY MOBILE RESTORE: image window visible + desktop button style ===== */
-@media (max-width: 760px) {
-  .lp-card {
-    background: transparent !important;
-    border: 3px solid #ffffff !important;
-    border-radius: 42px 42px 0 0 !important;
-    overflow: hidden !important;
-    box-shadow: none !important;
-    outline: none !important;
-  }
-
-  .lp-card-right {
-    order: 1 !important;
-    position: relative !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .lp-card-right,
-  .lp-card-right * {
-    visibility: visible !important;
-  }
-
-  .lp-panel,
-  .lp-panel-image {
-    position: absolute !important;
-    inset: 0 !important;
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    overflow: hidden !important;
-  }
-
-  .lp-panel img,
-  .lp-panel-image img,
-  .lp-bg,
-  .lp-bg img,
-  .lp-image,
-  .lp-image img {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    filter: saturate(1.12) contrast(1.02) brightness(.98) !important;
-  }
-
-  .lp-card::before,
-  .lp-card::after,
-  .lp-card-right::before,
-  .lp-card-right::after,
-  .lp-panel::before,
-  .lp-panel::after,
-  .lp-panel-image::before,
-  .lp-panel-image::after,
-  .lp-panel-overlay {
-    display: none !important;
-    content: none !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .lp-panel-itin {
-    position: absolute !important;
-    left: 24px !important;
-    right: 24px !important;
-    bottom: 24px !important;
-    z-index: 5 !important;
-    display: grid !important;
-    gap: 12px !important;
-  }
-
-  .lp-itin-line {
-    min-height: 58px !important;
-    display: grid !important;
-    grid-template-columns: 82px 1fr !important;
-    align-items: center !important;
-    padding: 0 18px !important;
-    border-radius: 18px !important;
-    background: rgba(255,255,255,.24) !important;
-    border: 1px solid rgba(255,255,255,.34) !important;
-    backdrop-filter: blur(18px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-itin-time {
-    color: #3CA394 !important;
-    font-weight: 900 !important;
-  }
-
-  .lp-itin-label {
-    color: #ffffff !important;
-    font-weight: 850 !important;
-  }
-
-  .lp-card-left {
-    order: 2 !important;
-    position: relative !important;
-    flex: 0 0 auto !important;
-    background: #ffffff !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-    padding: 28px 28px max(28px, env(safe-area-inset-bottom)) !important;
-  }
-
-  .lp-card-left::before,
-  .lp-card-left::after {
-    display: none !important;
-    content: none !important;
-  }
-
-  .lp-actions {
-    display: grid !important;
-    gap: 12px !important;
-    margin-top: 24px !important;
-  }
-
-  .lp-google-wrap {
-    display: none !important;
-  }
-
-  .lp-ghost-btn {
-    width: 100% !important;
-    height: 56px !important;
-    border-radius: 18px !important;
-    border: 1px solid #D9D4CA !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
-  .lp-google-wrap iframe,
-  .lp-google-wrap > div,
-  #googleSignIn,
-  #googleSignIn > div {
-    opacity: 0 !important;
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 3 !important;
-  }
-
-  .lp-ghost-btn {
-    background: #ffffff !important;
-    color: #080808 !important;
-    font-size: 16px !important;
-    font-weight: 750 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  .lp-google-wrap:hover,
-  .lp-ghost-btn:hover {
-    background: #F8F5EF !important;
-    border-color: #D9D4CA !important;
-    color: #080808 !important;
-  }
-}
-
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-card-left {
-    padding: 22px 24px calc(44px + env(safe-area-inset-bottom)) 24px !important;
-  }
-
-  .lp-shell {
-    padding-bottom: 0 !important;
-  }
-
-  .lp-card {
-    height: 100dvh !important;
-  }
-}
-
-
 /* ===== PROFILE CARD: simple translucent profile note ===== */
 .setup-stack .partnership-box {
   max-width: 100% !important;
@@ -2920,6 +2182,812 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   }
 }
 
+/* ═══════════════════════════════════════════
+   RECOMMENDATION SCREEN — one viewport, no scroll
+   Anime.js-inspired springs: cubic-bezier(.34,1.56,.64,1)
+═══════════════════════════════════════════ */
+.result-active {
+  height: 100dvh !important;
+  overflow: hidden !important;
+  padding-bottom: 0 !important;
+}
+
+.rec-screen {
+  width: 100%;
+  max-width: 1440px;
+  height: calc(100dvh - 68px);
+  display: flex;
+  flex-direction: column;
+  padding: 8px clamp(20px,4vw,56px) 20px;
+  overflow: hidden;
+  animation: scIn .3s var(--ease) both;
+}
+
+/* Header */
+.rec-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  flex-shrink: 0;
+}
+.rec-head-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0 0 4px;
+}
+.rec-head-dest {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(26px, 3.2vw, 44px);
+  font-weight: 400; line-height: 1; letter-spacing: -.02em;
+  color: var(--ink); margin: 0;
+}
+.rec-head-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.icon-btn-sm {
+  width: 38px; height: 38px; border-radius: 12px;
+  border: 1.5px solid var(--line-strong); background: transparent;
+  color: var(--ink-2); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s;
+}
+.icon-btn-sm:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); background: var(--surface); }
+.icon-btn-sm:disabled { opacity: .4; cursor: wait; }
+.icon-btn-sm-active { border-color: var(--accent) !important; color: var(--accent) !important; }
+.cal-icon-btn-done { border-color: var(--accent) !important; color: var(--accent) !important; }
+.rec-maps-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 38px; padding: 0 16px; border-radius: 12px;
+  background: var(--ink); color: #fff; font-size: 13px; font-weight: 700;
+  text-decoration: none; transition: opacity .15s;
+}
+.rec-maps-cta:hover { opacity: .85; }
+
+/* Split layout */
+.rec-split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(380px, 1fr);
+  gap: clamp(20px, 3vw, 40px);
+  align-items: stretch;
+}
+
+/* LEFT photo pane */
+.rec-photo {
+  position: relative;
+  border-radius: 26px;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+}
+.rec-photo-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  animation: photoIn .7s cubic-bezier(.2,.8,.2,1) both, photoKen 9s ease-in-out 0.6s both;
+}
+@keyframes photoIn {
+  from { opacity: 0; transform: scale(1.06); filter: blur(6px); }
+  to   { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+@keyframes photoKen {
+  from { transform: scale(1); }
+  to   { transform: scale(1.06); }
+}
+.rec-photo-ov {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 42%);
+}
+.rec-photo-meta {
+  position: absolute; left: 22px; right: 22px; bottom: 20px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.rec-photo-count {
+  font-size: 11px; font-weight: 800; letter-spacing: .12em;
+  color: rgba(255,255,255,.65); font-variant-numeric: tabular-nums;
+}
+.rec-photo-name {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(20px, 2vw, 30px); color: #fff; letter-spacing: -.02em;
+  animation: nameSlide .55s cubic-bezier(.34,1.56,.64,1) .15s both;
+}
+@keyframes nameSlide {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* RIGHT card stack */
+.rec-stack {
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  touch-action: pan-y;
+}
+.rec-card {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 10px 34px rgba(0,0,0,.10);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .55s cubic-bezier(.34,1.56,.64,1), opacity .4s ease;
+  will-change: transform, opacity;
+}
+.rec-card-front {
+  animation: cardPop .55s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes cardPop {
+  from { transform: translateX(30px) scale(.96) rotate(1.5deg); opacity: .6; }
+  to   { transform: translateX(0) scale(1) rotate(0); opacity: 1; }
+}
+.rec-card-gone { pointer-events: none; }
+
+/* In-card image — hidden everywhere now that the photo pane doubles as the mobile backdrop */
+.rec-card-img { display: none; position: relative; height: 200px; flex-shrink: 0; }
+.rec-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.rec-card-img-ov { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.35), transparent 55%); }
+
+/* Heart */
+.rec-heart {
+  position: absolute; top: 16px; right: 16px; z-index: 5;
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 1.5px solid var(--line-strong);
+  background: #fff; color: var(--ink-3);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform .35s cubic-bezier(.34,1.9,.64,1), color .2s, border-color .2s, background .2s;
+}
+.rec-heart:hover { transform: scale(1.12); color: var(--accent); border-color: var(--accent); }
+.rec-heart-on {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+  animation: heartPop .45s cubic-bezier(.34,2.2,.64,1);
+}
+@keyframes heartPop {
+  0% { transform: scale(.7); }
+  55% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+/* Card inner content */
+.rec-card-inner {
+  flex: 1;
+  min-height: 0;
+  padding: clamp(22px,3vw,34px) clamp(22px,3vw,34px) 74px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+.rec-card-cat {
+  font-size: 10px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0;
+}
+.rec-card-timerow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rec-card-time {
+  font-size: 13px; font-weight: 800; color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.rec-card-suggested {
+  font-size: 12px; font-weight: 600; color: var(--ink-3);
+  margin: 10px 0 0; font-variant-numeric: tabular-nums;
+}
+.rec-card-pill {
+  font-size: 11px; font-weight: 700; color: var(--ink-2);
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line);
+}
+.rec-pill-rating { color: var(--accent); background: rgba(51,153,137,.08); border-color: rgba(51,153,137,.25); }
+.rec-pill-price { color: #b8860b; background: rgba(184,134,11,.08); border-color: rgba(184,134,11,.25); font-variant-numeric: tabular-nums; letter-spacing: .05em; }
+.rec-card-name {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(24px, 2.6vw, 38px);
+  font-weight: 400; line-height: 1.05; letter-spacing: -.02em;
+  color: var(--ink); margin: 2px 0 0;
+}
+.rec-card-desc {
+  font-size: 14px; line-height: 1.65; color: var(--ink-2); margin: 6px 0 0;
+}
+.rec-card-addr {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--ink-3);
+  text-decoration: none; margin-top: 2px;
+}
+.rec-card-addr:hover { color: var(--accent); }
+.rec-card-book {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-top: 6px; padding: 9px 16px; width: fit-content;
+  border-radius: 11px; background: var(--ink); color: #fff;
+  font-size: 12.5px; font-weight: 700; text-decoration: none;
+  transition: opacity .15s, transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.rec-card-book:hover { opacity: .88; transform: translateY(-1px); }
+.rec-card-route { color: var(--ink-3); font-size: 11.5px; line-height: 1.5; margin-top: 4px; display: block; }
+
+/* Nav — sits INSIDE the front card, bottom center */
+.rec-nav {
+  position: absolute;
+  left: 0; right: 0; bottom: 16px;
+  z-index: 20;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  pointer-events: none;
+}
+.rec-nav > * { pointer-events: auto; }
+.rec-arrow {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1.5px solid var(--line-strong); background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,.08);
+  color: var(--ink-2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s;
+}
+.rec-arrow:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); transform: scale(1.06); }
+.rec-arrow:disabled { opacity: .25; cursor: not-allowed; }
+.rec-dots { display: flex; gap: 7px; align-items: center; }
+.rec-dot {
+  width: 7px; height: 7px; border-radius: 999px;
+  border: none; background: var(--surface-3);
+  cursor: pointer; padding: 0;
+  transition: all .35s cubic-bezier(.34,1.56,.64,1);
+}
+.rec-dot-on { background: var(--ink); width: 22px; }
+.rec-dot-heart { background: var(--accent); }
+.rec-dot-heart.rec-dot-on { background: var(--accent); width: 22px; }
+
+/* ── MOBILE BOTTOM BAR + GESTURE UI (hidden on desktop) ── */
+.rec-mbar {
+  display: none;
+  grid-template-columns: 1fr 1.35fr 1fr;
+  gap: 10px;
+  padding-top: 12px;
+  flex-shrink: 0;
+}
+.rec-mbar-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 54px; border-radius: 18px;
+  border: 1.5px solid var(--line-strong); background: #fff;
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  text-decoration: none; cursor: pointer;
+  box-shadow: 0 1px 6px rgba(0,0,0,.06);
+  transition: transform .15s, opacity .15s;
+}
+.rec-mbar-btn:active { transform: scale(.97); }
+.rec-mbar-btn:disabled { opacity: .5; cursor: wait; }
+.rec-mbar-primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.rec-hint {
+  display: none;
+  position: absolute; inset: 0; z-index: 30;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,.22);
+  border-radius: 24px;
+  animation: hintFade .35s ease both;
+  cursor: pointer;
+}
+@keyframes hintFade { from { opacity: 0; } to { opacity: 1; } }
+.rec-hint-pill {
+  display: flex; align-items: center; gap: 9px;
+  padding: 13px 20px; border-radius: 999px;
+  background: rgba(8,8,8,.78);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  color: #fff; font-size: 13px; font-weight: 700;
+  animation: hintPillIn .5s cubic-bezier(.34,1.56,.64,1) both;
+}
+.rec-hint-pill svg { color: var(--accent); flex-shrink: 0; }
+@keyframes hintPillIn {
+  from { opacity: 0; transform: translateY(12px) scale(.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.rec-heart-burst {
+  position: absolute; inset: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.rec-heart-burst svg {
+  color: #fff;
+  filter: drop-shadow(0 10px 28px rgba(0,0,0,.35));
+  animation: burstPop .75s cubic-bezier(.34,1.8,.64,1) both;
+}
+@keyframes burstPop {
+  0%   { transform: scale(.25); opacity: 0; }
+  30%  { transform: scale(1.25); opacity: 1; }
+  60%  { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.05); opacity: 0; }
+}
+
+.rec-more-backdrop {
+  position: fixed; inset: 0; z-index: 700;
+  background: rgba(10,10,10,.45);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: flex-end;
+  animation: drawerBgIn .2s ease both;
+}
+.rec-more-sheet {
+  width: 100%;
+  background: var(--bg);
+  border-radius: 26px 26px 0 0;
+  padding: 12px 16px max(22px, env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 2px;
+  animation: sheetUp .32s var(--ease) both;
+}
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.rec-more-grab {
+  width: 40px; height: 4px; border-radius: 999px;
+  background: var(--surface-3); margin: 0 auto 12px;
+}
+.rec-more-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; min-height: 54px; padding: 0 14px;
+  border: none; border-radius: 14px;
+  background: transparent;
+  font-size: 15px; font-weight: 700; color: var(--ink);
+  text-align: left; cursor: pointer;
+  transition: background .12s;
+}
+.rec-more-item:active { background: var(--surface-2); }
+.rec-more-item svg { flex-shrink: 0; color: var(--ink-2); }
+.rec-more-danger { color: #c0392b; }
+.rec-more-danger svg { color: #c0392b; }
+
+/* ── Mobile result: image backdrop + floating swipe card + bottom bar ── */
+@media (max-width: 900px) {
+  .app-shell.result-active {
+    background: transparent !important;
+    padding-bottom: 0 !important;
+  }
+  .result-active .navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 60;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .result-active .hamburger span { background: #fff; }
+  .result-active .nav-subscribe {
+    background: rgba(0,0,0,.08) !important;
+    border: 1.5px solid rgba(255,255,255,.92) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .result-active .nav-subscribe:hover {
+    background: rgba(255,255,255,.12) !important;
+    border-color: #fff !important;
+  }
+  .rec-screen {
+    height: 100dvh;
+    padding: 0; /* remove off-white gutters so photo can be full-bleed */
+    background: transparent;
+  }
+  .rec-head { padding-bottom: 10px; align-items: center; }
+  .rec-head-dest { display: none; }
+  .rec-head-actions { display: none; }
+
+  /* Photo becomes the full backdrop; it changes with the active card */
+  .rec-split { position: relative; display: block; }
+  .rec-photo {
+    display: block;
+    position: fixed; inset: 0; /* full-bleed background */
+    z-index: 0;
+    border-radius: 0;
+  }
+  .rec-photo-ov { background: linear-gradient(to bottom, rgba(0,0,0,.62) 0%, rgba(0,0,0,.04) 46%); }
+  .rec-photo { border-radius: 0; border: none; }
+  .rec-photo-meta { top: calc(76px + env(safe-area-inset-top, 0px)); bottom: auto; left: 18px; right: 18px; }
+  .rec-photo-name { font-size: 20px; }
+
+  /* Card floats lower and shorter so the image keeps the full-screen feel */
+  .rec-stack {
+    position: absolute;
+    left: 14px; right: 14px;
+    bottom: 14px; top: auto;
+    height: 50vh;
+    display: block;
+    z-index: 2;
+  }
+  .rec-card { cursor: pointer; }
+  .rec-card-img { display: none; }
+  .rec-card-inner { padding: 18px 18px 56px; gap: 8px; overflow: hidden; }
+  .rec-card-name { font-size: 24px; }
+  .rec-card-desc { font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .rec-heart { top: 12px; right: 12px; width: 42px; height: 42px; }
+
+  /* Tap/swipe drives navigation; hide the scroll dots on mobile */
+  .rec-arrow { display: none; }
+  .rec-nav { display: none; }
+
+  .rec-mbar { display: none; }
+  .rec-card-actions { display: none; }
+  .rec-card-actions .rec-mbar-btn { width: 100%; min-height: 46px; justify-content: center; }
+  .rec-card-actions { display: flex; flex-direction: column; gap: 12px; padding: 12px 18px calc(20px + env(safe-area-inset-bottom)); background: transparent; }
+  .rec-card { overflow: visible; }
+  .rec-hint { display: flex; }
+  .rec-hint { display: flex; }
+}
+
+/* ── ACTION SEARCH BAR (mood page) — kokonutui style ── */
+.action-search { position: relative; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.action-search-label { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.action-search-bar {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border-radius: 18px;
+  min-height: 60px; padding: 0 20px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  border: 1.5px solid transparent;
+  transition: border-color .2s, box-shadow .25s cubic-bezier(.34,1.56,.64,1);
+}
+.action-search-open { border-color: var(--accent); box-shadow: 0 6px 24px rgba(51,153,137,.14); }
+.action-search-icon { color: var(--ink-3); flex-shrink: 0; }
+.action-search-open .action-search-icon { color: var(--accent); }
+.action-search-bar input {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-size: 15px; font-weight: 500; color: var(--ink); min-width: 0;
+}
+.action-search-bar input::placeholder { color: var(--ink-3); font-weight: 400; }
+.action-search-field { flex: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 7px; min-width: 0; padding: 10px 0; }
+.action-search-field input { flex: 1; min-width: 140px; border: none; background: transparent; outline: none; font-size: 15px; font-weight: 500; color: var(--ink); }
+.action-search-has-chips { min-height: 60px; height: auto; }
+.activity-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 8px 6px 13px; border-radius: 999px;
+  background: rgba(51,153,137,.1); border: 1px solid rgba(51,153,137,.3);
+  color: var(--accent-strong, #237a6d); font-size: 13px; font-weight: 700;
+  animation: chipIn .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes chipIn { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+.activity-chip-x {
+  width: 18px; height: 18px; border-radius: 50%; border: none;
+  background: rgba(51,153,137,.18); color: var(--accent-strong, #237a6d);
+  font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+}
+.activity-chip-x:hover { background: var(--accent); color: #fff; }
+.asi-picked .asi-spark { color: var(--accent); font-weight: 800; }
+.asi-picked { background: rgba(51,153,137,.07); }
+.action-search-clear {
+  width: 28px; height: 28px; border-radius: 50%; border: none;
+  background: var(--surface-2); color: var(--ink-2); font-size: 16px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+}
+.action-search-panel {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 300;
+  background: #fff; border-radius: 18px; padding: 10px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.14);
+  border: 1px solid var(--line);
+  animation: panelIn .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes panelIn { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.action-search-panel-label {
+  font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); margin: 4px 0 8px; padding: 0 10px;
+}
+.action-search-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 11px 12px; border: none; border-radius: 12px;
+  background: transparent; text-align: left; cursor: pointer;
+  transition: background .12s;
+  animation: itemIn .35s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes itemIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+.action-search-item:hover { background: var(--surface); }
+.asi-spark { color: var(--accent); font-size: 12px; flex-shrink: 0; }
+.asi-name { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; }
+.asi-mood { font-size: 11px; font-weight: 600; color: var(--ink-3); padding: 2px 9px; border-radius: 999px; background: var(--surface); }
+
+/* ═══════════════════════════════════════════
+   LANDING MOTION — cinematic mood cycle
+   wallpaper zooms out → gets "captured" into the
+   itinerary window → plan lines drop in, staggered
+═══════════════════════════════════════════ */
+
+/* Stacked crossfading backgrounds */
+.lp-bg-outer .lp-bg-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+  will-change: opacity, transform;
+}
+.lp-bg-outer .lp-bg-live {
+  opacity: 1;
+  animation: lpZoomOut 5.2s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes lpZoomOut {
+  from { transform: scale(1.14); }
+  to   { transform: scale(1.0); }
+}
+
+/* The captured wallpaper inside the itinerary window:
+   starts huge + blurred (same as wallpaper), condenses into the frame */
+.lp-window-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  animation: lpCapture 1.35s cubic-bezier(.22,.9,.32,1) both;
+}
+@keyframes lpCapture {
+  0%   { transform: scale(1.55); filter: blur(14px) saturate(1.25); opacity: 0; }
+  35%  { opacity: 1; }
+  100% { transform: scale(1); filter: blur(0) saturate(1); opacity: 1; }
+}
+
+/* Keep overlay + content above the captured image */
+.lp-panel-overlay { z-index: 1; }
+.lp-panel-itin { z-index: 2; }
+
+/* Mood tag — glass pill, slides in after the capture settles */
+.lp-window-mood {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.32);
+  border: 1px solid rgba(255,255,255,.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  animation: lpTagIn .6s cubic-bezier(.34,1.56,.64,1) .55s both;
+}
+.lp-window-mood-icon { font-size: 13px; opacity: .9; }
+@keyframes lpTagIn {
+  from { opacity: 0; transform: translateY(-10px) scale(.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Itinerary lines drop in from above, staggered, springy */
+.lp-itin-drop {
+  animation: lpLineDrop .65s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes lpLineDrop {
+  from { opacity: 0; transform: translateY(-22px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .lp-bg-outer .lp-bg-live,
+  .lp-window-img,
+  .lp-window-mood,
+  .lp-itin-drop { animation: none !important; }
+  .lp-bg-outer .lp-bg-slide { transition: opacity .6s ease; }
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE LANDING — consolidated, full-bleed
+   Replaces the stacked emergency override blocks.
+   The image window fills edge-to-edge (no outer gap),
+   and the white sign-in sheet rises over it.
+═══════════════════════════════════════════ */
+@media (max-width: 760px) {
+  .app-shell.login-active,
+  .login-active {
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    background: #050807 !important;
+  }
+  .login-active .navbar { display: none !important; }
+
+  /* Full bleed — no padding, no frame, no gap */
+  .lp-shell {
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+    background: #050807 !important;
+  }
+
+  .lp-bg-outer { display: none !important; }
+
+  .lp-card {
+    position: relative !important;
+    z-index: 2 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #050807 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  /* Image window: fills all the space above the sheet, edge to edge */
+  .lp-card-right {
+    order: 1 !important;
+    position: relative !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: #050807 !important;
+  }
+
+  .lp-window-img {
+    object-position: center !important;
+    filter: saturate(1.12) contrast(1.02) !important;
+  }
+
+  .lp-panel-overlay {
+    display: block !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.02) 34%, rgba(0,0,0,.34) 100%) !important;
+    pointer-events: none !important;
+  }
+
+  .lp-window-mood {
+    top: max(16px, env(safe-area-inset-top)) !important;
+    left: 18px !important;
+  }
+
+  .lp-panel-itin {
+    position: absolute !important;
+    left: 18px !important;
+    right: 18px !important;
+    bottom: 46px !important; /* clears the sheet's rounded overlap */
+    display: grid !important;
+    gap: 11px !important;
+    z-index: 2 !important;
+  }
+
+  .lp-itin-line {
+    min-height: 56px !important;
+    display: grid !important;
+    grid-template-columns: 78px 1fr !important;
+    align-items: center !important;
+    padding: 0 18px !important;
+    border-radius: 18px !important;
+    background: rgba(255,255,255,.24) !important;
+    border: 1px solid rgba(255,255,255,.34) !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+    box-shadow: none !important;
+  }
+
+  .lp-itin-time {
+    color: #3CA394 !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    letter-spacing: -.02em !important;
+  }
+
+  .lp-itin-label {
+    color: #FFFFFF !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: -.02em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* White sign-in sheet rises over the image */
+  .lp-card-left {
+    order: 2 !important;
+    position: relative !important;
+    z-index: 5 !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    margin: -28px 0 0 !important;
+    padding: 26px 26px max(28px, env(safe-area-inset-bottom)) !important;
+    background: #FFFFFF !important;
+    border: 0 !important;
+    border-radius: 28px 28px 0 0 !important;
+    box-shadow: 0 -12px 34px rgba(0,0,0,.16) !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  .lp-eyebrow {
+    margin: 0 0 10px !important;
+    color: #8A897F !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    letter-spacing: .18em !important;
+    text-transform: uppercase !important;
+  }
+
+  .lp-h1 {
+    margin: 0 !important;
+    font-size: clamp(46px, 13vw, 62px) !important;
+    line-height: .88 !important;
+    letter-spacing: -.045em !important;
+    color: #080808 !important;
+  }
+
+  .lp-accent { color: #3CA394 !important; -webkit-text-fill-color: #3CA394 !important; }
+
+  .lp-sub {
+    margin: 14px 0 0 !important;
+    max-width: 34ch !important;
+    color: #8A897F !important;
+    font-size: 14px !important;
+    line-height: 1.42 !important;
+    letter-spacing: -.01em !important;
+  }
+
+  .lp-actions {
+    width: 100% !important;
+    margin-top: 20px !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 11px !important;
+  }
+
+  /* Google iframe stays desktop-only; mobile uses the styled prompt() button */
+  .lp-google-wrap { display: none !important; }
+  .lp-google-btn-mobile {
+    display: flex !important;
+    height: 56px !important;
+    border-radius: 18px !important;
+    border: 1px solid #D9D4CA !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+  }
+
+  .lp-ghost-btn {
+    width: 100% !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    border-radius: 18px !important;
+    border: 1px solid #D9D4CA !important;
+    background: #FFFFFF !important;
+    color: #080808 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    font-size: 15px !important;
+    font-weight: 750 !important;
+    box-shadow: none !important;
+  }
+  .lp-ghost-btn:hover { background: #F8F5EF !important; border-color: #D9D4CA !important; color: #080808 !important; }
+
+  .lp-fine { display: none !important; }
+
+  .drawer-close { display: none !important; }
+}
+
+/* Shorter phones: keep CTAs visible */
+@media (max-width: 760px) and (max-height: 760px) {
+  .lp-card-left { padding: 20px 22px max(22px, env(safe-area-inset-bottom)) !important; }
+  .lp-h1 { font-size: clamp(42px, 12vw, 54px) !important; }
+  .lp-sub { margin-top: 10px !important; font-size: 13px !important; }
+  .lp-actions { margin-top: 15px !important; gap: 9px !important; }
+  .lp-google-btn-mobile, .lp-ghost-btn { height: 50px !important; min-height: 50px !important; }
+  .lp-panel-itin { bottom: 40px !important; gap: 9px !important; }
+  .lp-itin-line { min-height: 50px !important; }
+}
 `;
 
 createRoot(document.getElementById("root")).render(<App />);
