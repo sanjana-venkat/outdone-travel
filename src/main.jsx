@@ -1217,6 +1217,7 @@ function App() {
               const stops = itinerary?.stops || [];
               const stop = stops[cardIndex] || {};
               const imgOf = (s, i) => s.imageUrl || s.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length,1)]?.img || moodVibes[i % moodVibes.length].img;
+              const photoTitle = itinerary?.destination || destination || stop.googlePlaceName || stop.name;
               return (
                 <>
                   {/* LEFT: photo pane (desktop) / full-bleed backdrop (mobile) — changes with the active card */}
@@ -1225,7 +1226,7 @@ function App() {
                     <div className="rec-photo-ov" />
                     <div className="rec-photo-meta">
                       <span className="rec-photo-count">{String(cardIndex+1).padStart(2,"0")} / {String(stops.length).padStart(2,"0")}</span>
-                      <span className="rec-photo-name">{stop.googlePlaceName || stop.name}</span>
+                      <span className="rec-photo-name">{photoTitle}</span>
                     </div>
                   </div>
 
@@ -1589,8 +1590,8 @@ button { cursor: pointer; }
 .btn-accent:active { transform: scale(.98); }
 .btn-accent:disabled { opacity: .35; cursor: not-allowed; transform: none; }
 .btn-accent, .btn-outline { text-decoration: none !important; }
-.nav-subscribe { min-height: 44px !important; padding: 0 24px !important; font-size: 13px; background: var(--ink) !important; border: none !important; color: #fff !important; font-weight: 700 !important; border-radius: 12px !important; }
-.nav-subscribe:hover { opacity: .85 !important; }
+.nav-subscribe { min-height: 44px !important; padding: 0 24px !important; font-size: 13px; background: transparent !important; border: 1.5px solid rgba(255,255,255,.95) !important; color: #fff !important; font-weight: 700 !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,.16); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.nav-subscribe:hover { opacity: 1 !important; background: rgba(255,255,255,.14) !important; border-color: #fff !important; color: #fff !important; }
 
 /* ── CHIPS (global) ── */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -2516,16 +2517,16 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .rec-photo-meta { top: 16px; bottom: auto; left: 18px; right: 18px; }
   .rec-photo-name { font-size: 20px; }
 
-  /* Card floats over the image with the photo peeking around it */
+  /* Card floats lower and shorter so the image keeps the full-screen feel */
   .rec-stack {
     position: absolute;
     left: 14px; right: 14px;
-    top: 27%; bottom: 14px;
+    top: 42%; bottom: 112px;
     display: block;
   }
   .rec-card { cursor: pointer; }
   .rec-card-img { display: none; }
-  .rec-card-inner { padding: 20px 20px 50px; gap: 8px; }
+  .rec-card-inner { padding: 18px 18px 56px; gap: 8px; }
   .rec-card-name { font-size: 24px; }
   .rec-card-desc { font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .rec-heart { top: 12px; right: 12px; width: 42px; height: 42px; }
@@ -2534,7 +2535,16 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .rec-arrow { display: none; }
   .rec-nav { bottom: 12px; }
 
-  .rec-mbar { display: grid; }
+  .rec-mbar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rec-mbar-btn {
+    width: 100%;
+    min-height: 46px;
+    justify-content: center;
+  }
   .rec-hint { display: flex; }
 }
 
