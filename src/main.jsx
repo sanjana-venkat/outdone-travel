@@ -1296,15 +1296,14 @@ function App() {
                               {s.openNow !== undefined && <span className="rec-card-pill">{s.openNow ? "Open" : "Check hours"}</span>}
                             </div>
                             <h3 className="rec-card-name">{s.name}</h3>
+                            {s.routeFromPrevious && <small className="rec-card-route rec-card-route-top">{s.routeFromPrevious}</small>}
                             {s.address && (
                               <a className="rec-card-addr" onClick={(e) => e.stopPropagation()} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`} target="_blank" rel="noreferrer">
                                 <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5" /><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5" /></svg>
                                 {s.address}
                               </a>
                             )}
-                            {s.time && <p className="rec-card-suggested">Suggested time · {s.time}{s.period ? ` ${s.period}` : ""}</p>}
                             <p className="rec-card-desc">{s.description}</p>
-                            {s.routeFromPrevious && <small className="rec-card-route">{s.routeFromPrevious}</small>}
                             {s.bookingUrl && (
                               <a className="rec-card-book" href={s.bookingUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                                 Check availability & book
@@ -1632,6 +1631,8 @@ button { cursor: pointer; }
 /* Result screen (itinerary) — make the subscribe control outlined white over the photo backdrop */
 .result-active .nav-subscribe { background: transparent !important; border: 1.5px solid rgba(255,255,255,.95) !important; color: #fff !important; box-shadow: 0 8px 24px rgba(0,0,0,.16); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .result-active .nav-subscribe:hover { background: rgba(255,255,255,.12) !important; border-color: #fff !important; }
+/* Make navbar transparent only on the result screen so buttons float on the image */
+.result-active .navbar { background: transparent !important; box-shadow: none !important; }
 
 /* ── CHIPS (global) ── */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -2578,7 +2579,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 
   /* Tap/swipe drives navigation — arrows off, dots stay */
   .rec-arrow { display: none; }
-  .rec-nav { bottom: 12px; }
+  .rec-nav { bottom: 84px; }
 
   .rec-mbar { display: none; }
   .rec-card-actions { display: none; }
