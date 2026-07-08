@@ -275,6 +275,8 @@ function App() {
   const [itineraryBuilt, setItineraryBuilt] = useState(false);
   const [mobileTrayOpen, setMobileTrayOpen] = useState(false);
   const [dragIndex, setDragIndex] = useState(null);
+  const [addedStopName, setAddedStopName] = useState("");
+  const [activeTimelineIndex, setActiveTimelineIndex] = useState(0);
   const [swipeDir, setSwipeDir] = useState(1);
   const [activityFocus, setActivityFocus] = useState(false);
   const [customActivities, setCustomActivities] = useState([]);
@@ -284,6 +286,7 @@ function App() {
   const [moreOpen, setMoreOpen] = useState(false);
   const tapTimerRef = useRef(null);
   const swipeStartXRef = useRef(null);
+  const timelineRefs = useRef([]);
   const shellRef = useRef(null);
 
   function goTo(s) {
@@ -439,7 +442,11 @@ function App() {
   function addStopToItinerary(stop = activeStop) {
     if (!stop?.name) return;
     setSelectedStops((items) => items.some((s) => s.name === stop.name) ? items : [...items, stop]);
-    setCardIndex((i) => Math.min(i + 1, Math.max(suggestionStops.length - 1, 0)));
+    setAddedStopName(stop.name);
+    setTimeout(() => {
+      setAddedStopName("");
+      setCardIndex((i) => Math.min(i + 1, Math.max(suggestionStops.length - 1, 0)));
+    }, 520);
   }
 
   function discardCurrentStop() {
@@ -466,14 +473,44 @@ function App() {
     setMobileTrayOpen(false);
   }
 
-  const loadingItems = useMemo(() => [
-    user?.name ? `${user.name}'s lightweight profile` : "Quick feeler profile",
-    "Understanding today's intent",
-    "Keeping your real constraints in mind",
-    "Reading the destination context",
-    "Looking for places that match today's mood",
-    "Pulling real place photos and ratings",
-    "Asking AI to think like today's version of you"
+  useEffect(() => {
+    if (!itineraryBuilt) return;
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible?.target?.dataset?.index) setActiveTimelineIndex(Number(visible.target.dataset.index));
+    }, { threshold: [0.35, 0.6], rootMargin: "-20% 0px -45% 0px" });
+    timelineRefs.current.forEach((node) => node && observer.observe(node));
+    return () => observer.disconnect();
+  }, [itineraryBuilt, itineraryStops.length]);
+
+  const loadingPhases = useMemo(() => [
+    {
+      title: "Quick feeler profile",
+      line: user?.name ? `Reading ${user.name}'s lightweight profile` : "Reading your lightweight profile",
+      visual: "profile"
+    },
+    {
+      title: "Mood and constraints",
+      line: "Understanding today's intent",
+      visual: "mood"
+    },
+    {
+      title: "Place reviews",
+      line: "Looking for places that match today's mood",
+      visual: "places"
+    },
+    {
+      title: "Photos and ratings",
+      line: "Pulling real place photos and ratings",
+      visual: "photos"
+    },
+    {
+      title: "AI generating itinerary",
+      line: "Asking AI to think like today's version of you",
+      visual: "ai"
+    }
   ], [user]);
 
   function toggleMood(id) {
@@ -698,7 +735,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell${step === "login" ? " login-active" : ""}${step === "result" ? " result-active" : ""}`} ref={shellRef}>
+    <div className={`app-shell${step === "login" ? " login-active" : ""}${step === "loading" ? " loading-active" : ""}${step === "result" ? " result-active" : ""}`} ref={shellRef}>
       <style>{css}</style>
 
       <nav className="navbar">
@@ -1065,145 +1102,90 @@ function App() {
       )}
 
       {step === "loading" && (
-        <main className="loading-screen on">
-          <div className="loader-head">
-            <h2 className="loader-headline">Building around <span className="gem">today's version of you</span></h2>
-            <p className="loader-sub">{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
+        <main className="loading-screen motion-loading-screen on">
+          <div className="motion-loader-copy">
+            <p className="label">Building your day</p>
+            <h2>Building around <span className="gem">today's version of you</span></h2>
+            <p>{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
           </div>
-          <div className="loader-stage">
-            <div className={`ls${loadingLine === 0 ? " ls-active" : " ls-done"}`}>
-              <div className="ls-profile">
-                <div className="profile-ring-wrap">
-                  <svg className="profile-ring-svg" viewBox="0 0 120 120">
-                    <circle className="ring-bg" cx="60" cy="60" r="54" />
-                    <circle className="ring-fill" cx="60" cy="60" r="54" />
-                  </svg>
-                  {user?.picture
-                    ? <img className="profile-pic" src={user.picture} alt={user.name} />
-                    : <div className="profile-pic profile-pic-fallback">
-                      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="19" cy="14" r="7" fill="var(--ink-3)" opacity="0.6" />
-                        <path d="M4 34c0-8.284 6.716-13 15-13s15 4.716 15 13" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-                      </svg>
-                    </div>
-                  }
-                </div>
-                <div className="profile-meta">
-                  <p className="profile-name">{user?.name || "Quick feeler mode"}</p>
-                  {user?.email && <p className="profile-email">{user.email}</p>}
-                </div>
-              </div>
-            </div>
 
-            <div className={`ls${loadingLine === 1 || loadingLine === 2 ? " ls-active" : loadingLine > 2 ? " ls-done" : ""}`}>
-              <div className="ls-moods">
-                {selectedMoodObjects.slice(0, 3).map((mood, i) => (
-                  <div className={`lcard lcard-${i}`} key={mood.id}>
-                    <img src={mood.img} alt="" />
-                    <div className="lcard-ov" />
-                    <span className="lcard-lbl">{mood.title}</span>
+          <section className="motion-map-stage" aria-label="Itinerary loading progress">
+            <svg className="motion-route-svg" viewBox="0 0 1200 640" preserveAspectRatio="xMidYMid meet">
+              <path className="motion-route-shadow" d="M92 518 C168 398 282 440 338 318 C404 176 526 158 620 246 C708 328 778 420 884 334 C982 254 1022 138 1110 104" />
+              <path id="travelMotionPath" className="motion-route-path" d="M92 518 C168 398 282 440 338 318 C404 176 526 158 620 246 C708 328 778 420 884 334 C982 254 1022 138 1110 104" />
+              {[
+                { x: 92, y: 518 },
+                { x: 338, y: 318 },
+                { x: 620, y: 246 },
+                { x: 884, y: 334 },
+                { x: 1110, y: 104 }
+              ].map((point, i) => (
+                <g key={i} className={
+                  i < Math.min(loadingLine, loadingPhases.length - 1) ? "route-stop route-stop-done" :
+                  i === Math.min(loadingLine, loadingPhases.length - 1) ? "route-stop route-stop-active" : "route-stop"
+                }>
+                  <circle cx={point.x} cy={point.y} r="11" />
+                  <circle cx={point.x} cy={point.y} r="22" />
+                </g>
+              ))}
+              <g className="motion-pointer" style={{ offsetDistance: String(Math.min(100, (Math.min(loadingLine, loadingPhases.length - 1) / Math.max(loadingPhases.length - 1, 1)) * 100)) + "%" }}>
+                <path d="M18 0l-30 12 6-12-6-12L18 0z" />
+              </g>
+            </svg>
+
+            <div className={"motion-visual motion-visual-" + (loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual || "profile")}>
+              {loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual === "profile" && (
+                <div className="motion-profile-card">
+                  {user?.picture ? <img src={user.picture} alt="" /> : <span className="motion-avatar">✦</span>}
+                  <div>
+                    <strong>{loadingPhases[0].title}</strong>
+                    <p>{user?.email || "No account needed"}</p>
                   </div>
-                ))}
-                <div className="lspills">
-                  {[...selectedMoodObjects.map(m => m.title), diet, planFor].filter(Boolean).map((label, i) => (
-                    <span className={`lspill lspill-${i}`} key={label}>{label}</span>
+                </div>
+              )}
+              {loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual === "mood" && (
+                <div className="motion-mood-stack">
+                  {selectedMoodObjects.slice(0, 3).map((mood, i) => (
+                    <span key={mood.id} style={{ animationDelay: String(i * 80) + "ms" }}>{mood.title}</span>
+                  ))}
+                  <span>{diet}</span>
+                  <span>{planFor}</span>
+                </div>
+              )}
+              {loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual === "places" && (
+                <div className="motion-review-card">
+                  <strong>Place reviews</strong>
+                  {["Local favorite", "Open hours", "Distance check"].map((item, i) => <p key={item} style={{ animationDelay: String(i * 90) + "ms" }}>✓ {item}</p>)}
+                </div>
+              )}
+              {loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual === "photos" && (
+                <div className="motion-photo-grid">
+                  {(placesPhotos.length ? placesPhotos : selectedMoodObjects).slice(0, 4).map((item, i) => (
+                    <img key={i} src={item.photoUrl || item.img || moodVibes[i % moodVibes.length].img} alt="" />
                   ))}
                 </div>
-              </div>
+              )}
+              {loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual === "ai" && (
+                <div className="motion-ai-card">
+                  <span>✦</span>
+                  <strong>AI generating itinerary</strong>
+                  <p>Asking AI to think like today's version of you</p>
+                </div>
+              )}
             </div>
+          </section>
 
-            <div className={`ls${loadingLine === 3 ? " ls-active" : loadingLine > 3 ? " ls-done" : ""}`}>
-              <div className="ls-map">
-                <div className="map-dest-label">{destination}</div>
-                <div className="map-sketch">
-                  <svg viewBox="0 0 420 155" xmlns="http://www.w3.org/2000/svg" className="map-svg">
-                    <path d="M 0 95 Q 60 88 110 98 Q 160 108 200 100 Q 260 90 300 96 Q 360 104 420 98" fill="none" stroke="rgba(51,153,137,.18)" strokeWidth="8" strokeLinecap="round" />
-                    <circle cx="50" cy="60" r="10" fill="rgba(51,153,137,.12)" />
-                    <circle cx="62" cy="54" r="8" fill="rgba(51,153,137,.1)" />
-                    <circle cx="150" cy="130" r="9" fill="rgba(51,153,137,.1)" />
-                    <circle cx="163" cy="136" r="7" fill="rgba(51,153,137,.08)" />
-                    <circle cx="360" cy="110" r="11" fill="rgba(51,153,137,.1)" />
-                    <circle cx="374" cy="116" r="8" fill="rgba(51,153,137,.08)" />
-                    <line x1="0" y1="50" x2="420" y2="50" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
-                    <line x1="0" y1="100" x2="420" y2="100" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
-                    <line x1="105" y1="0" x2="105" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
-                    <line x1="210" y1="0" x2="210" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
-                    <line x1="315" y1="0" x2="315" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
-                    <line className="map-line ml1" x1="80" y1="118" x2="185" y2="62" />
-                    <line className="map-line ml2" x1="185" y1="62" x2="275" y2="85" />
-                    <line className="map-line ml3" x1="275" y1="85" x2="345" y2="42" />
-                    <circle className="map-dot md1" cx="80" cy="118" r="6" />
-                    <circle className="map-dot md2" cx="185" cy="62" r="6" />
-                    <circle className="map-dot md3" cx="275" cy="85" r="6" />
-                    <circle className="map-dot md4" cx="345" cy="42" r="6" />
-                    <circle className="map-traveller" cx="80" cy="118" r="9" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.6" />
-                    <circle className="map-traveller-dot" cx="80" cy="118" r="4" fill="var(--accent)" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className={`ls${loadingLine === 4 ? " ls-active" : loadingLine > 4 ? " ls-done" : ""}`}>
-              <div className="ls-places-chips">
-                <p className="places-chips-label">Scanning Google Places for {destination}</p>
-                <div className="places-chips-wrap">
-                  {(placesPhotos.length
-                    ? placesPhotos.map(p => p.name)
-                    : selectedMoodObjects.map(m => `${destination} ${m.title}`)
-                  ).map((name, i) => {
-                    const clean = name.split(",")[0].trim();
-                    const rating = (4.1 + i * 0.15).toFixed(1);
-                    return (
-                      <div className={`place-chip pc-anim-${i}`} key={i}>
-                        <span className="place-chip-name">{clean}</span>
-                        <span className="place-chip-rating">★ {rating}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className={`ls${loadingLine >= 5 ? " ls-active" : ""}`}>
-              <div className="wire-frame">
-                <div className="wire-meta">
-                  <div className="wire-tag" />
-                  <div className="wire-title" />
-                </div>
-                <div className="wire-stops">
-                  {[0, 1].map(i => (
-                    <div className="wire-stop" key={i}>
-                      <div className="wire-dot" />
-                      <div className="wire-lines">
-                        <div className="wire-line wl-a" style={{ animationDelay: `${i * 0.2}s` }} />
-                        <div className="wire-line wl-b" style={{ animationDelay: `${i * 0.2 + 0.1}s` }} />
-                      </div>
-                      <div className="wire-img" style={{ animationDelay: `${i * 0.15}s` }} />
-                    </div>
-                  ))}
-                </div>
-                <div className="wire-gemini-badge">
-                  <span className="gorb-core-sm">✦</span>
-                  <span>AI is crafting your itinerary…</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="loader-bottom">
-            <div className="loader-list">
-              {loadingItems.map((item, i) => (
-                <div key={item} className={`loader-item${i < loadingLine ? " li-done" : ""}${i === loadingLine ? " li-active" : ""}`}>
-                  <span className="li-dot" />
-                  <span className="li-text">{item}</span>
-                  {i < loadingLine && <span className="li-badge">Done</span>}
-                </div>
+          <div className="motion-loader-status">
+            <div className="motion-status-row">
+              {loadingPhases.map((phase, i) => (
+                <span key={phase.title} className={i < Math.min(loadingLine, loadingPhases.length - 1) ? "done" : i === Math.min(loadingLine, loadingPhases.length - 1) ? "active" : ""}>
+                  {phase.title}{i < Math.min(loadingLine, loadingPhases.length - 1) ? " - done" : ""}
+                </span>
               ))}
             </div>
-            <div className="loader-bar-track">
-              <div className="loader-bar-fill" style={{ width: `${Math.round(((loadingLine + 1) / loadingItems.length) * 100)}%` }} />
+            <div className="loader-bar-track motion-bar-track">
+              <div className="loader-bar-fill" style={{ width: String(Math.round(((Math.min(loadingLine, loadingPhases.length - 1) + 1) / loadingPhases.length) * 100)) + "%" }} />
             </div>
-            <p className="loader-pct">{Math.round(((loadingLine + 1) / loadingItems.length) * 100)}% complete</p>
           </div>
         </main>
       )}
@@ -1223,7 +1205,7 @@ function App() {
       )}
 
       {step === "result" && (
-        <main className="rec-screen builder-screen on">
+        <main className={`rec-screen builder-screen on${itineraryBuilt ? " itinerary-built" : ""}`}>
           <div className="builder-layout">
             <section className="builder-photo-pane">
               <img key={cardIndex} className="builder-photo-img" src={stopImage(activeStop, cardIndex)} alt="" />
@@ -1255,9 +1237,11 @@ function App() {
                       <p>{stop.name}</p>
                     </article>
                   ))}
-                  <button className="create-itinerary-side" type="button" disabled={!selectedStops.length} onClick={createItineraryFromSelected}>
-                    Create itinerary
-                  </button>
+                  {selectedStops.length > 0 && (
+                    <button className="create-itinerary-side" type="button" onClick={createItineraryFromSelected}>
+                      Create plan
+                    </button>
+                  )}
                 </div>
               </div>
             </section>
@@ -1271,17 +1255,21 @@ function App() {
                   </header>
 
                   <article
-                    className="suggestion-card"
+                    className={`suggestion-card${addedStopName === activeStop.name ? " suggestion-card-added" : ""}`}
                     onTouchStart={(e) => { swipeStartXRef.current = e.touches[0].clientX; }}
                     onTouchEnd={(e) => {
                       const dx = e.changedTouches[0].clientX - (swipeStartXRef.current ?? e.changedTouches[0].clientX);
                       if (dx > 64) addStopToItinerary(activeStop);
-                      if (dx < -64) discardCurrentStop();
+                      if (dx < -64) setCardIndex((i) => Math.min(i + 1, Math.max(suggestionStops.length - 1, 0)));
                       swipeStartXRef.current = null;
                     }}
                   >
-                    <button className="rec-heart suggestion-save" onClick={() => addStopToItinerary(activeStop)} aria-label="Add to itinerary">
-                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                    <button className={`rec-heart suggestion-save${addedStopName === activeStop.name ? " suggestion-save-done" : ""}`} onClick={() => addStopToItinerary(activeStop)} aria-label="Add to plan">
+                      {addedStopName === activeStop.name ? (
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7" /></svg>
+                      ) : (
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                      )}
                     </button>
 
                     <div className="rec-card-inner suggestion-inner">
@@ -1309,24 +1297,41 @@ function App() {
                     </div>
 
                     <div className="suggestion-actions">
-                      <button type="button" onClick={() => addStopToItinerary(activeStop)}>Add to itinerary</button>
-                      <button type="button" onClick={discardCurrentStop}>Discard</button>
-                      <button type="button" onClick={() => setCardIndex((i) => Math.min(i + 1, Math.max(suggestionStops.length - 1, 0)))}>More suggestions</button>
-                      <button type="button" className="create-itinerary-mobile" disabled={!selectedStops.length} onClick={createItineraryFromSelected}>Create itinerary</button>
+                      <button type="button" onClick={() => addStopToItinerary(activeStop)}>I like this</button>
+                      {selectedStops.length > 0 && <button type="button" className="create-plan-inline" onClick={createItineraryFromSelected}>Create plan</button>}
                     </div>
                   </article>
+                  {selectedStops.length > 0 && (
+                    <button type="button" className="builder-create-plan" onClick={createItineraryFromSelected}>Create plan</button>
+                  )}
                 </>
               ) : (
                 <section className="builder-timeline">
                   <header className="builder-panel-head">
                     <p className="rec-head-eyebrow">{selectedStops.length} stops · {itinerary?.dates || prettyDate(date)}</p>
                     <h2 className="rec-head-dest">Your itinerary</h2>
-                    {tripMapsUrl && <a className="rec-card-book builder-maps-link" href={tripMapsUrl} target="_blank" rel="noreferrer">Open in Google Maps</a>}
+                    <div className="builder-final-actions">
+                      {tripMapsUrl && <a className="rec-card-book builder-maps-link" href={tripMapsUrl} target="_blank" rel="noreferrer">Google Maps</a>}
+                      <div className="builder-icon-stack">
+                        <button className={`builder-icon-btn${calendarState === "done" ? " icon-btn-active" : ""}`} type="button" onClick={addToCalendar} aria-label="Add to calendar" data-label={calendarState === "done" ? "Added" : "Add to calendar"}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="2"/><path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                        </button>
+                        <button className="builder-icon-btn" type="button" onClick={shareItinerary} aria-label="Share" data-label={shareCopied ? "Copied" : "Share"}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 12l8-5M8 12l8 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2"/><circle cx="18" cy="6" r="3" stroke="currentColor" strokeWidth="2"/><circle cx="18" cy="18" r="3" stroke="currentColor" strokeWidth="2"/></svg>
+                        </button>
+                        <button className="builder-icon-btn" type="button" onClick={() => goTo("mood")} aria-label="Edit vibe" data-label="Edit vibe">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 20h4l10.5-10.5a2.8 2.8 0 0 0-4-4L4 16v4z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M13 7l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                        </button>
+                        <button className="builder-icon-btn" type="button" onClick={generatePlan} aria-label="Regenerate" data-label="Regenerate">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6v5h-5M4 18v-5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 10a7 7 0 0 0-12-3M5.5 14a7 7 0 0 0 12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                        </button>
+                      </div>
+                    </div>
                   </header>
                   <div className="timeline compact-timeline">
                     {itineraryStops.map((stop, i) => (
-                      <article className="stop" key={`${stop.name}-${i}`}>
-                        <div className={i === 0 ? "s-pin s-pin-featured" : "s-pin"}><span className="s-pin-index">{String(i + 1).padStart(2, "0")}</span></div>
+                      <article className={`stop${i === activeTimelineIndex ? " stop-active" : ""}`} key={`${stop.name}-${i}`} ref={(node) => { timelineRefs.current[i] = node; }} data-index={i}>
+                        <div className="s-pin"><span className="s-pin-index">{String(i + 1).padStart(2, "0")}</span></div>
                         <div className="s-body">
                           <p className="s-cat">{stop.category}</p>
                           <h3>{stop.time || "Flexible"} <span>{stop.period}</span></h3>
@@ -1360,7 +1365,7 @@ function App() {
                     <button type="button" onClick={() => removeSelectedStop(i)}>×</button>
                   </article>
                 ))}
-                <button className="rec-mbar-btn rec-mbar-primary" disabled={!selectedStops.length} onClick={createItineraryFromSelected}>Create itinerary</button>
+                <button className="rec-mbar-btn rec-mbar-primary" disabled={!selectedStops.length} onClick={createItineraryFromSelected}>Create plan</button>
               </div>
             </div>
           )}
@@ -1459,6 +1464,7 @@ button { cursor: pointer; }
   background: var(--bg);
 }
 .login-active .navbar { display: none; }
+.loading-active .navbar { display: none; }
 .login-active { overflow: hidden; height: 100vh; }
 .navbar::before { display: none; }
 .nav-steps, .nav-actions, .error-actions { display: flex; align-items: center; gap: 6px; }
@@ -2990,6 +2996,100 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .mobile-sort-row p { margin: 0; font-size: 14px; font-weight: 800; line-height: 1.2; }
   .mobile-sort-row button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-strong); background: #fff; }
   .sort-icon { color: var(--ink-3); font-size: 18px; }
+}
+
+/* Motion path loading screen */
+.motion-loading-screen { position: relative; width: 100vw; min-height: 100dvh; max-width: none; padding: clamp(28px,4vw,54px); overflow: hidden; display: flex; flex-direction: column; background: radial-gradient(circle at 50% 12%, rgba(51,153,137,.12), transparent 32%), var(--bg); }
+.motion-loader-copy { position: relative; z-index: 2; max-width: 760px; }
+.motion-loader-copy h2 { margin: 6px 0 8px; font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(44px,6vw,82px); line-height: .95; font-weight: 400; color: var(--ink); }
+.motion-loader-copy p:last-child { margin: 0; color: var(--ink-3); font-size: 15px; font-weight: 700; }
+.motion-map-stage { position: relative; flex: 1; min-height: 420px; display: grid; place-items: center; }
+.motion-route-svg { width: min(1120px, 100%); height: min(58vh, 600px); overflow: visible; }
+.motion-route-shadow, .motion-route-path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.motion-route-shadow { stroke: rgba(0,0,0,.08); stroke-width: 24; filter: blur(5px); }
+.motion-route-path { stroke: var(--accent); stroke-width: 8; stroke-dasharray: 12 18; animation: routeDash 1.8s linear infinite; }
+@keyframes routeDash { to { stroke-dashoffset: -60; } }
+.route-stop circle:first-child { fill: #fff; stroke: rgba(51,153,137,.32); stroke-width: 4; transition: fill .25s, stroke .25s; }
+.route-stop circle:last-child { fill: rgba(51,153,137,.08); opacity: 0; transform-origin: center; }
+.route-stop-active circle:first-child, .route-stop-done circle:first-child { fill: var(--accent); stroke: #fff; }
+.route-stop-active circle:last-child { opacity: 1; animation: routePulse 1.15s ease-in-out infinite; }
+@keyframes routePulse { 50% { transform: scale(1.35); opacity: .28; } }
+.motion-pointer { offset-path: path("M92 518 C168 398 282 440 338 318 C404 176 526 158 620 246 C708 328 778 420 884 334 C982 254 1022 138 1110 104"); offset-rotate: auto; transition: offset-distance .7s var(--ease); filter: drop-shadow(0 10px 18px rgba(0,0,0,.2)); }
+.motion-pointer path { fill: var(--ink); stroke: #fff; stroke-width: 2; }
+.motion-visual { position: absolute; left: 50%; top: 48%; width: min(360px, 80vw); transform: translate(-50%, -50%); z-index: 4; animation: motionVisualIn .42s var(--ease) both; pointer-events: none; }
+@keyframes motionVisualIn { from { opacity: 0; transform: translate(-50%, -42%) scale(.94); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.motion-profile-card, .motion-review-card, .motion-ai-card { border-radius: 24px; background: rgba(255,255,255,.86); border: 1px solid rgba(255,255,255,.8); box-shadow: 0 22px 70px rgba(0,0,0,.16); backdrop-filter: blur(18px); padding: 18px; }
+.motion-profile-card { display: flex; align-items: center; gap: 14px; }
+.motion-profile-card img, .motion-avatar { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; background: rgba(51,153,137,.14); color: var(--accent); font-size: 24px; }
+.motion-profile-card strong, .motion-review-card strong, .motion-ai-card strong { display: block; color: var(--ink); font-size: 17px; font-weight: 900; }
+.motion-profile-card p, .motion-review-card p, .motion-ai-card p { margin: 4px 0 0; color: var(--ink-3); font-size: 13px; font-weight: 700; }
+.motion-mood-stack { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.motion-mood-stack span { min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 999px; background: #fff; border: 1px solid rgba(51,153,137,.28); color: var(--ink); font-size: 13px; font-weight: 900; box-shadow: 0 12px 30px rgba(0,0,0,.1); animation: motionChipIn .35s var(--ease) both; }
+@keyframes motionChipIn { from { opacity: 0; transform: translateY(10px); } }
+.motion-review-card p { animation: motionChipIn .35s var(--ease) both; }
+.motion-photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; padding: 10px; border-radius: 26px; background: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.82); box-shadow: 0 22px 70px rgba(0,0,0,.16); backdrop-filter: blur(18px); }
+.motion-photo-grid img { width: 100%; aspect-ratio: 1.15; object-fit: cover; border-radius: 18px; }
+.motion-ai-card { text-align: center; }
+.motion-ai-card span { display: grid; place-items: center; width: 46px; height: 46px; margin: 0 auto 10px; border-radius: 50%; background: var(--accent); color: #fff; }
+.motion-loader-status { position: relative; z-index: 5; margin-top: auto; }
+.motion-status-row { display: flex; align-items: center; gap: clamp(12px,2vw,26px); overflow: hidden; white-space: nowrap; padding-bottom: 18px; color: var(--ink-3); font-size: clamp(12px,1.55vw,25px); font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.motion-status-row span { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+.motion-status-row span::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex: 0 0 auto; }
+.motion-status-row .active { color: var(--ink); }
+.motion-status-row .done { color: var(--ink-2); }
+.motion-bar-track { height: 6px; border-radius: 999px; background: rgba(51,153,137,.16); overflow: hidden; }
+
+/* Builder refinements */
+.suggestion-card::before, .suggestion-card::after { content: ""; position: absolute; left: 20px; right: 20px; bottom: -12px; height: 24px; border-radius: 0 0 24px 24px; border: 1px solid var(--line-strong); background: rgba(255,255,255,.7); z-index: -1; }
+.suggestion-card::after { left: 38px; right: 38px; bottom: -22px; opacity: .65; }
+.suggestion-card { overflow: visible; z-index: 1; }
+.suggestion-inner { border-radius: 24px 24px 0 0; background: #fff; }
+.suggestion-actions { border-radius: 0 0 24px 24px; }
+.suggestion-card-added { animation: cardFlyToTray .58s var(--ease) both; }
+@keyframes cardFlyToTray { 0% { transform: translateY(0) scale(1); opacity: 1; } 58% { transform: translateY(-92px) scale(.84); opacity: .92; } 100% { transform: translateY(-132px) scale(.72); opacity: 0; } }
+.suggestion-save-done { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; animation: savePop .32s var(--ease) both; }
+@keyframes savePop { 50% { transform: scale(1.12); } }
+.suggestion-actions { grid-template-columns: 1fr !important; }
+.suggestion-actions .create-plan-inline { display: none; }
+.builder-create-plan { margin-top: 18px; width: 100%; min-height: 58px; border: none; border-radius: 18px; background: var(--accent); color: #fff; font-size: 16px; font-weight: 900; box-shadow: 0 16px 34px rgba(51,153,137,.24); }
+.create-itinerary-side { min-height: 132px; background: var(--accent); box-shadow: 0 12px 28px rgba(0,0,0,.18); }
+.builder-final-actions { display: flex; align-items: flex-start; gap: 12px; margin-top: 14px; }
+.builder-maps-link { min-height: 52px; margin-top: 0 !important; flex: 1; justify-content: center; }
+.builder-icon-stack { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.builder-icon-btn { position: relative; width: 52px; height: 52px; border-radius: 16px; border: 1.5px solid var(--line-strong); background: #fff; color: var(--ink); display: flex; align-items: center; justify-content: center; transition: width .22s var(--ease), background .16s, border-color .16s; overflow: hidden; }
+.builder-icon-btn::after { content: attr(data-label); max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; margin-left: 0; font-size: 13px; font-weight: 900; transition: max-width .22s var(--ease), opacity .16s, margin-left .16s; }
+.builder-icon-btn:hover { width: 172px; justify-content: flex-start; padding-left: 16px; background: var(--surface-2); border-color: var(--ink); }
+.builder-icon-btn:hover::after { max-width: 116px; opacity: 1; margin-left: 10px; }
+.stop-active .s-pin { background: var(--accent) !important; border-color: var(--accent) !important; box-shadow: 0 0 0 7px rgba(51,153,137,.16); }
+.compact-timeline .stop:hover .s-pin { background: var(--surface-3); border-color: var(--line-strong); }
+
+@media(max-width: 900px) {
+  .motion-loading-screen { padding: 24px 18px max(20px, env(safe-area-inset-bottom)); }
+  .motion-loader-copy h2 { font-size: 42px; }
+  .motion-map-stage { min-height: 440px; }
+  .motion-route-svg { width: 126%; height: 430px; }
+  .motion-visual { top: 50%; width: min(320px, 86vw); }
+  .motion-status-row { font-size: 12px; gap: 14px; padding-bottom: 14px; }
+  .motion-status-row span { max-width: 170px; }
+
+  .suggestion-card::before, .suggestion-card::after { display: block; }
+  .suggestion-actions { grid-template-columns: 1fr !important; padding: 10px 18px max(18px, env(safe-area-inset-bottom)) !important; }
+  .suggestion-actions button { display: flex !important; align-items: center; justify-content: center; width: 100%; }
+  .suggestion-actions .create-plan-inline { display: flex; background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
+  .builder-create-plan { display: none; }
+  .mobile-tray-inner { padding: 12px 22px max(24px, env(safe-area-inset-bottom)) !important; }
+  .mobile-tray-inner .rec-mbar-btn { width: 100%; min-height: 54px; justify-content: center; }
+  .builder-screen.itinerary-built { height: auto; min-height: 100dvh; overflow: visible; background: var(--bg); }
+  .builder-screen.itinerary-built .builder-layout { min-height: 100dvh; height: auto; display: block; background: var(--bg); }
+  .builder-screen.itinerary-built .builder-photo-pane { position: relative; height: 42svh; min-height: 300px; inset: auto; }
+  .builder-screen.itinerary-built .builder-panel { position: relative; left: auto; right: auto; bottom: auto; height: auto; min-height: 0; padding: 0 16px 36px; background: var(--bg); }
+  .builder-screen.itinerary-built .builder-timeline { height: auto; overflow: visible; border-radius: 24px 24px 0 0; margin-top: -28px; padding: 24px 18px 34px; }
+  .builder-screen.itinerary-built .builder-panel-head { display: block; }
+  .builder-screen.itinerary-built .builder-final-actions { align-items: stretch; }
+  .builder-screen.itinerary-built .builder-icon-stack { flex-direction: column; }
+  .builder-screen.itinerary-built .builder-icon-btn { width: 52px; flex: 0 0 52px; }
+  .builder-screen.itinerary-built .builder-icon-btn:hover { width: 150px; }
+  .builder-screen.itinerary-built .compact-timeline { padding: 18px 0 20px !important; }
 }
 
 `;
