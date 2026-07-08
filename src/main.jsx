@@ -110,6 +110,47 @@ function buildGoogleMapsTripUrl(stops = [], travelMode = "walking") {
   return url;
 }
 
+function ensureTwelveSuggestions(plan, destinationName, selectedMoodObjects = []) {
+  const stops = Array.isArray(plan?.stops) ? [...plan.stops] : [];
+  if (stops.length >= 12) return { ...plan, stops: stops.slice(0, 12) };
+  const moodLabel = selectedMoodObjects[0]?.title || "mood-matched";
+  const fillers = [
+    ["Breakfast pick", "Breakfast", "Morning", "A breakfast or coffee stop that fits your route and opens early enough for the day."],
+    ["Coffee or tea break", "Coffee", "Morning", "A relaxed cafe stop to reset between activities."],
+    ["Lunch spot", "Lunch", "Afternoon", "A lunch option near the places already on your short list."],
+    ["Snack or dessert stop", "Snack", "Afternoon", "A lighter food stop for a flexible pause."],
+    ["Dinner pick", "Dinner", "Evening", "A dinner option that fits the vibe and dietary preference."],
+    [`${moodLabel} activity`, "Activity", "Flexible", "An activity suggestion to compare against the rest of the plan."],
+    ["Scenic detour", "Scenic", "Flexible", "A short visual detour that adds texture without locking the day too tightly."],
+    ["Local neighborhood walk", "Walk", "Flexible", "A flexible walkable area to add if you want more open exploration time."],
+    ["Cultural stop", "Culture", "Flexible", "A cultural or historical stop that can round out the plan."],
+    ["Evening option", "Nightlife", "Evening", "A late-day option for after dinner or a slower night."],
+    ["Shopping or market stop", "Market", "Flexible", "A market or local shopping stop for browsing and small finds."],
+    ["Quiet reset", "Slow", "Flexible", "A calmer pause if the day starts feeling too packed."]
+  ];
+  let fillIndex = 0;
+  while (stops.length < 12) {
+    const [name, category, period, description] = fillers[fillIndex % fillers.length];
+    const fullName = `${name} in ${destinationName || "the destination"}`;
+    stops.push({
+      name: fullName,
+      googlePlaceName: fullName,
+      category,
+      period,
+      time: "Flexible",
+      description,
+      routeFromPrevious: "Add this where it best fits your route.",
+      address: destinationName || "",
+      rating: null,
+      openNow: undefined,
+      photoQuery: `${destinationName || ""} ${category}`,
+      isFlexibleSuggestion: true
+    });
+    fillIndex += 1;
+  }
+  return { ...plan, stops };
+}
+
 function getToday() { return new Date().toISOString().slice(0, 10); }
 
 function prettyDate(value) {
@@ -475,11 +516,12 @@ function App() {
   useEffect(() => {
     if (!itineraryBuilt) return;
     const observer = new IntersectionObserver((entries) => {
+      const center = window.innerHeight * 0.42;
       const visible = entries
         .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        .sort((a, b) => Math.abs(a.boundingClientRect.top - center) - Math.abs(b.boundingClientRect.top - center))[0];
       if (visible?.target?.dataset?.index) setActiveTimelineIndex(Number(visible.target.dataset.index));
-    }, { threshold: [0.35, 0.6], rootMargin: "-20% 0px -45% 0px" });
+    }, { threshold: [0.12, 0.28, 0.5], rootMargin: "-18% 0px -58% 0px" });
     timelineRefs.current.forEach((node) => node && observer.observe(node));
     return () => observer.disconnect();
   }, [itineraryBuilt, itineraryStops.length]);
@@ -560,7 +602,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, recommendationCount: 12, numStops: 12, minStops: 12, maxStops: 12, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a pool of exactly 12 real, specific suggestions that the user can add to their own itinerary. Include places to eat for breakfast, lunch, and dinner when timing and opening hours make sense, and include activity suggestions that match the selected moods. The returned stops array must contain exactly 12 concrete places, no fewer. Each item should still be a stop object with name, category, time, period, description, routeFromPrevious, address when known, and open/timing guidance. For food, say whether it is best for breakfast, lunch, dinner, snack, coffee, or drinks, and respect dietary preference strictly. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent - the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one suggestion around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the suggestions across the ENTIRE region. Only keep suggestions close together and walkable when the destination is a specific city or neighborhood. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, recommendationCount: 12, numStops: 12, minStops: 12, maxStops: 12, requiredFoodStops: 5, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a pool of exactly 12 real, specific suggestions that the user can add to their own itinerary. The returned stops array must contain exactly 12 concrete places, no fewer and no more. Include at least 5 food or drink places across breakfast, lunch, dinner, coffee, snacks, dessert, or drinks when timing and opening hours make sense. Include the remaining 7 suggestions as activities, sights, nature, culture, shopping, nightlife, or experiences that match the selected moods. Each item should still be a stop object with name, category, time, period, description, routeFromPrevious, address when known, and open/timing guidance. For food, say whether it is best for breakfast, lunch, dinner, snack, coffee, dessert, or drinks, and respect dietary preference strictly. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent - the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one suggestion around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the suggestions across the ENTIRE region. Only keep suggestions close together and walkable when the destination is a specific city or neighborhood. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -569,9 +611,10 @@ function App() {
       const res = await geminiPromise;
       const data = await res.json();
       if (!res.ok || data?.error) throw new Error(data?.error || "The planning service is unavailable right now.");
+      const completePlan = ensureTwelveSuggestions(data, data.destination || destination, selectedMoodObjects);
       clearInterval(interval);
       setLoadingLine(6);
-      setItinerary(data);
+      setItinerary(completePlan);
       setTimeout(() => goTo("result"), 800);
     } catch (err) {
       clearInterval(interval);
@@ -1123,7 +1166,8 @@ function App() {
             <g className="motion-svg-pointer">
               <animateMotion
                 dur="12s"
-                repeatCount="indefinite"
+                repeatCount="1"
+                fill="freeze"
                 rotate="auto"
                 calcMode="linear"
                 keyPoints="0;0;.26;.26;.48;.48;.68;.68;.86;.86;1"
@@ -1184,17 +1228,10 @@ function App() {
           </div>
 
           <div className="motion-loader-bottom">
-            <div className="motion-status-row">
-              {loadingPhases.map((phase, i) => (
-                <div key={phase.id} className={"motion-status" + (i < activeLoadingPhase ? " motion-status-done" : "") + (i === activeLoadingPhase ? " motion-status-active" : "")}>
-                  <span />
-                  <p>{phase.title}{i < activeLoadingPhase ? " - done" : ""}</p>
-                </div>
-              ))}
-            </div>
             <div className="loader-bar-track">
               <div className="loader-bar-fill" style={{ width: String(loadingPct) + "%" }} />
             </div>
+            <p className="loader-pct">{loadingPct}%</p>
           </div>
         </main>
       )}
@@ -3157,40 +3194,3 @@ const css = [
   "",
   "@media(max-width: 900px) {",
   "  .app-shell.result-active.itinerary-final-active { height: auto !important; min-height: 100dvh !important; overflow: visible !important; padding-bottom: 0 !important; }",
-  "  .app-shell.result-active.itinerary-final-active .builder-screen { height: auto !important; overflow: visible !important; }",
-  "  .motion-loader-svg { padding: 0; width: 145%; left: -22%; }",
-  "  .motion-loader-title { top: 28px; left: 20px; }",
-  "  .motion-loader-title h2 { font-size: 42px; }",
-  "  .motion-svg-pointer { transform: scale(.86); transform-origin: center; }",
-  "  .motion-callout { width: min(310px, calc(100vw - 36px)); grid-template-columns: 58px 1fr; padding: 12px; }",
-  "  .motion-callout .motion-visual { width: 58px; height: 58px; border-radius: 14px; }",
-  "  .motion-callout-0 { left: 18px; bottom: 31%; }",
-  "  .motion-callout-1 { left: 26px; top: 35%; }",
-  "  .motion-callout-2 { left: 34px; top: 18%; }",
-  "  .motion-callout-3 { right: 18px; top: 44%; }",
-  "  .motion-callout-4 { right: 18px; top: 24%; }",
-  "  .motion-loader-bottom .motion-status-row { display: flex; overflow: hidden; }",
-  "  .motion-status { display: none; }",
-  "  .motion-status-active, .motion-status-done { display: flex; }",
-  "  .builder-create-plan { display: block; min-height: 50px; margin-top: 10px; }",
-  "}",
-  "",
-  "/* Final itinerary actions */",
-  ".builder-final-actions { align-items: center !important; }",
-  ".builder-icon-stack { flex-direction: row !important; align-items: center !important; gap: 10px !important; }",
-  ".builder-icon-btn { flex: 0 0 52px; }",
-  ".builder-icon-btn:hover { width: 172px; flex-basis: 172px; }",
-  "",
-  "@media(max-width: 900px) {",
-  "  .builder-screen.itinerary-built .builder-final-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch !important; }",
-  "  .builder-screen.itinerary-built .builder-maps-link { width: 100%; min-height: 54px; flex: none; }",
-  "  .builder-screen.itinerary-built .builder-icon-stack { width: 100%; display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px !important; }",
-  "  .builder-screen.itinerary-built .builder-icon-btn { width: 100% !important; height: 52px; flex: none; }",
-  "  .builder-screen.itinerary-built .builder-icon-btn:hover { width: 100% !important; flex-basis: auto; justify-content: center; padding-left: 0; }",
-  "  .builder-screen.itinerary-built .builder-icon-btn:hover::after { display: none; }",
-  "}",
-  "",
-  ""
-].join("\n");
-
-createRoot(document.getElementById("root")).render(<App />);
