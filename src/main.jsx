@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import "./styles.css";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -3178,3 +3177,4 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 /* Final itinerary actions */
 .builder-final-actions { align-items: center !important; }
 .builder-icon-stack { flex-direction: row !important; align-items: center !important; gap: 10px !important; }
+.builder-icon-btn { flex: 0 0 52px; }
