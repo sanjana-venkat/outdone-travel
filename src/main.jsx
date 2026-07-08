@@ -154,21 +154,6 @@ function prettyDate(value) {
   return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
-const fallbackDestinationSuggestions = [
-  { label: "France", aliases: ["france"] },
-  { label: "Nigeria", aliases: ["nigeria"] },
-  { label: "Sunnyvale, California", aliases: ["sunnyvale", "sunnyvale california", "sunnyvale ca"] },
-  { label: "Delhi, India", aliases: ["delhi", "new delhi", "india"] },
-  { label: "Tokyo, Japan", aliases: ["tokyo", "japan"] },
-  { label: "Kyoto, Japan", aliases: ["kyoto"] },
-  { label: "Oaxaca, Mexico", aliases: ["oaxaca"] },
-  { label: "Big Island, Hawaii", aliases: ["big island", "hawaii"] },
-  { label: "Kauai, Hawaii", aliases: ["kauai"] },
-  { label: "San Francisco, CA", aliases: ["san francisco", "sf", "frisco", "bay area"] },
-  { label: "New York City", aliases: ["new york", "nyc"] },
-  { label: "Paris, France", aliases: ["paris"] }
-];
-
 const moodVibes = [
   {
     id: "adventurous",
@@ -448,14 +433,7 @@ function App() {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [destination]);
 
-  const fallbackFilteredDestinations = fallbackDestinationSuggestions.filter((item) => {
-    const query = destination.toLowerCase().trim();
-    return item.label.toLowerCase().includes(query) || item.aliases.some((alias) => alias.includes(query));
-  });
-
-  const destinationOptions = placePredictions.length
-    ? placePredictions
-    : fallbackFilteredDestinations.slice(0, 5).map((item) => ({ label: item.label, source: "fallback" }));
+  const destinationOptions = placePredictions;
 
   const selectedMoodObjects = selectedMoods.map((id) => moodVibes.find((vibe) => vibe.id === id)).filter(Boolean);
   // Preload all itinerary images so switching cards feels instant on mobile
@@ -981,7 +959,7 @@ function App() {
                 autoComplete="off"
                 className="setup-card-input"
               />
-              {showDestinationSuggestions && destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
+              {showDestinationSuggestions && destination.trim().length >= 2 && (isAutocompleting || destinationOptions.length > 0) && !destinationOptions.find(o => o.label === destination) && (
                 <div className="setup-suggestions">
                   {destinationOptions.map((item) => (
                     <button
@@ -994,7 +972,7 @@ function App() {
                       {item.label}
                     </button>
                   ))}
-                  {isAutocompleting && <div className="autocomplete-loading">Searching…</div>}
+                  {isAutocompleting && destinationOptions.length === 0 && <div className="autocomplete-loading">Searching...</div>}
                 </div>
               )}
             </div>
