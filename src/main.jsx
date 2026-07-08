@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars, no-empty, react-refresh/only-export-components, react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+/* eslint-disable no-unused-vars, no-empty, react-refresh/only-export-components, react-hooks/exhaustive-deps */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -112,7 +112,7 @@ function buildGoogleMapsTripUrl(stops = [], travelMode = "walking") {
 }
 
 function parseStopMinutes(stop = {}) {
-  const raw = String(stop.time || "").trim().toLowerCase();
+  const raw = `${stop.time || ""} ${stop.period || ""}`.trim().toLowerCase();
   const match = raw.match(/(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?/i);
   if (!match) return null;
   let hour = Number(match[1]);
@@ -136,9 +136,13 @@ function stopTimeRank(stop = {}) {
   return 16 * 60;
 }
 
+function orderStopsByTime(stops = []) {
+  return [...stops].sort((a, b) => stopTimeRank(a) - stopTimeRank(b));
+}
+
 function orderStopsMorningFirst(plan) {
   const stops = Array.isArray(plan?.stops) ? [...plan.stops] : [];
-  return { ...plan, stops: stops.sort((a, b) => stopTimeRank(a) - stopTimeRank(b)) };
+  return { ...plan, stops: orderStopsByTime(stops) };
 }
 
 function getToday() { return new Date().toISOString().slice(0, 10); }
@@ -309,6 +313,7 @@ function App() {
   const [itineraryBuilt, setItineraryBuilt] = useState(false);
   const [mobileTrayOpen, setMobileTrayOpen] = useState(false);
   const [dragIndex, setDragIndex] = useState(null);
+  const [manualStopOrder, setManualStopOrder] = useState(false);
   const [addedStopName, setAddedStopName] = useState("");
   const [activeTimelineIndex, setActiveTimelineIndex] = useState(0);
   const [swipeDir, setSwipeDir] = useState(1);
@@ -414,14 +419,17 @@ function App() {
   useEffect(() => {
     if (step !== "result") return;
     if (!window.matchMedia("(max-width: 900px)").matches) return;
-    setShowTapHint(true);
-    const t = setTimeout(() => setShowTapHint(false), 3600);
-    return () => clearTimeout(t);
+    const showTimer = setTimeout(() => setShowTapHint(true), 0);
+    const hideTimer = setTimeout(() => setShowTapHint(false), 3600);
+    return () => { clearTimeout(showTimer); clearTimeout(hideTimer); };
   }, [step]);
 
   useEffect(() => {
     const query = destination.trim();
-    if (query.length < 2) { setPlacePredictions([]); return; }
+    if (query.length < 2) {
+      const clearTimer = setTimeout(() => setPlacePredictions([]), 0);
+      return () => clearTimeout(clearTimer);
+    }
     let cancelled = false;
     const timer = setTimeout(async () => {
       setIsAutocompleting(true);
@@ -467,8 +475,8 @@ function App() {
   const googleTravelMode = transportMode === "Car" ? "driving" : transportMode === "Public transit" ? "transit" : "walking";
   const suggestionStops = itinerary?.stops || [];
   const activeStop = suggestionStops[Math.min(cardIndex, Math.max(suggestionStops.length - 1, 0))] || {};
-  const itineraryStops = selectedStops.length ? selectedStops : suggestionStops;
-  const mapsStops = selectedStops.length ? sortByProximity(selectedStops) : suggestionStops;
+  const itineraryStops = orderStopsByTime(selectedStops.length ? selectedStops : suggestionStops);
+  const mapsStops = itineraryStops;
   const tripMapsUrl = mapsStops.length ? buildGoogleMapsTripUrl(mapsStops, googleTravelMode) : "";
 
   const stopImage = (stop, i = 0) => stop?.imageUrl || stop?.photoUrl || selectedMoodObjects[i % Math.max(selectedMoodObjects.length, 1)]?.img || moodVibes[i % moodVibes.length].img;
@@ -493,6 +501,7 @@ function App() {
 
   function moveSelectedStop(from, to) {
     if (from == null || to == null || from === to) return;
+    setManualStopOrder(true);
     setSelectedStops((items) => {
       const next = [...items];
       const [moved] = next.splice(from, 1);
@@ -501,8 +510,30 @@ function App() {
     });
   }
 
+  function beginMobileSort(index, event) {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setDragIndex(index);
+  }
+
+  function moveMobileSort(event) {
+    if (dragIndex == null) return;
+    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest?.("[data-mobile-sort-index]");
+    if (!target) return;
+    const nextIndex = Number(target.dataset.mobileSortIndex);
+    if (!Number.isNaN(nextIndex) && nextIndex !== dragIndex) {
+      moveSelectedStop(dragIndex, nextIndex);
+      setDragIndex(nextIndex);
+    }
+  }
+
+  function endMobileSort() {
+    setDragIndex(null);
+  }
+
   function createItineraryFromSelected() {
     if (!selectedStops.length) return;
+    if (!manualStopOrder) setSelectedStops((items) => orderStopsByTime(items));
     setItineraryBuilt(true);
     setMobileTrayOpen(false);
   }
@@ -569,8 +600,9 @@ function App() {
     setSelectedStops([]);
     setItineraryBuilt(false);
     setMobileTrayOpen(false);
+    setManualStopOrder(false);
 
-    const CLAMP_AT = 5;
+    const CLAMP_AT = 3;
     const interval = setInterval(() => {
       setLoadingLine((v) => Math.min(v + 1, CLAMP_AT));
     }, 2400);
@@ -607,9 +639,9 @@ function App() {
       if (!res.ok || data?.error) throw new Error(data?.error || "The planning service is unavailable right now.");
       const completePlan = orderStopsMorningFirst(data);
       clearInterval(interval);
-      setLoadingLine(6);
+      setLoadingLine(5);
       setItinerary(completePlan);
-      setTimeout(() => goTo("result"), 800);
+      setTimeout(() => goTo("result"), 1800);
     } catch (err) {
       clearInterval(interval);
       console.error(err);
@@ -645,7 +677,7 @@ function App() {
     setDestination(""); setDate(getToday()); setDiet("No preference"); setPlanFor("Date");
     setTransportMode(""); setTimeRange(""); setSelectedMoods([]); setCustomActivity("");
     setCustomActivities([]); setItinerary(null); setCardIndex(0); setSavedCards(new Set());
-    setSelectedStops([]); setItineraryBuilt(false); setMobileTrayOpen(false);
+    setSelectedStops([]); setItineraryBuilt(false); setMobileTrayOpen(false); setManualStopOrder(false);
     goTo("setup");
   }
 
@@ -1397,8 +1429,27 @@ function App() {
             <div className="rec-more-grab" />
             <div className="mobile-tray-title"><strong>Selected stops</strong><span>Sort and remove</span></div>
             {selectedStops.map((stop, i) => (
-              <article className="mobile-sort-row" key={`${stop.name}-${i}`}>
-                <span className="sort-icon">☰</span>
+              <article
+                className={`mobile-sort-row${dragIndex === i ? " mobile-sort-row-dragging" : ""}`}
+                key={`${stop.name}-${i}`}
+                data-mobile-sort-index={i}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => { moveSelectedStop(dragIndex, i); setDragIndex(null); }}
+              >
+                <button
+                  className="sort-icon"
+                  type="button"
+                  aria-label="Drag to reorder"
+                  draggable
+                  onDragStart={() => setDragIndex(i)}
+                  onDragEnd={() => setDragIndex(null)}
+                  onPointerDown={(event) => beginMobileSort(i, event)}
+                  onPointerMove={moveMobileSort}
+                  onPointerUp={endMobileSort}
+                  onPointerCancel={endMobileSort}
+                >
+                  ☰
+                </button>
                 <img src={stopImage(stop, i)} alt="" />
                 <p>{stop.name}</p>
                 <button type="button" onClick={() => removeSelectedStop(i)}>×</button>
@@ -3031,11 +3082,13 @@ const css =
   "  .mobile-tray-title { display: flex; align-items: baseline; justify-content: space-between; margin: 10px 0 14px; }\n" +
   "  .mobile-tray-title strong { font-size: 18px; }\n" +
   "  .mobile-tray-title span { font-size: 12px; color: var(--ink-3); font-weight: 700; }\n" +
-  "  .mobile-sort-row { display: grid; grid-template-columns: 28px 54px 1fr 34px; align-items: center; gap: 10px; min-height: 66px; border-bottom: 1px solid var(--line); }\n" +
+  "  .mobile-sort-row { display: grid; grid-template-columns: 28px 54px 1fr 34px; align-items: center; gap: 10px; min-height: 66px; border-bottom: 1px solid var(--line); transition: transform .16s var(--ease), background .16s; }\n" +
+  "  .mobile-sort-row-dragging { background: rgba(51,153,137,.07); transform: scale(.985); }\n" +
   "  .mobile-sort-row img { width: 54px; height: 46px; border-radius: 10px; object-fit: cover; }\n" +
   "  .mobile-sort-row p { margin: 0; font-size: 14px; font-weight: 800; line-height: 1.2; }\n" +
-  "  .mobile-sort-row button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-strong); background: #fff; }\n" +
-  "  .sort-icon { color: var(--ink-3); font-size: 18px; }\n" +
+  "  .mobile-sort-row > button:last-child { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-strong); background: #fff; }\n" +
+  "  .sort-icon { width: 28px; height: 44px; border: none; background: transparent; color: var(--ink-3); font-size: 18px; cursor: grab; touch-action: none; display: grid; place-items: center; padding: 0; }\n" +
+  "  .sort-icon:active { cursor: grabbing; color: var(--accent); }\n" +
   "}\n" +
   "\n" +
   "/* Motion path loading screen */\n" +
@@ -3094,7 +3147,7 @@ const css =
   ".builder-create-plan { margin-top: 18px; width: 100%; min-height: 58px; border: none; border-radius: 18px; background: var(--accent); color: #fff; font-size: 16px; font-weight: 900; box-shadow: 0 16px 34px rgba(51,153,137,.24); }\n" +
   ".create-itinerary-side { min-height: 132px; background: var(--accent); box-shadow: 0 12px 28px rgba(0,0,0,.18); }\n" +
   ".builder-final-actions { display: flex; align-items: flex-start; gap: 12px; margin-top: 14px; }\n" +
-  ".builder-maps-link { min-height: 52px; margin-top: 0 !important; flex: 1; justify-content: center; }\n" +
+  ".builder-maps-link { min-height: 52px; margin-top: 0 !important; flex: 0 0 auto; width: fit-content; min-width: 190px; padding-inline: 34px; justify-content: center; }\n" +
   ".builder-icon-stack { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }\n" +
   ".builder-icon-btn { position: relative; width: 52px; height: 52px; border-radius: 16px; border: 1.5px solid var(--line-strong); background: #fff; color: var(--ink); display: flex; align-items: center; justify-content: center; transition: width .22s var(--ease), background .16s, border-color .16s; overflow: hidden; }\n" +
   ".builder-icon-btn::after { content: attr(data-label); max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; margin-left: 0; font-size: 13px; font-weight: 900; transition: max-width .22s var(--ease), opacity .16s, margin-left .16s; }\n" +
@@ -3199,56 +3252,3 @@ const css =
   "  .motion-callout .motion-visual { width: 58px; height: 58px; border-radius: 14px; }\n" +
   "  .motion-callout-0 { left: 18px; bottom: 31%; }\n" +
   "  .motion-callout-1 { left: 26px; top: 35%; }\n" +
-  "  .motion-callout-2 { left: 34px; top: 18%; }\n" +
-  "  .motion-callout-3 { right: 18px; top: 44%; }\n" +
-  "  .motion-callout-4 { right: 18px; top: 24%; }\n" +
-  "  .motion-loader-bottom .motion-status-row { display: flex; overflow: hidden; }\n" +
-  "  .motion-status { display: none; }\n" +
-  "  .motion-status-active, .motion-status-done { display: flex; }\n" +
-  "  .builder-create-plan { display: block; min-height: 50px; margin-top: 10px; }\n" +
-  "}\n" +
-  "\n" +
-  "/* Final itinerary actions */\n" +
-  ".builder-final-actions { align-items: center !important; }\n" +
-  ".builder-icon-stack { flex-direction: row !important; align-items: center !important; gap: 10px !important; }\n" +
-  ".builder-icon-btn { flex: 0 0 52px; }\n" +
-  ".builder-icon-btn:hover { width: 172px; flex-basis: 172px; }\n" +
-  "\n" +
-  "@media(max-width: 900px) {\n" +
-  "  .builder-screen.itinerary-built .builder-final-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch !important; }\n" +
-  "  .builder-screen.itinerary-built .builder-maps-link { width: 100%; min-height: 54px; flex: none; }\n" +
-  "  .builder-screen.itinerary-built .builder-icon-stack { width: 100%; display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px !important; }\n" +
-  "  .builder-screen.itinerary-built .builder-icon-btn { width: 100% !important; height: 52px; flex: none; }\n" +
-  "  .builder-screen.itinerary-built .builder-icon-btn:hover { width: 100% !important; flex-basis: auto; justify-content: center; padding-left: 0; }\n" +
-  "  .builder-screen.itinerary-built .builder-icon-btn:hover::after { display: none; }\n" +
-  "}\n" +
-  "\n" +
-  "/* Final polish pass */\n" +
-  ".motion-node circle:last-child { display: none !important; }\n" +
-  ".motion-node-on circle:first-child { fill: var(--accent); stroke: #fff; }\n" +
-  ".motion-callout-done { opacity: .16 !important; }\n" +
-  ".motion-profile-ring { display: none !important; animation: none !important; }\n" +
-  ".motion-svg-pointer { opacity: .92; }\n" +
-  ".motion-loader-bottom { gap: 8px !important; align-items: stretch; }\n" +
-  ".motion-loader-bottom .motion-status-row, .motion-status { display: none !important; }\n" +
-  ".motion-loader-bottom .loader-pct { display: block; margin: 0; text-align: right; color: var(--accent); font-size: 12px; font-weight: 900; letter-spacing: .08em; }\n" +
-  ".motion-loader-bottom .loader-bar-track { height: 5px !important; }\n" +
-  ".suggestion-card::before { left: auto !important; right: -18px !important; top: 26px !important; bottom: auto !important; width: 54px !important; height: calc(100% - 74px) !important; border-radius: 0 22px 22px 0 !important; background: rgba(255,255,255,.72) !important; }\n" +
-  ".suggestion-card::after { left: auto !important; right: -34px !important; top: 46px !important; bottom: auto !important; width: 54px !important; height: calc(100% - 116px) !important; border-radius: 0 20px 20px 0 !important; background: rgba(255,255,255,.46) !important; }\n" +
-  ".suggestion-actions { grid-template-columns: 1fr !important; gap: 10px !important; }\n" +
-  ".suggestion-actions button { min-height: 52px !important; }\n" +
-  ".builder-create-plan { margin-top: 28px !important; position: relative; z-index: 3; }\n" +
-  ".compact-timeline .s-pin { position: static !important; top: auto !important; background: var(--surface-3) !important; border-color: var(--line-strong) !important; box-shadow: none !important; }\n" +
-  ".compact-timeline .stop-active .s-pin { background: var(--accent) !important; border-color: var(--accent) !important; box-shadow: 0 0 0 7px rgba(51,153,137,.16) !important; }\n" +
-  ".compact-timeline .stop:hover:not(.stop-active) .s-pin { background: var(--surface-3) !important; border-color: var(--line-strong) !important; }\n" +
-  "@media(max-width: 900px) {\n" +
-  "  .suggestion-actions { grid-template-columns: 1fr !important; gap: 8px !important; }\n" +
-  "  .suggestion-actions button { display: flex !important; min-height: 46px !important; }\n" +
-  "  .builder-panel { bottom: max(22px, env(safe-area-inset-bottom)) !important; }\n" +
-  "  .builder-create-plan { margin: 20px 14px 0 !important; width: calc(100% - 28px) !important; }\n" +
-  "  .mobile-tray-sheet { position: fixed !important; inset: 0 !important; z-index: 9999 !important; display: flex !important; align-items: flex-end !important; justify-content: stretch !important; background: rgba(0,0,0,.42) !important; }\n" +
-  "  .mobile-tray-inner { width: 100% !important; max-height: min(74vh, 560px) !important; margin: 0 !important; border-radius: 28px 28px 0 0 !important; padding: 16px 22px max(28px, env(safe-area-inset-bottom)) !important; box-shadow: 0 -18px 70px rgba(0,0,0,.22) !important; }\n" +
-  "  .mobile-tray-inner .rec-mbar-btn { margin-top: 20px !important; }\n" +
-  "}";
-
-createRoot(document.getElementById("root")).render(<App />);
