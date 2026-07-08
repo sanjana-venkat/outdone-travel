@@ -487,31 +487,33 @@ function App() {
 
   const loadingPhases = useMemo(() => [
     {
+      id: "profile",
       title: "Quick feeler profile",
-      line: user?.name ? `Reading ${user.name}'s lightweight profile` : "Reading your lightweight profile",
-      visual: "profile"
+      line: user?.name ? `${user.name}'s travel signal is ready` : "Reading your day-of travel signal",
     },
     {
+      id: "vibe",
       title: "Mood and constraints",
-      line: "Understanding today's intent",
-      visual: "mood"
+      line: `${selectedMoodObjects.map(m => m.title).join(", ") || "Your vibe"} · ${diet} · ${planFor}`,
     },
     {
+      id: "places",
       title: "Place reviews",
-      line: "Looking for places that match today's mood",
-      visual: "places"
+      line: `Scanning real matches around ${destination || "your destination"}`,
     },
     {
+      id: "photos",
       title: "Photos and ratings",
-      line: "Pulling real place photos and ratings",
-      visual: "photos"
+      line: "Matching each stop with visual context",
     },
     {
+      id: "gemini",
       title: "AI generating itinerary",
       line: "Asking AI to think like today's version of you",
-      visual: "ai"
     }
-  ], [user]);
+  ], [destination, diet, planFor, selectedMoodObjects, user]);
+  const activeLoadingPhase = Math.min(loadingLine, loadingPhases.length - 1);
+  const loadingPct = Math.round((Math.min(loadingLine + 1, loadingPhases.length) / loadingPhases.length) * 100);
 
   function toggleMood(id) {
     setSelectedMoods((current) => {
@@ -559,7 +561,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, recommendationCount: 12, numStops: 12, minStops: 8, maxStops: 12, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a pool of real, specific suggestions that the user can add to their own itinerary. Include places to eat for breakfast, lunch, and dinner when timing and opening hours make sense, and include activity suggestions that match the selected moods. Return at least 8 concrete places, ideally 10 to 12. Each item should still be a stop object with name, category, time, period, description, routeFromPrevious, address when known, and open/timing guidance. For food, say whether it is best for breakfast, lunch, dinner, snack, coffee, or drinks, and respect dietary preference strictly. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent - the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one suggestion around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the suggestions across the ENTIRE region. Only keep suggestions close together and walkable when the destination is a specific city or neighborhood. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, recommendationCount: 12, numStops: 12, minStops: 12, maxStops: 12, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a pool of exactly 12 real, specific suggestions that the user can add to their own itinerary. Include places to eat for breakfast, lunch, and dinner when timing and opening hours make sense, and include activity suggestions that match the selected moods. The returned stops array must contain exactly 12 concrete places, no fewer. Each item should still be a stop object with name, category, time, period, description, routeFromPrevious, address when known, and open/timing guidance. For food, say whether it is best for breakfast, lunch, dinner, snack, coffee, or drinks, and respect dietary preference strictly. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent - the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one suggestion around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the suggestions across the ENTIRE region. Only keep suggestions close together and walkable when the destination is a specific city or neighborhood. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -735,7 +737,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell${step === "login" ? " login-active" : ""}${step === "loading" ? " loading-active" : ""}${step === "result" ? " result-active" : ""}`} ref={shellRef}>
+    <div className={`app-shell${step === "login" ? " login-active" : ""}${step === "loading" ? " loading-active" : ""}${step === "result" ? " result-active" : ""}${step === "result" && itineraryBuilt ? " itinerary-final-active" : ""}`} ref={shellRef}>
       <style>{css}</style>
 
       <nav className="navbar">
@@ -1102,89 +1104,97 @@ function App() {
       )}
 
       {step === "loading" && (
-        <main className="loading-screen motion-loading-screen on">
-          <div className="motion-loader-copy">
-            <p className="label">Building your day</p>
-            <h2>Building around <span className="gem">today's version of you</span></h2>
-            <p>{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
+        <main className="loading-screen on">
+          <svg className="motion-loader-svg" viewBox="0 0 1200 680" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <path className="motion-path-shadow" d="M78 516 C190 385 260 588 374 412 C475 258 554 356 626 238 C724 78 830 190 878 322 C922 444 1014 428 1122 218" />
+            <path className="motion-path-base" d="M78 516 C190 385 260 588 374 412 C475 258 554 356 626 238 C724 78 830 190 878 322 C922 444 1014 428 1122 218" />
+            <path className="motion-path-draw" d="M78 516 C190 385 260 588 374 412 C475 258 554 356 626 238 C724 78 830 190 878 322 C922 444 1014 428 1122 218" />
+            {[
+              [78, 516],
+              [374, 412],
+              [626, 238],
+              [878, 322],
+              [1122, 218],
+            ].map(([x, y], i) => (
+              <g className={"motion-node" + (i <= activeLoadingPhase ? " motion-node-on" : "")} key={String(x) + "-" + String(y)}>
+                <circle cx={x} cy={y} r="7" />
+                <circle cx={x} cy={y} r="17" />
+              </g>
+            ))}
+            <g className="motion-svg-pointer">
+              <animateMotion
+                dur="12s"
+                repeatCount="indefinite"
+                rotate="auto"
+                calcMode="linear"
+                keyPoints="0;0;.26;.26;.48;.48;.68;.68;.86;.86;1"
+                keyTimes="0;.10;.20;.28;.40;.48;.60;.68;.80;.88;1"
+                path="M78 516 C190 385 260 588 374 412 C475 258 554 356 626 238 C724 78 830 190 878 322 C922 444 1014 428 1122 218"
+              />
+              <path d="M18 0l-30 12 6-12-6-12L18 0z" />
+            </g>
+          </svg>
+
+          <div className="motion-loader-title">
+            <p>{destination || "Your trip"}</p>
+            <h2>Building your itinerary</h2>
           </div>
 
-          <section className="motion-map-stage" aria-label="Itinerary loading progress">
-            <svg className="motion-route-svg" viewBox="0 0 1200 640" preserveAspectRatio="xMidYMid meet">
-              <path className="motion-route-shadow" d="M92 518 C168 398 282 440 338 318 C404 176 526 158 620 246 C708 328 778 420 884 334 C982 254 1022 138 1110 104" />
-              <path id="travelMotionPath" className="motion-route-path" d="M92 518 C168 398 282 440 338 318 C404 176 526 158 620 246 C708 328 778 420 884 334 C982 254 1022 138 1110 104" />
-              {[
-                { x: 92, y: 518 },
-                { x: 338, y: 318 },
-                { x: 620, y: 246 },
-                { x: 884, y: 334 },
-                { x: 1110, y: 104 }
-              ].map((point, i) => (
-                <g key={i} className={
-                  i < Math.min(loadingLine, loadingPhases.length - 1) ? "route-stop route-stop-done" :
-                  i === Math.min(loadingLine, loadingPhases.length - 1) ? "route-stop route-stop-active" : "route-stop"
-                }>
-                  <circle cx={point.x} cy={point.y} r="11" />
-                  <circle cx={point.x} cy={point.y} r="22" />
-                </g>
-              ))}
-              <g className="motion-pointer" style={{ offsetDistance: String(Math.min(100, (Math.min(loadingLine, loadingPhases.length - 1) / Math.max(loadingPhases.length - 1, 1)) * 100)) + "%" }}>
-                <path d="M18 0l-30 12 6-12-6-12L18 0z" />
-              </g>
-            </svg>
+          <div className="motion-callouts">
+            {loadingPhases.map((phase, i) => (
+              <section key={phase.id} className={"motion-callout motion-callout-" + i + (i === activeLoadingPhase ? " motion-callout-active" : "") + (i < activeLoadingPhase ? " motion-callout-done" : "")}>
+                <div className="motion-visual">
+                  {phase.id === "profile" && (
+                    <div className="motion-profile">
+                      <div className="motion-profile-ring" />
+                      {user?.picture
+                        ? <img src={user.picture} alt="" />
+                        : <svg viewBox="0 0 42 42" width="42" height="42" fill="none"><circle cx="21" cy="16" r="8" fill="currentColor" opacity=".35" /><path d="M7 37c0-8 6.2-13 14-13s14 5 14 13" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" opacity=".35" /></svg>}
+                    </div>
+                  )}
+                  {phase.id === "vibe" && (
+                    <div className="motion-vibes">
+                      {selectedMoodObjects.slice(0, 3).map((mood) => <span key={mood.id}>{mood.title}</span>)}
+                    </div>
+                  )}
+                  {phase.id === "places" && (
+                    <div className="motion-reviews">
+                      {[4.8, 4.6, 4.5].map((rating, idx) => <span key={idx}>★ {rating}</span>)}
+                    </div>
+                  )}
+                  {phase.id === "photos" && (
+                    <div className="motion-photo-stack">
+                      {selectedMoodObjects.slice(0, 3).map((mood, idx) => <img key={mood.id} src={mood.img} alt="" style={{ "--i": idx }} />)}
+                    </div>
+                  )}
+                  {phase.id === "gemini" && (
+                    <div className="motion-gemini">
+                      <span>✦</span>
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p>{phase.title}{i < activeLoadingPhase ? " - done" : ""}</p>
+                  <span>{phase.line}</span>
+                </div>
+              </section>
+            ))}
+          </div>
 
-            <div className={"motion-visual motion-visual-" + (loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual || "profile")}>
-              {loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual === "profile" && (
-                <div className="motion-profile-card">
-                  {user?.picture ? <img src={user.picture} alt="" /> : <span className="motion-avatar">✦</span>}
-                  <div>
-                    <strong>{loadingPhases[0].title}</strong>
-                    <p>{user?.email || "No account needed"}</p>
-                  </div>
-                </div>
-              )}
-              {loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual === "mood" && (
-                <div className="motion-mood-stack">
-                  {selectedMoodObjects.slice(0, 3).map((mood, i) => (
-                    <span key={mood.id} style={{ animationDelay: String(i * 80) + "ms" }}>{mood.title}</span>
-                  ))}
-                  <span>{diet}</span>
-                  <span>{planFor}</span>
-                </div>
-              )}
-              {loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual === "places" && (
-                <div className="motion-review-card">
-                  <strong>Place reviews</strong>
-                  {["Local favorite", "Open hours", "Distance check"].map((item, i) => <p key={item} style={{ animationDelay: String(i * 90) + "ms" }}>✓ {item}</p>)}
-                </div>
-              )}
-              {loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual === "photos" && (
-                <div className="motion-photo-grid">
-                  {(placesPhotos.length ? placesPhotos : selectedMoodObjects).slice(0, 4).map((item, i) => (
-                    <img key={i} src={item.photoUrl || item.img || moodVibes[i % moodVibes.length].img} alt="" />
-                  ))}
-                </div>
-              )}
-              {loadingPhases[Math.min(loadingLine, loadingPhases.length - 1)]?.visual === "ai" && (
-                <div className="motion-ai-card">
-                  <span>✦</span>
-                  <strong>AI generating itinerary</strong>
-                  <p>Asking AI to think like today's version of you</p>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <div className="motion-loader-status">
+          <div className="motion-loader-bottom">
             <div className="motion-status-row">
               {loadingPhases.map((phase, i) => (
-                <span key={phase.title} className={i < Math.min(loadingLine, loadingPhases.length - 1) ? "done" : i === Math.min(loadingLine, loadingPhases.length - 1) ? "active" : ""}>
-                  {phase.title}{i < Math.min(loadingLine, loadingPhases.length - 1) ? " - done" : ""}
-                </span>
+                <div key={phase.id} className={"motion-status" + (i < activeLoadingPhase ? " motion-status-done" : "") + (i === activeLoadingPhase ? " motion-status-active" : "")}>
+                  <span />
+                  <p>{phase.title}{i < activeLoadingPhase ? " - done" : ""}</p>
+                </div>
               ))}
             </div>
-            <div className="loader-bar-track motion-bar-track">
-              <div className="loader-bar-fill" style={{ width: String(Math.round(((Math.min(loadingLine, loadingPhases.length - 1) + 1) / loadingPhases.length) * 100)) + "%" }} />
+            <div className="loader-bar-track">
+              <div className="loader-bar-fill" style={{ width: String(loadingPct) + "%" }} />
             </div>
           </div>
         </main>
@@ -1237,11 +1247,6 @@ function App() {
                       <p>{stop.name}</p>
                     </article>
                   ))}
-                  {selectedStops.length > 0 && (
-                    <button className="create-itinerary-side" type="button" onClick={createItineraryFromSelected}>
-                      Create plan
-                    </button>
-                  )}
                 </div>
               </div>
             </section>
@@ -1297,8 +1302,8 @@ function App() {
                     </div>
 
                     <div className="suggestion-actions">
-                      <button type="button" onClick={() => addStopToItinerary(activeStop)}>I like this</button>
-                      {selectedStops.length > 0 && <button type="button" className="create-plan-inline" onClick={createItineraryFromSelected}>Create plan</button>}
+                      <button type="button" onClick={() => addStopToItinerary(activeStop)}>Add to plan</button>
+                      <button type="button" onClick={() => setCardIndex((i) => Math.min(i + 1, Math.max(suggestionStops.length - 1, 0)))}>Skip</button>
                     </div>
                   </article>
                   {selectedStops.length > 0 && (
@@ -2943,6 +2948,8 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .selected-mini-card button { position: absolute; right: 7px; top: 7px; z-index: 2; width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,.65); background: rgba(0,0,0,.42); color: #fff; display: grid; place-items: center; }
 .selected-mini-card span { position: absolute; left: 9px; top: 9px; z-index: 2; font-size: 10px; font-weight: 900; letter-spacing: .08em; }
 .selected-mini-card p { position: absolute; left: 9px; right: 9px; bottom: 9px; z-index: 2; margin: 0; font-size: 12px; line-height: 1.15; font-weight: 800; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.selected-mini-card::after { content: ""; position: absolute; inset: auto 0 0 0; height: 62%; z-index: 1; background: linear-gradient(to top, rgba(0,0,0,.74), rgba(0,0,0,0)); pointer-events: none; }
+.selected-mini-card span, .selected-mini-card p { color: #fff !important; text-shadow: 0 2px 10px rgba(0,0,0,.8); }
 .create-itinerary-side { flex: 0 0 150px; border: none; border-radius: 16px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 850; padding: 0 18px; }
 .create-itinerary-side:disabled { opacity: .45; cursor: not-allowed; }
 .builder-panel { min-width: 0; min-height: 0; overflow-y: auto; padding: clamp(22px,4vw,50px); background: var(--bg); display: flex; flex-direction: column; }
@@ -3092,6 +3099,82 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .builder-screen.itinerary-built .compact-timeline { padding: 18px 0 20px !important; }
 }
 
-`;
+/* Restored motion-path loader */
+.loading-screen.on { position: relative; width: 100vw; min-height: 100dvh; max-width: none; padding: 0; overflow: hidden; background: radial-gradient(circle at 50% 10%, rgba(51,153,137,.12), transparent 34%), var(--bg); }
+.motion-loader-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; padding: clamp(28px,4vw,64px); overflow: visible; }
+.motion-path-shadow, .motion-path-base, .motion-path-draw { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.motion-path-shadow { stroke: rgba(0,0,0,.08); stroke-width: 24; filter: blur(6px); }
+.motion-path-base { stroke: rgba(51,153,137,.15); stroke-width: 8; }
+.motion-path-draw { stroke: var(--accent); stroke-width: 7; stroke-dasharray: 18 18; animation: routeDash 1.8s linear infinite; }
+.motion-node circle:first-child { fill: #fff; stroke: rgba(51,153,137,.36); stroke-width: 3; }
+.motion-node circle:last-child { fill: rgba(51,153,137,.1); opacity: 0; transform-origin: center; }
+.motion-node-on circle:first-child { fill: var(--accent); stroke: #fff; }
+.motion-node-on circle:last-child { opacity: 1; animation: routePulse 1.15s ease-in-out infinite; }
+.motion-svg-pointer { filter: drop-shadow(0 12px 18px rgba(0,0,0,.22)); }
+.motion-svg-pointer path { fill: var(--ink); stroke: #fff; stroke-width: 2; }
+.motion-loader-title { position: absolute; top: clamp(28px,5vh,54px); left: clamp(22px,5vw,72px); z-index: 6; max-width: min(520px, calc(100% - 44px)); }
+.motion-loader-title p { margin: 0 0 7px; font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: .13em; text-transform: uppercase; }
+.motion-loader-title h2 { margin: 0; font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(34px,5vw,72px); font-weight: 400; line-height: .94; color: var(--ink); }
+.motion-callouts { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+.motion-callout { position: absolute; width: min(330px,34vw); display: grid; grid-template-columns: 70px 1fr; gap: 14px; align-items: center; padding: 14px; border-radius: 18px; background: rgba(255,255,255,.82); border: 1px solid rgba(51,153,137,.22); box-shadow: 0 18px 48px rgba(0,0,0,.10); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); opacity: 0; transform: translateY(10px) scale(.96); transition: opacity .28s, transform .32s; }
+.motion-callout-active, .motion-callout-done { opacity: 1; transform: translateY(0) scale(1); }
+.motion-callout-done { opacity: .38; }
+.motion-callout-0 { left: 7%; bottom: 20%; }
+.motion-callout-1 { left: 25%; top: 38%; }
+.motion-callout-2 { left: 46%; top: 18%; }
+.motion-callout-3 { right: 16%; top: 44%; }
+.motion-callout-4 { right: 5%; top: 20%; }
+.motion-callout .motion-visual { position: static; width: 70px; height: 70px; border-radius: 16px; background: rgba(51,153,137,.08); color: var(--accent); display: flex; align-items: center; justify-content: center; overflow: hidden; transform: none; animation: none; pointer-events: none; }
+.motion-callout p { margin: 0; font-size: 14px; font-weight: 850; color: var(--ink); letter-spacing: -.01em; }
+.motion-callout span { display: block; margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--ink-3); line-height: 1.35; }
+.motion-profile { position: relative; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; }
+.motion-profile-ring { position: absolute; inset: -8px; border-radius: 50%; border: 3px solid rgba(51,153,137,.18); border-top-color: var(--accent); animation: calSpin 1.1s linear infinite; }
+.motion-profile img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; }
+.motion-vibes { display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 8px; }
+.motion-vibes span { margin: 0; padding: 4px 8px; border-radius: 999px; background: #fff; color: var(--accent); font-size: 10px; font-weight: 800; text-align: center; }
+.motion-reviews { display: grid; gap: 5px; width: 100%; padding: 8px; }
+.motion-reviews span { margin: 0; border-radius: 999px; padding: 5px 8px; background: #fff; color: var(--accent); font-size: 11px; font-weight: 850; }
+.motion-photo-stack { position: relative; width: 58px; height: 58px; }
+.motion-photo-stack img { position: absolute; inset: 0; width: 44px; height: 44px; border-radius: 10px; object-fit: cover; transform: translate(calc(var(--i) * 7px), calc(var(--i) * 5px)) rotate(calc((var(--i) - 1) * 8deg)); border: 2px solid #fff; }
+.motion-gemini { width: 100%; padding: 10px; display: grid; gap: 6px; }
+.motion-gemini span { margin: 0 auto 2px; font-size: 18px; color: var(--accent); animation: coreGlow 1.4s ease-in-out infinite; }
+.motion-gemini i { display: block; height: 6px; border-radius: 999px; background: rgba(51,153,137,.25); animation: shimmer 1.2s ease-in-out infinite; }
+.motion-loader-bottom { position: absolute; left: clamp(18px,5vw,70px); right: clamp(18px,5vw,70px); bottom: max(18px, env(safe-area-inset-bottom)); z-index: 9; display: flex; flex-direction: column; gap: 13px; }
+.motion-loader-bottom .motion-status-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; padding-bottom: 0; color: inherit; font-size: inherit; letter-spacing: inherit; text-transform: none; }
+.motion-status { min-width: 0; display: flex; align-items: center; gap: 8px; color: var(--ink-3); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.motion-status span { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--surface-3); }
+.motion-status span::before, .motion-loader-bottom .motion-status-row span::before { display: none; }
+.motion-status p { margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.motion-status-active, .motion-status-done { color: var(--ink); }
+.motion-status-active span, .motion-status-done span { background: var(--accent); }
+.motion-status-active span { animation: lpulse 1s ease-in-out infinite; }
+.motion-loader-bottom .loader-bar-track { height: 4px; background: rgba(51,153,137,.14); }
+.motion-loader-bottom .loader-bar-fill { height: 4px; background: var(--accent); }
 
-createRoot(document.getElementById("root")).render(<App />);
+.suggestion-actions { grid-template-columns: 1fr 1fr !important; }
+.suggestion-actions button:first-child { background: var(--ink); border-color: var(--ink); color: #fff; }
+.suggestion-actions button:nth-child(2) { background: #fff; border-color: var(--line-strong); color: var(--ink); }
+
+@media(max-width: 900px) {
+  .app-shell.result-active.itinerary-final-active { height: auto !important; min-height: 100dvh !important; overflow: visible !important; padding-bottom: 0 !important; }
+  .app-shell.result-active.itinerary-final-active .builder-screen { height: auto !important; overflow: visible !important; }
+  .motion-loader-svg { padding: 0; width: 145%; left: -22%; }
+  .motion-loader-title { top: 28px; left: 20px; }
+  .motion-loader-title h2 { font-size: 42px; }
+  .motion-svg-pointer { transform: scale(.86); transform-origin: center; }
+  .motion-callout { width: min(310px, calc(100vw - 36px)); grid-template-columns: 58px 1fr; padding: 12px; }
+  .motion-callout .motion-visual { width: 58px; height: 58px; border-radius: 14px; }
+  .motion-callout-0 { left: 18px; bottom: 31%; }
+  .motion-callout-1 { left: 26px; top: 35%; }
+  .motion-callout-2 { left: 34px; top: 18%; }
+  .motion-callout-3 { right: 18px; top: 44%; }
+  .motion-callout-4 { right: 18px; top: 24%; }
+  .motion-loader-bottom .motion-status-row { display: flex; overflow: hidden; }
+  .motion-status { display: none; }
+  .motion-status-active, .motion-status-done { display: flex; }
+  .builder-create-plan { display: block; min-height: 50px; margin-top: 10px; }
+}
+
+/* Final itinerary actions */
+.builder-final-actions { align-items: center !important; }
+.builder-icon-stack { flex-direction: row !important; align-items: center !important; gap: 10px !important; }
