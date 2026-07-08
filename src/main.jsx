@@ -427,15 +427,35 @@ function App() {
   const mapsStops = savedStopsList.length ? sortByProximity(savedStopsList) : (itinerary?.stops || []);
   const tripMapsUrl = mapsStops.length ? buildGoogleMapsTripUrl(mapsStops, googleTravelMode) : "";
 
-  const loadingItems = useMemo(() => [
-    user?.name ? `${user.name}'s lightweight profile` : "Quick feeler profile",
-    "Understanding today's intent",
-    "Keeping your real constraints in mind",
-    "Reading the destination context",
-    "Looking for places that match today's mood",
-    "Pulling real place photos and ratings",
-    "Asking AI to think like today's version of you"
-  ], [user]);
+  const loadingPhases = useMemo(() => [
+    {
+      id: "profile",
+      title: "Quick feeler profile",
+      line: user?.name ? `${user.name}'s travel signal is ready` : "Reading your day-of travel signal",
+    },
+    {
+      id: "vibe",
+      title: "Mood and constraints",
+      line: `${selectedMoodObjects.map(m => m.title).join(", ") || "Your vibe"} · ${diet} · ${planFor}`,
+    },
+    {
+      id: "places",
+      title: "Place reviews",
+      line: `Scanning real matches around ${destination || "your destination"}`,
+    },
+    {
+      id: "photos",
+      title: "Photos and ratings",
+      line: "Matching each stop with visual context",
+    },
+    {
+      id: "gemini",
+      title: "Gemini itinerary",
+      line: "Sequencing the final recommendations",
+    },
+  ], [destination, diet, planFor, selectedMoodObjects, user]);
+  const activeLoadingPhase = Math.min(loadingLine, loadingPhases.length - 1);
+  const loadingPct = Math.round((Math.min(loadingLine + 1, loadingPhases.length) / loadingPhases.length) * 100);
 
   function toggleMood(id) {
     setSelectedMoods((current) => {
@@ -464,7 +484,7 @@ function App() {
         const res = await fetch(`/api/place-autocomplete?input=${encodeURIComponent(destination)}`);
         const data = await res.json();
         const photos = await Promise.all(
-          [destination, ...selectedMoodObjects.map(m => `${destination} ${m.title}`)].slice(0, 5).map(async (q) => {
+          [destination, ...selectedMoodObjects.map(m => `${destination} ${m.title}`)].slice(0, 8).map(async (q) => {
             try {
               const r = await fetch(`/api/place-autocomplete?input=${encodeURIComponent(q)}`);
               const d = await r.json();
@@ -480,7 +500,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a real, specific, mood-first day plan. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the stops across the ENTIRE region — pick the best mood-matching places even if they are hours apart, and do NOT cluster every stop in a single city or town. Only keep stops close together and walkable when the destination is a specific city or neighborhood. Return concrete places. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, recommendationCount: 8, numStops: 8, minStops: 8, maxStops: 8, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a real, specific, mood-first day plan with exactly 8 recommendations/stops. The returned stops array must contain exactly 8 concrete places, no fewer. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent — the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one stop around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the stops across the ENTIRE region — pick the best mood-matching places even if they are hours apart, and do NOT cluster every stop in a single city or town. Only keep stops close together and walkable when the destination is a specific city or neighborhood. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -655,7 +675,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell${step === "login" ? " login-active" : ""}${step === "result" ? " result-active" : ""}`} ref={shellRef}>
+    <div className={`app-shell${step === "login" ? " login-active" : ""}${step === "loading" ? " loading-active" : ""}${step === "result" ? " result-active" : ""}`} ref={shellRef}>
       <style>{css}</style>
 
       <nav className="navbar">
@@ -1023,144 +1043,98 @@ function App() {
 
       {step === "loading" && (
         <main className="loading-screen on">
-          <div className="loader-head">
-            <h2 className="loader-headline">Building around <span className="gem">today's version of you</span></h2>
-            <p className="loader-sub">{destination} · {selectedMoodObjects.map(m => m.title).join(", ")}</p>
-          </div>
-          <div className="loader-stage">
-            <div className={`ls${loadingLine === 0 ? " ls-active" : " ls-done"}`}>
-              <div className="ls-profile">
-                <div className="profile-ring-wrap">
-                  <svg className="profile-ring-svg" viewBox="0 0 120 120">
-                    <circle className="ring-bg" cx="60" cy="60" r="54" />
-                    <circle className="ring-fill" cx="60" cy="60" r="54" />
-                  </svg>
-                  {user?.picture
-                    ? <img className="profile-pic" src={user.picture} alt={user.name} />
-                    : <div className="profile-pic profile-pic-fallback">
-                      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="19" cy="14" r="7" fill="var(--ink-3)" opacity="0.6" />
-                        <path d="M4 34c0-8.284 6.716-13 15-13s15 4.716 15 13" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-                      </svg>
-                    </div>
-                  }
-                </div>
-                <div className="profile-meta">
-                  <p className="profile-name">{user?.name || "Quick feeler mode"}</p>
-                  {user?.email && <p className="profile-email">{user.email}</p>}
-                </div>
-              </div>
-            </div>
+          <svg className="motion-loader-svg" viewBox="0 0 1200 680" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <path className="motion-path-shadow" d="M78 516 C190 385 260 588 374 412 C475 258 554 356 626 238 C724 78 830 190 878 322 C922 444 1014 428 1122 218" />
+            <path className="motion-path-base" d="M78 516 C190 385 260 588 374 412 C475 258 554 356 626 238 C724 78 830 190 878 322 C922 444 1014 428 1122 218" />
+            <path className="motion-path-draw" d="M78 516 C190 385 260 588 374 412 C475 258 554 356 626 238 C724 78 830 190 878 322 C922 444 1014 428 1122 218" />
+            {[
+              [78, 516],
+              [374, 412],
+              [626, 238],
+              [878, 322],
+              [1122, 218],
+            ].map(([x, y], i) => (
+              <g className={`motion-node${i <= activeLoadingPhase ? " motion-node-on" : ""}`} key={`${x}-${y}`}>
+                <circle cx={x} cy={y} r="7" />
+                <circle cx={x} cy={y} r="17" />
+              </g>
+            ))}
+            <g className="motion-svg-pointer">
+              <animateMotion
+                dur="12s"
+                repeatCount="indefinite"
+                rotate="auto"
+                calcMode="linear"
+                keyPoints="0;0;.26;.26;.48;.48;.68;.68;.86;.86;1"
+                keyTimes="0;.10;.20;.28;.40;.48;.60;.68;.80;.88;1"
+                path="M78 516 C190 385 260 588 374 412 C475 258 554 356 626 238 C724 78 830 190 878 322 C922 444 1014 428 1122 218"
+              />
+              <path d="M0 -18l12 32L0 8l-12 6L0 -18z" />
+            </g>
+          </svg>
 
-            <div className={`ls${loadingLine === 1 || loadingLine === 2 ? " ls-active" : loadingLine > 2 ? " ls-done" : ""}`}>
-              <div className="ls-moods">
-                {selectedMoodObjects.slice(0, 3).map((mood, i) => (
-                  <div className={`lcard lcard-${i}`} key={mood.id}>
-                    <img src={mood.img} alt="" />
-                    <div className="lcard-ov" />
-                    <span className="lcard-lbl">{mood.title}</span>
-                  </div>
-                ))}
-                <div className="lspills">
-                  {[...selectedMoodObjects.map(m => m.title), diet, planFor].filter(Boolean).map((label, i) => (
-                    <span className={`lspill lspill-${i}`} key={label}>{label}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className={`ls${loadingLine === 3 ? " ls-active" : loadingLine > 3 ? " ls-done" : ""}`}>
-              <div className="ls-map">
-                <div className="map-dest-label">{destination}</div>
-                <div className="map-sketch">
-                  <svg viewBox="0 0 420 155" xmlns="http://www.w3.org/2000/svg" className="map-svg">
-                    <path d="M 0 95 Q 60 88 110 98 Q 160 108 200 100 Q 260 90 300 96 Q 360 104 420 98" fill="none" stroke="rgba(51,153,137,.18)" strokeWidth="8" strokeLinecap="round" />
-                    <circle cx="50" cy="60" r="10" fill="rgba(51,153,137,.12)" />
-                    <circle cx="62" cy="54" r="8" fill="rgba(51,153,137,.1)" />
-                    <circle cx="150" cy="130" r="9" fill="rgba(51,153,137,.1)" />
-                    <circle cx="163" cy="136" r="7" fill="rgba(51,153,137,.08)" />
-                    <circle cx="360" cy="110" r="11" fill="rgba(51,153,137,.1)" />
-                    <circle cx="374" cy="116" r="8" fill="rgba(51,153,137,.08)" />
-                    <line x1="0" y1="50" x2="420" y2="50" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
-                    <line x1="0" y1="100" x2="420" y2="100" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
-                    <line x1="105" y1="0" x2="105" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
-                    <line x1="210" y1="0" x2="210" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
-                    <line x1="315" y1="0" x2="315" y2="155" stroke="rgba(0,0,0,.04)" strokeWidth="1" />
-                    <line className="map-line ml1" x1="80" y1="118" x2="185" y2="62" />
-                    <line className="map-line ml2" x1="185" y1="62" x2="275" y2="85" />
-                    <line className="map-line ml3" x1="275" y1="85" x2="345" y2="42" />
-                    <circle className="map-dot md1" cx="80" cy="118" r="6" />
-                    <circle className="map-dot md2" cx="185" cy="62" r="6" />
-                    <circle className="map-dot md3" cx="275" cy="85" r="6" />
-                    <circle className="map-dot md4" cx="345" cy="42" r="6" />
-                    <circle className="map-traveller" cx="80" cy="118" r="9" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.6" />
-                    <circle className="map-traveller-dot" cx="80" cy="118" r="4" fill="var(--accent)" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className={`ls${loadingLine === 4 ? " ls-active" : loadingLine > 4 ? " ls-done" : ""}`}>
-              <div className="ls-places-chips">
-                <p className="places-chips-label">Scanning Google Places for {destination}</p>
-                <div className="places-chips-wrap">
-                  {(placesPhotos.length
-                    ? placesPhotos.map(p => p.name)
-                    : selectedMoodObjects.map(m => `${destination} ${m.title}`)
-                  ).map((name, i) => {
-                    const clean = name.split(",")[0].trim();
-                    const rating = (4.1 + i * 0.15).toFixed(1);
-                    return (
-                      <div className={`place-chip pc-anim-${i}`} key={i}>
-                        <span className="place-chip-name">{clean}</span>
-                        <span className="place-chip-rating">★ {rating}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className={`ls${loadingLine >= 5 ? " ls-active" : ""}`}>
-              <div className="wire-frame">
-                <div className="wire-meta">
-                  <div className="wire-tag" />
-                  <div className="wire-title" />
-                </div>
-                <div className="wire-stops">
-                  {[0, 1].map(i => (
-                    <div className="wire-stop" key={i}>
-                      <div className="wire-dot" />
-                      <div className="wire-lines">
-                        <div className="wire-line wl-a" style={{ animationDelay: `${i * 0.2}s` }} />
-                        <div className="wire-line wl-b" style={{ animationDelay: `${i * 0.2 + 0.1}s` }} />
-                      </div>
-                      <div className="wire-img" style={{ animationDelay: `${i * 0.15}s` }} />
-                    </div>
-                  ))}
-                </div>
-                <div className="wire-gemini-badge">
-                  <span className="gorb-core-sm">✦</span>
-                  <span>AI is crafting your itinerary…</span>
-                </div>
-              </div>
-            </div>
+          <div className="motion-loader-title">
+            <p>{destination || "Your trip"}</p>
+            <h2>Building your itinerary</h2>
           </div>
 
-          <div className="loader-bottom">
-            <div className="loader-list">
-              {loadingItems.map((item, i) => (
-                <div key={item} className={`loader-item${i < loadingLine ? " li-done" : ""}${i === loadingLine ? " li-active" : ""}`}>
-                  <span className="li-dot" />
-                  <span className="li-text">{item}</span>
-                  {i < loadingLine && <span className="li-badge">Done</span>}
+          <div className="motion-callouts">
+            {loadingPhases.map((phase, i) => (
+              <section key={phase.id} className={`motion-callout motion-callout-${i}${i === activeLoadingPhase ? " motion-callout-active" : ""}${i < activeLoadingPhase ? " motion-callout-done" : ""}`}>
+                <div className="motion-visual">
+                  {phase.id === "profile" && (
+                    <div className="motion-profile">
+                      <div className="motion-profile-ring" />
+                      {user?.picture
+                        ? <img src={user.picture} alt="" />
+                        : <svg viewBox="0 0 42 42" width="42" height="42" fill="none"><circle cx="21" cy="16" r="8" fill="currentColor" opacity=".35" /><path d="M7 37c0-8 6.2-13 14-13s14 5 14 13" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" opacity=".35" /></svg>}
+                    </div>
+                  )}
+                  {phase.id === "vibe" && (
+                    <div className="motion-vibes">
+                      {selectedMoodObjects.slice(0, 3).map((mood) => <span key={mood.id}>{mood.title}</span>)}
+                    </div>
+                  )}
+                  {phase.id === "places" && (
+                    <div className="motion-reviews">
+                      {[4.8, 4.6, 4.5].map((rating, idx) => <span key={idx}>★ {rating}</span>)}
+                    </div>
+                  )}
+                  {phase.id === "photos" && (
+                    <div className="motion-photo-stack">
+                      {selectedMoodObjects.slice(0, 3).map((mood, idx) => <img key={mood.id} src={mood.img} alt="" style={{ "--i": idx }} />)}
+                    </div>
+                  )}
+                  {phase.id === "gemini" && (
+                    <div className="motion-gemini">
+                      <span>✦</span>
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p>{phase.title}{i < activeLoadingPhase ? " - done" : ""}</p>
+                  <span>{phase.line}</span>
+                </div>
+              </section>
+            ))}
+          </div>
+
+          <div className="motion-loader-bottom">
+            <div className="motion-status-row">
+              {loadingPhases.map((phase, i) => (
+                <div key={phase.id} className={`motion-status${i < activeLoadingPhase ? " motion-status-done" : ""}${i === activeLoadingPhase ? " motion-status-active" : ""}`}>
+                  <span />
+                  <p>{phase.title}{i < activeLoadingPhase ? " - done" : ""}</p>
                 </div>
               ))}
             </div>
             <div className="loader-bar-track">
-              <div className="loader-bar-fill" style={{ width: `${Math.round(((loadingLine + 1) / loadingItems.length) * 100)}%` }} />
+              <div className="loader-bar-fill" style={{ width: `${loadingPct}%` }} />
             </div>
-            <p className="loader-pct">{Math.round(((loadingLine + 1) / loadingItems.length) * 100)}% complete</p>
+            <p className="loader-pct">{loadingPct}% complete</p>
           </div>
         </main>
       )}
@@ -1188,8 +1162,9 @@ function App() {
               <h2 className="rec-head-dest">{itinerary?.destination || destination}</h2>
             </div>
             <div className="rec-head-actions">
-              <button className="icon-btn-sm" onClick={() => goTo("mood")} title="Edit mood">
+              <button className="icon-btn-sm" onClick={() => goTo("mood")} title="Edit vibe">
                 <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M12.5 2.5l3 3L5 16H2v-3L12.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span>Edit vibe</span>
               </button>
               <button
                 className="icon-btn-sm"
@@ -1197,31 +1172,14 @@ function App() {
                 onClick={startOver}
               >
                 <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 3v3M9 3a6 6 0 106 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M6.5 1.5L9 3 6.5 4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span>Start over</span>
               </button>
-              <button className="icon-btn-sm" onClick={generatePlan} title="Regenerate">
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0110.5-4M15 9a6 6 0 01-10.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M13 5h2.5V2.5M5 13H2.5V15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </button>
-              <button
-                className={`icon-btn-sm${shareCopied ? " icon-btn-sm-active" : ""}`}
-                disabled={shareLoading}
-                onClick={shareItinerary}
-                title="Share"
-              >
-                {shareCopied
-                  ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="13" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="13" cy="14.5" r="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="5" cy="9" r="2" stroke="currentColor" strokeWidth="1.5" /><line x1="11.1" y1="4.6" x2="6.9" y2="7.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><line x1="6.9" y1="10.1" x2="11.1" y2="13.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
-              </button>
-              <button className={`icon-btn-sm cal-icon-btn-${calendarState}`} onClick={addToCalendar} disabled={calendarState === "loading"} title={user ? "Add to Google Calendar" : "Download .ics"}>
+              <button className={`icon-btn-sm cal-icon-btn-${calendarState}`} onClick={addToCalendar} disabled={calendarState === "loading"} title="Add to calendar">
                 {calendarState === "loading" ? <svg className="cal-spin" width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round" /></svg>
                   : calendarState === "done" ? <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4L14 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     : <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" /><path d="M2 8h14" stroke="currentColor" strokeWidth="1.5" /><path d="M6 1.5v3M12 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
+                <span>Add to calendar</span>
               </button>
-              {tripMapsUrl && (
-                <a className="rec-maps-cta" href={tripMapsUrl} target="_blank" rel="noreferrer">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5" /><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5" /></svg>
-                  Maps
-                </a>
-              )}
             </div>
           </header>
 
@@ -1328,6 +1286,7 @@ function App() {
                                 </a>
                               )}
                               <button className="rec-mbar-btn" onClick={() => setMoreOpen(true)}>
+                                <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="9" r="1.5" fill="currentColor" /><circle cx="9" cy="9" r="1.5" fill="currentColor" /><circle cx="14" cy="9" r="1.5" fill="currentColor" /></svg>
                                 <span>More</span>
                               </button>
                             </div>
@@ -1740,7 +1699,13 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .lp-accent { color: var(--accent) !important; }
 .lp-sub { font-size: 12px; line-height: 1.5; color: var(--ink-3); margin: 0; }
 .lp-actions { display: flex; flex-direction: column; gap: 6px; }
-.lp-google-wrap { min-height: 36px; display: flex; align-items: center; position: relative; width: 100%; }
+.lp-google-wrap {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
 /* Desktop: hide fake, show real */
 .lp-google-fake { display: none; }
 .lp-google-real { width: 100%; }
@@ -1991,6 +1956,259 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .loader-bar-fill { height: 2px; background: var(--ink); border-radius: 1px; transition: width .6s var(--ease); }
 .loader-pct { font-size: 11px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; margin: 0; }
 
+/* Full-page motion-path loading screen */
+.loading-active {
+  height: 100dvh !important;
+  overflow: hidden !important;
+  padding-bottom: 0 !important;
+}
+.loading-active .navbar { display: none !important; }
+.loading-active .loading-screen {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(51,153,137,.12), transparent 28%),
+    linear-gradient(180deg, #f9fbf7 0%, #eef7f2 100%);
+}
+.motion-loader-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: clamp(20px,4vw,58px);
+  overflow: visible;
+}
+.motion-path-shadow,
+.motion-path-base,
+.motion-path-draw {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.motion-path-shadow {
+  stroke: rgba(0,0,0,.07);
+  stroke-width: 28;
+  filter: blur(18px);
+}
+.motion-path-base {
+  stroke: rgba(51,153,137,.16);
+  stroke-width: 12;
+}
+.motion-path-draw {
+  stroke: var(--accent);
+  stroke-width: 8;
+  stroke-dasharray: 1360;
+  stroke-dashoffset: 1360;
+  animation: motionDraw 12s linear infinite;
+}
+@keyframes motionDraw {
+  0%, 10% { stroke-dashoffset: 1360; }
+  20%, 28% { stroke-dashoffset: 1020; }
+  40%, 48% { stroke-dashoffset: 680; }
+  60%, 68% { stroke-dashoffset: 390; }
+  80%, 88% { stroke-dashoffset: 110; }
+  100% { stroke-dashoffset: 0; }
+}
+.motion-node circle:first-child {
+  fill: #fff;
+  stroke: rgba(51,153,137,.35);
+  stroke-width: 3;
+}
+.motion-node circle:last-child {
+  fill: none;
+  stroke: rgba(51,153,137,.18);
+  stroke-width: 2;
+  opacity: 0;
+}
+.motion-node-on circle:first-child { fill: var(--accent); stroke: #fff; }
+.motion-node-on circle:last-child { opacity: 1; animation: motionNodePulse 1.25s ease-in-out infinite; }
+@keyframes motionNodePulse {
+  0%,100% { r: 14; opacity: .18; }
+  50% { r: 23; opacity: .32; }
+}
+.motion-svg-pointer path {
+  fill: var(--accent);
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,.22));
+}
+.motion-loader-title {
+  position: absolute;
+  top: clamp(28px,5vh,54px);
+  left: clamp(22px,5vw,72px);
+  z-index: 6;
+  max-width: min(520px, calc(100% - 44px));
+}
+.motion-loader-title p {
+  margin: 0 0 7px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+.motion-loader-title h2 {
+  margin: 0;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(34px,5vw,72px);
+  font-weight: 400;
+  line-height: .94;
+  color: var(--ink);
+}
+.motion-callouts {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
+.motion-callout {
+  position: absolute;
+  width: min(330px, 34vw);
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.82);
+  border: 1px solid rgba(51,153,137,.22);
+  box-shadow: 0 18px 48px rgba(0,0,0,.10);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  opacity: 0;
+  transform: translateY(10px) scale(.96);
+  transition: opacity .28s, transform .32s;
+}
+.motion-callout-active,
+.motion-callout-done {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.motion-callout-done { opacity: .38; }
+.motion-callout-0 { left: 7%; bottom: 20%; }
+.motion-callout-1 { left: 25%; top: 38%; }
+.motion-callout-2 { left: 46%; top: 18%; }
+.motion-callout-3 { right: 16%; top: 44%; }
+.motion-callout-4 { right: 5%; top: 20%; }
+.motion-visual {
+  width: 70px;
+  height: 70px;
+  border-radius: 16px;
+  background: rgba(51,153,137,.08);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.motion-callout p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 850;
+  color: var(--ink);
+  letter-spacing: -.01em;
+}
+.motion-callout span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  line-height: 1.35;
+}
+.motion-profile { position: relative; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; }
+.motion-profile-ring { position: absolute; inset: -8px; border-radius: 50%; border: 3px solid rgba(51,153,137,.18); border-top-color: var(--accent); animation: calSpin 1.1s linear infinite; }
+.motion-profile img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; }
+.motion-vibes { display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 8px; }
+.motion-vibes span { margin: 0; padding: 4px 8px; border-radius: 999px; background: #fff; color: var(--accent); font-size: 10px; font-weight: 800; text-align: center; }
+.motion-reviews { display: grid; gap: 5px; width: 100%; padding: 8px; }
+.motion-reviews span { margin: 0; border-radius: 999px; padding: 5px 8px; background: #fff; color: var(--accent); font-size: 11px; font-weight: 850; }
+.motion-photo-stack { position: relative; width: 58px; height: 58px; }
+.motion-photo-stack img { position: absolute; inset: 0; width: 44px; height: 44px; border-radius: 10px; object-fit: cover; transform: translate(calc(var(--i) * 7px), calc(var(--i) * 5px)) rotate(calc((var(--i) - 1) * 8deg)); border: 2px solid #fff; }
+.motion-gemini { width: 100%; padding: 10px; display: grid; gap: 6px; }
+.motion-gemini span { margin: 0 auto 2px; font-size: 18px; color: var(--accent); animation: coreGlow 1.4s ease-in-out infinite; }
+.motion-gemini i { display: block; height: 6px; border-radius: 999px; background: rgba(51,153,137,.25); animation: shimmer 1.2s ease-in-out infinite; }
+.motion-loader-bottom {
+  position: absolute;
+  left: clamp(18px,5vw,70px);
+  right: clamp(18px,5vw,70px);
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.motion-status-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.motion-status {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.motion-status span {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--surface-3);
+}
+.motion-status p {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.motion-status-active,
+.motion-status-done { color: var(--ink); }
+.motion-status-active span,
+.motion-status-done span { background: var(--accent); }
+.motion-status-active span { animation: lpulse 1s ease-in-out infinite; }
+.motion-loader-bottom .loader-bar-track {
+  height: 4px;
+  background: rgba(51,153,137,.14);
+}
+.motion-loader-bottom .loader-bar-fill {
+  height: 4px;
+  background: var(--accent);
+}
+.motion-loader-bottom .loader-pct { color: var(--ink-3); }
+
+@media(max-width: 760px) {
+  .motion-loader-svg { padding: 0; width: 145%; left: -22%; }
+  .motion-loader-title { top: 28px; left: 20px; }
+  .motion-loader-title h2 { font-size: 42px; }
+  .motion-svg-pointer { transform: scale(.86); transform-origin: center; }
+  .motion-callout {
+    width: min(310px, calc(100vw - 36px));
+    grid-template-columns: 58px 1fr;
+    padding: 12px;
+  }
+  .motion-visual { width: 58px; height: 58px; border-radius: 14px; }
+  .motion-callout-0 { left: 18px; bottom: 31%; }
+  .motion-callout-1 { left: 26px; top: 35%; }
+  .motion-callout-2 { left: 34px; top: 18%; }
+  .motion-callout-3 { right: 18px; top: 44%; }
+  .motion-callout-4 { right: 18px; top: 24%; }
+  .motion-status-row {
+    display: flex;
+    overflow: hidden;
+  }
+  .motion-status { display: none; }
+  .motion-status-active,
+  .motion-status-done { display: flex; }
+}
+
 /* ── ERROR ── */
 .api-error-card { width: min(620px,100%); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 20px; padding: 34px; text-align: left; }
 
@@ -2226,8 +2444,19 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   width: 38px; height: 38px; border-radius: 12px;
   border: 1.5px solid var(--line-strong); background: transparent;
   color: var(--ink-2); display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all .15s;
+  gap: 0; overflow: hidden; white-space: nowrap;
+  cursor: pointer; transition: all .18s;
 }
+.icon-btn-sm span {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  transition: max-width .18s, opacity .12s;
+}
+.icon-btn-sm:hover:not(:disabled) { width: auto; padding: 0 12px; gap: 7px; }
+.icon-btn-sm:hover:not(:disabled) span { max-width: 110px; opacity: 1; }
 .icon-btn-sm:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); background: var(--surface); }
 .icon-btn-sm:disabled { opacity: .4; cursor: wait; }
 .icon-btn-sm-active { border-color: var(--accent) !important; color: var(--accent) !important; }
@@ -2353,7 +2582,7 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .rec-card-inner {
   flex: 1;
   min-height: 0;
-  padding: clamp(22px,3vw,34px) clamp(22px,3vw,34px) 74px;
+  padding: clamp(22px,3vw,34px) clamp(22px,3vw,34px) 190px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -2454,6 +2683,23 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .rec-mbar-btn:active { transform: scale(.97); }
 .rec-mbar-btn:disabled { opacity: .5; cursor: wait; }
 .rec-mbar-primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.rec-card-actions {
+  position: absolute;
+  left: 22px; right: 22px; bottom: 74px;
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+}
+.rec-card-actions .rec-mbar-btn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 16px;
+  font-size: 14px;
+  box-shadow: none;
+}
+.rec-card-actions > .rec-mbar-btn:last-child { display: none; }
 
 .rec-hint {
   display: none;
@@ -2573,9 +2819,10 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
     z-index: 0;
     border-radius: 0;
   }
+  .rec-photo-img { object-position: center bottom; }
   .rec-photo-ov { background: linear-gradient(to bottom, rgba(0,0,0,.62) 0%, rgba(0,0,0,.04) 46%); }
   .rec-photo { border-radius: 0; border: none; }
-  .rec-photo-meta { top: 16px; bottom: auto; left: 18px; right: 18px; }
+  .rec-photo-meta { top: calc(76px + env(safe-area-inset-top, 0px)); bottom: auto; left: 18px; right: 18px; }
   .rec-photo-name { font-size: 20px; }
 
   /* Card floats lower and shorter so the image keeps the full-screen feel */
@@ -2590,7 +2837,14 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .rec-card { cursor: pointer; }
   .rec-card-img { display: none; }
   .rec-card-inner { padding: 18px 18px 56px; gap: 8px; overflow: hidden; }
-  .rec-card-name { font-size: 24px; }
+  .rec-card-name {
+    font-size: 24px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .rec-card-desc { font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .rec-heart { top: 12px; right: 12px; width: 42px; height: 42px; }
 
@@ -2601,8 +2855,18 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
   .rec-mbar { display: none; }
   .rec-card-actions { display: none; }
   .rec-card-actions .rec-mbar-btn { width: 100%; min-height: 46px; justify-content: center; }
-  .rec-card-actions { display: flex; flex-direction: column; gap: 12px; padding: 12px 18px calc(20px + env(safe-area-inset-bottom)); background: transparent; }
-  .rec-card { overflow: visible; }
+  .rec-card-actions > .rec-mbar-btn:last-child { display: flex; }
+  .rec-card-actions {
+    position: static;
+    left: auto; right: auto; bottom: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 18px calc(20px + env(safe-area-inset-bottom));
+    background: transparent;
+  }
+  .rec-card { overflow: hidden; }
+  .rec-card-inner { flex: 1; padding-bottom: 12px; overflow-y: auto; }
   .rec-hint { display: flex; }
   .rec-hint { display: flex; }
 }
@@ -2773,220 +3037,3 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
    Replaces the stacked emergency override blocks.
    The image window fills edge-to-edge (no outer gap),
    and the white sign-in sheet rises over it.
-═══════════════════════════════════════════ */
-@media (max-width: 760px) {
-  .app-shell.login-active,
-  .login-active {
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-    background: #050807 !important;
-  }
-  .login-active .navbar { display: none !important; }
-
-  /* Full bleed — no padding, no frame, no gap */
-  .lp-shell {
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: stretch !important;
-    overflow: hidden !important;
-    background: #050807 !important;
-  }
-
-  .lp-bg-outer { display: none !important; }
-
-  .lp-card {
-    position: relative !important;
-    z-index: 2 !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    margin: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: #050807 !important;
-    box-shadow: none !important;
-    overflow: hidden !important;
-  }
-
-  /* Image window: fills all the space above the sheet, edge to edge */
-  .lp-card-right {
-    order: 1 !important;
-    position: relative !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    overflow: hidden !important;
-    background: #050807 !important;
-  }
-
-  .lp-window-img {
-    object-position: center !important;
-    filter: saturate(1.12) contrast(1.02) !important;
-  }
-
-  .lp-panel-overlay {
-    display: block !important;
-    position: absolute !important;
-    inset: 0 !important;
-    background: linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.02) 34%, rgba(0,0,0,.34) 100%) !important;
-    pointer-events: none !important;
-  }
-
-  .lp-window-mood {
-    top: max(16px, env(safe-area-inset-top)) !important;
-    left: 18px !important;
-  }
-
-  .lp-panel-itin {
-    position: absolute !important;
-    left: 18px !important;
-    right: 18px !important;
-    bottom: 46px !important; /* clears the sheet's rounded overlap */
-    display: grid !important;
-    gap: 11px !important;
-    z-index: 2 !important;
-  }
-
-  .lp-itin-line {
-    min-height: 56px !important;
-    display: grid !important;
-    grid-template-columns: 78px 1fr !important;
-    align-items: center !important;
-    padding: 0 18px !important;
-    border-radius: 18px !important;
-    background: rgba(255,255,255,.24) !important;
-    border: 1px solid rgba(255,255,255,.34) !important;
-    backdrop-filter: blur(18px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-    box-shadow: none !important;
-  }
-
-  .lp-itin-time {
-    color: #3CA394 !important;
-    font-size: 15px !important;
-    font-weight: 900 !important;
-    letter-spacing: -.02em !important;
-  }
-
-  .lp-itin-label {
-    color: #FFFFFF !important;
-    font-size: 15px !important;
-    font-weight: 800 !important;
-    letter-spacing: -.02em !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  /* White sign-in sheet rises over the image */
-  .lp-card-left {
-    order: 2 !important;
-    position: relative !important;
-    z-index: 5 !important;
-    flex: 0 0 auto !important;
-    width: 100% !important;
-    margin: -28px 0 0 !important;
-    padding: 26px 26px max(28px, env(safe-area-inset-bottom)) !important;
-    background: #FFFFFF !important;
-    border: 0 !important;
-    border-radius: 28px 28px 0 0 !important;
-    box-shadow: 0 -12px 34px rgba(0,0,0,.16) !important;
-    overflow: visible !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0 !important;
-  }
-
-  .lp-eyebrow {
-    margin: 0 0 10px !important;
-    color: #8A897F !important;
-    font-size: 11px !important;
-    font-weight: 900 !important;
-    letter-spacing: .18em !important;
-    text-transform: uppercase !important;
-  }
-
-  .lp-h1 {
-    margin: 0 !important;
-    font-size: clamp(46px, 13vw, 62px) !important;
-    line-height: .88 !important;
-    letter-spacing: -.045em !important;
-    color: #080808 !important;
-  }
-
-  .lp-accent { color: #3CA394 !important; -webkit-text-fill-color: #3CA394 !important; }
-
-  .lp-sub {
-    margin: 14px 0 0 !important;
-    max-width: 34ch !important;
-    color: #8A897F !important;
-    font-size: 14px !important;
-    line-height: 1.42 !important;
-    letter-spacing: -.01em !important;
-  }
-
-  .lp-actions {
-    width: 100% !important;
-    margin-top: 20px !important;
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 11px !important;
-  }
-
-  /* Google iframe stays desktop-only; mobile uses the styled prompt() button */
-  .lp-google-wrap { display: none !important; }
-  .lp-google-btn-mobile {
-    display: flex !important;
-    height: 56px !important;
-    border-radius: 18px !important;
-    border: 1px solid #D9D4CA !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
-  }
-
-  .lp-ghost-btn {
-    width: 100% !important;
-    height: 56px !important;
-    min-height: 56px !important;
-    border-radius: 18px !important;
-    border: 1px solid #D9D4CA !important;
-    background: #FFFFFF !important;
-    color: #080808 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    font-size: 15px !important;
-    font-weight: 750 !important;
-    box-shadow: none !important;
-  }
-  .lp-ghost-btn:hover { background: #F8F5EF !important; border-color: #D9D4CA !important; color: #080808 !important; }
-
-  .lp-fine { display: none !important; }
-
-  .drawer-close { display: none !important; }
-}
-
-/* Shorter phones: keep CTAs visible */
-@media (max-width: 760px) and (max-height: 760px) {
-  .lp-card-left { padding: 20px 22px max(22px, env(safe-area-inset-bottom)) !important; }
-  .lp-h1 { font-size: clamp(42px, 12vw, 54px) !important; }
-  .lp-sub { margin-top: 10px !important; font-size: 13px !important; }
-  .lp-actions { margin-top: 15px !important; gap: 9px !important; }
-  .lp-google-btn-mobile, .lp-ghost-btn { height: 50px !important; min-height: 50px !important; }
-  .lp-panel-itin { bottom: 40px !important; gap: 9px !important; }
-  .lp-itin-line { min-height: 50px !important; }
-}
-`;
-
-createRoot(document.getElementById("root")).render(<App />);
