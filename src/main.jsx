@@ -3192,3 +3192,5 @@ const css = [
   "",
   ""
 ].join("\n");
+
+createRoot(document.getElementById("root")).render(<App />);
