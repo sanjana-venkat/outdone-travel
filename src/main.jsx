@@ -27,8 +27,8 @@ function getTravelArchetype(moods = []) {
   if (has("cultural")) return { name: "The Context Seeker", line: "You want the story behind the place. History, art, architecture — you travel to understand, not just to see." };
   if (has("active")) return { name: "The Kinetic Traveler", line: "You see a city best from a run or a bike. Movement is how you think, explore, and decompress." };
   if (has("slow-easy")) return { name: "The Unhurried", line: "You know that the best travel memories are almost never the rushed ones. You give places the time they deserve." };
-  if (moods.length) return { name: "The Mood-Led Traveler", line: "You know what you want today — and you're building a day around exactly that feeling." };
-  return { name: "The Mood-Led Traveler", line: "You know what you want today — and you're building a day around exactly that feeling." };
+  if (moods.length) return { name: "The Vibe-Led Traveler", line: "You know what you want today — and you're building a day around exactly that feeling." };
+  return { name: "The Vibe-Led Traveler", line: "You know what you want today — and you're building a day around exactly that feeling." };
 }
 
 function priceLabel(p) {
@@ -111,45 +111,34 @@ function buildGoogleMapsTripUrl(stops = [], travelMode = "walking") {
   return url;
 }
 
-function ensureTwelveSuggestions(plan, destinationName, selectedMoodObjects = []) {
+function parseStopMinutes(stop = {}) {
+  const raw = String(stop.time || "").trim().toLowerCase();
+  const match = raw.match(/(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?/i);
+  if (!match) return null;
+  let hour = Number(match[1]);
+  const minute = Number(match[2] || 0);
+  const meridiem = match[3]?.replace(/\./g, "");
+  if (meridiem === "pm" && hour !== 12) hour += 12;
+  if (meridiem === "am" && hour === 12) hour = 0;
+  return hour * 60 + minute;
+}
+
+function stopTimeRank(stop = {}) {
+  const minutes = parseStopMinutes(stop);
+  if (minutes != null) return minutes;
+  const text = `${stop.period || ""} ${stop.category || ""} ${stop.name || ""} ${stop.description || ""}`.toLowerCase();
+  if (/(sunrise|breakfast|coffee|morning)/.test(text)) return 8 * 60;
+  if (/(brunch|late morning)/.test(text)) return 10 * 60;
+  if (/(lunch|noon|midday)/.test(text)) return 13 * 60;
+  if (/(snack|dessert|afternoon)/.test(text)) return 15 * 60;
+  if (/(dinner|sunset|evening)/.test(text)) return 19 * 60;
+  if (/(night|drinks|bar|club|late)/.test(text)) return 21 * 60;
+  return 16 * 60;
+}
+
+function orderStopsMorningFirst(plan) {
   const stops = Array.isArray(plan?.stops) ? [...plan.stops] : [];
-  if (stops.length >= 12) return { ...plan, stops: stops.slice(0, 12) };
-  const moodLabel = selectedMoodObjects[0]?.title || "mood-matched";
-  const fillers = [
-    ["Breakfast pick", "Breakfast", "Morning", "A breakfast or coffee stop that fits your route and opens early enough for the day."],
-    ["Coffee or tea break", "Coffee", "Morning", "A relaxed cafe stop to reset between activities."],
-    ["Lunch spot", "Lunch", "Afternoon", "A lunch option near the places already on your short list."],
-    ["Snack or dessert stop", "Snack", "Afternoon", "A lighter food stop for a flexible pause."],
-    ["Dinner pick", "Dinner", "Evening", "A dinner option that fits the vibe and dietary preference."],
-    [`${moodLabel} activity`, "Activity", "Flexible", "An activity suggestion to compare against the rest of the plan."],
-    ["Scenic detour", "Scenic", "Flexible", "A short visual detour that adds texture without locking the day too tightly."],
-    ["Local neighborhood walk", "Walk", "Flexible", "A flexible walkable area to add if you want more open exploration time."],
-    ["Cultural stop", "Culture", "Flexible", "A cultural or historical stop that can round out the plan."],
-    ["Evening option", "Nightlife", "Evening", "A late-day option for after dinner or a slower night."],
-    ["Shopping or market stop", "Market", "Flexible", "A market or local shopping stop for browsing and small finds."],
-    ["Quiet reset", "Slow", "Flexible", "A calmer pause if the day starts feeling too packed."]
-  ];
-  let fillIndex = 0;
-  while (stops.length < 12) {
-    const [name, category, period, description] = fillers[fillIndex % fillers.length];
-    const fullName = `${name} in ${destinationName || "the destination"}`;
-    stops.push({
-      name: fullName,
-      googlePlaceName: fullName,
-      category,
-      period,
-      time: "Flexible",
-      description,
-      routeFromPrevious: "Add this where it best fits your route.",
-      address: destinationName || "",
-      rating: null,
-      openNow: undefined,
-      photoQuery: `${destinationName || ""} ${category}`,
-      isFlexibleSuggestion: true
-    });
-    fillIndex += 1;
-  }
-  return { ...plan, stops };
+  return { ...plan, stops: stops.sort((a, b) => stopTimeRank(a) - stopTimeRank(b)) };
 }
 
 function getToday() { return new Date().toISOString().slice(0, 10); }
@@ -161,14 +150,18 @@ function prettyDate(value) {
 }
 
 const fallbackDestinationSuggestions = [
+  { label: "France", aliases: ["france"] },
+  { label: "Nigeria", aliases: ["nigeria"] },
+  { label: "Sunnyvale, California", aliases: ["sunnyvale", "sunnyvale california", "sunnyvale ca"] },
+  { label: "Delhi, India", aliases: ["delhi", "new delhi", "india"] },
+  { label: "Tokyo, Japan", aliases: ["tokyo", "japan"] },
   { label: "Kyoto, Japan", aliases: ["kyoto"] },
   { label: "Oaxaca, Mexico", aliases: ["oaxaca"] },
   { label: "Big Island, Hawaii", aliases: ["big island", "hawaii"] },
   { label: "Kauai, Hawaii", aliases: ["kauai"] },
   { label: "San Francisco, CA", aliases: ["san francisco", "sf", "frisco", "bay area"] },
   { label: "New York City", aliases: ["new york", "nyc"] },
-  { label: "Paris, France", aliases: ["paris"] },
-  { label: "Tokyo, Japan", aliases: ["tokyo"] }
+  { label: "Paris, France", aliases: ["paris"] }
 ];
 
 const moodVibes = [
@@ -354,7 +347,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    document.title = "Travel DNA — Mood-first travel planning";
+    document.title = "Travel DNA - Vibe-first travel planning";
     const setFavicon = (href, type) => {
       let el = document.querySelector(`link[rel~="icon"]`);
       if (!el) { el = document.createElement("link"); el.rel = "icon"; document.head.appendChild(el); }
@@ -453,7 +446,7 @@ function App() {
 
   const destinationOptions = placePredictions.length
     ? placePredictions
-    : fallbackFilteredDestinations.slice(0, 6).map((item) => ({ label: item.label, source: "fallback" }));
+    : fallbackFilteredDestinations.slice(0, 5).map((item) => ({ label: item.label, source: "fallback" }));
 
   const selectedMoodObjects = selectedMoods.map((id) => moodVibes.find((vibe) => vibe.id === id)).filter(Boolean);
   // Preload all itinerary images so switching cards feels instant on mobile
@@ -535,7 +528,7 @@ function App() {
     },
     {
       id: "vibe",
-      title: "Mood and constraints",
+      title: "Vibe and constraints",
       line: `${selectedMoodObjects.map(m => m.title).join(", ") || "Your vibe"} · ${diet} · ${planFor}`,
     },
     {
@@ -603,7 +596,7 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, recommendationCount: 12, numStops: 12, minStops: 12, maxStops: 12, requiredFoodStops: 5, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a pool of exactly 12 real, specific suggestions that the user can add to their own itinerary. The returned stops array must contain exactly 12 concrete places, no fewer and no more. Include at least 5 food or drink places across breakfast, lunch, dinner, coffee, snacks, dessert, or drinks when timing and opening hours make sense. Include the remaining 7 suggestions as activities, sights, nature, culture, shopping, nightlife, or experiences that match the selected moods. Each item should still be a stop object with name, category, time, period, description, routeFromPrevious, address when known, and open/timing guidance. For food, say whether it is best for breakfast, lunch, dinner, snack, coffee, dessert, or drinks, and respect dietary preference strictly. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent - the signal field for each mood is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one suggestion around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the suggestions across the ENTIRE region. Only keep suggestions close together and walkable when the destination is a specific city or neighborhood. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, recommendationCount: 12, numStops: 12, minStops: 12, maxStops: 12, requiredFoodStops: 5, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a pool of exactly 12 real, specific suggestions that the user can add to their own itinerary. The returned stops array must contain exactly 12 concrete places, no fewer and no more. Do not use placeholder or generic names like Breakfast pick, Lunch spot, Dinner pick, Scenic detour, or activity in destination. Every stop name must be the actual name of a real venue, restaurant, attraction, neighborhood, park, market, tour, or activity provider. Start the suggestions with morning-first options, then midday, afternoon, evening, and night. Include at least 5 food or drink places across breakfast, lunch, dinner, coffee, snacks, dessert, or drinks when timing and opening hours make sense. Include the remaining 7 suggestions as activities, sights, nature, culture, shopping, nightlife, or experiences that match the selected vibe. Each item should still be a stop object with name, category, time, period, description, routeFromPrevious, address when known, and open/timing guidance. For food, say whether it is best for breakfast, lunch, dinner, snack, coffee, dessert, or drinks, and respect dietary preference strictly. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent - the signal field for each vibe is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one suggestion around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the suggestions across the ENTIRE region. Only keep suggestions close together and walkable when the destination is a specific city or neighborhood. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
     });
 
     fetchPlaces();
@@ -612,7 +605,7 @@ function App() {
       const res = await geminiPromise;
       const data = await res.json();
       if (!res.ok || data?.error) throw new Error(data?.error || "The planning service is unavailable right now.");
-      const completePlan = ensureTwelveSuggestions(data, data.destination || destination, selectedMoodObjects);
+      const completePlan = orderStopsMorningFirst(data);
       clearInterval(interval);
       setLoadingLine(6);
       setItinerary(completePlan);
@@ -793,7 +786,7 @@ function App() {
             <circle cx="16" cy="23.5" r="2" fill="#339989" />
           </svg>
           <div className="nav-steps nav-left">
-            {[{ label: "Setup", value: "setup" }, { label: "Mood", value: "mood" }, { label: "Result", value: "result" }].map((item, i) => {
+            {[{ label: "Setup", value: "setup" }, { label: "Vibe", value: "mood" }, { label: "Result", value: "result" }].map((item, i) => {
               const order = ["setup", "mood", "result"];
               const active = step === item.value;
               const done = order.indexOf(step) > i || step === "loading";
@@ -835,7 +828,7 @@ function App() {
                 <button className="drawer-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button>
               </div>
               <p className="mobile-drawer-label">Navigation</p>
-              {[{ label: "Setup", value: "setup" }, { label: "Mood", value: "mood" }, { label: "Result", value: "result" }].map((item, i) => {
+              {[{ label: "Setup", value: "setup" }, { label: "Vibe", value: "mood" }, { label: "Result", value: "result" }].map((item, i) => {
                 const order = ["setup", "mood", "result"];
                 const active = step === item.value;
                 const done = order.indexOf(step) > i || step === "loading";
@@ -950,13 +943,14 @@ function App() {
                   setShowDestinationSuggestions(true);
                 }}
                 onFocus={() => {
-                  if (destination.trim().length >= 2) setShowDestinationSuggestions(true);
+                  setShowDestinationSuggestions(true);
                 }}
-                placeholder="City, neighborhood or even country"
+                onBlur={() => setTimeout(() => setShowDestinationSuggestions(false), 140)}
+                placeholder={showDestinationSuggestions ? "" : "City, neighborhood or even country"}
                 autoComplete="off"
                 className="setup-card-input"
               />
-              {showDestinationSuggestions && destination.trim().length >= 2 && destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
+              {showDestinationSuggestions && destinationOptions.length > 0 && !destinationOptions.find(o => o.label === destination) && (
                 <div className="setup-suggestions">
                   {destinationOptions.map((item) => (
                     <button
@@ -1032,11 +1026,11 @@ function App() {
       {step === "mood" && (
         <main className="screen mood-screen on">
           <section className="mood-header">
-            <p className="label">Step 2 of 2 - Mood</p>
+            <p className="label">Step 2 of 2 - Vibe</p>
             <h2>What's the <span className="gem">vibe today?</span></h2>
             <p>
               Maybe yesterday you wanted museums. Today you want beach sunsets.
-              That's why we're asking. Pick up to three moods and we'll do the magic.
+              That's why we're asking. Pick up to three vibes and we'll do the magic.
             </p>
           </section>
           <section className="mood-grid image-grid">
@@ -1113,7 +1107,7 @@ function App() {
                 if (!filtered.length) return null;
                 return (
                   <div className="action-search-panel">
-                    <p className="action-search-panel-label">{selectedMoods.length ? "Based on your moods" : "Popular right now"}</p>
+                    <p className="action-search-panel-label">{selectedMoods.length ? "Based on your vibe" : "Popular right now"}</p>
                     {filtered.map((p, i) => {
                       const picked = customActivities.includes(p.activity);
                       return (
@@ -1394,24 +1388,25 @@ function App() {
             </section>
           </div>
 
-          {mobileTrayOpen && (
-            <div className="mobile-tray-sheet" onClick={() => setMobileTrayOpen(false)}>
-              <div className="mobile-tray-inner" onClick={(e) => e.stopPropagation()}>
-                <div className="rec-more-grab" />
-                <div className="mobile-tray-title"><strong>Selected stops</strong><span>Sort and remove</span></div>
-                {selectedStops.map((stop, i) => (
-                  <article className="mobile-sort-row" key={`${stop.name}-${i}`}>
-                    <span className="sort-icon">☰</span>
-                    <img src={stopImage(stop, i)} alt="" />
-                    <p>{stop.name}</p>
-                    <button type="button" onClick={() => removeSelectedStop(i)}>×</button>
-                  </article>
-                ))}
-                <button className="rec-mbar-btn rec-mbar-primary" disabled={!selectedStops.length} onClick={createItineraryFromSelected}>Create plan</button>
-              </div>
-            </div>
-          )}
         </main>
+      )}
+
+      {mobileTrayOpen && step === "result" && (
+        <div className="mobile-tray-sheet" onClick={() => setMobileTrayOpen(false)}>
+          <div className="mobile-tray-inner" onClick={(e) => e.stopPropagation()}>
+            <div className="rec-more-grab" />
+            <div className="mobile-tray-title"><strong>Selected stops</strong><span>Sort and remove</span></div>
+            {selectedStops.map((stop, i) => (
+              <article className="mobile-sort-row" key={`${stop.name}-${i}`}>
+                <span className="sort-icon">☰</span>
+                <img src={stopImage(stop, i)} alt="" />
+                <p>{stop.name}</p>
+                <button type="button" onClick={() => removeSelectedStop(i)}>×</button>
+              </article>
+            ))}
+            <button className="rec-mbar-btn rec-mbar-primary" disabled={!selectedStops.length} onClick={createItineraryFromSelected}>Create plan</button>
+          </div>
+        </div>
       )}
 
       {showSubscribe && (
@@ -1671,7 +1666,7 @@ const css = [
   "  border-radius: 0 !important; min-height: 0 !important; padding: 0 !important;",
   "  font-size: 16px !important; font-weight: 600 !important; color: var(--ink) !important; width: 100%;",
   "}",
-  ".setup-card-input:focus { box-shadow: none !important; }",
+  ".setup-card-input:focus { outline: none !important; box-shadow: none !important; }",
   ".setup-card-input::placeholder { color: var(--ink-3); font-weight: 400; }",
   "input[type=\"date\"].setup-card-input { font-size: 15px !important; }",
   ".setup-suggestions {",
@@ -3052,8 +3047,8 @@ const css = [
   ".motion-route-svg { width: min(1120px, 100%); height: min(58vh, 600px); overflow: visible; }",
   ".motion-route-shadow, .motion-route-path { fill: none; stroke-linecap: round; stroke-linejoin: round; }",
   ".motion-route-shadow { stroke: rgba(0,0,0,.08); stroke-width: 24; filter: blur(5px); }",
-  ".motion-route-path { stroke: var(--accent); stroke-width: 8; stroke-dasharray: 12 18; animation: routeDash 1.8s linear infinite; }",
-  "@keyframes routeDash { to { stroke-dashoffset: -60; } }",
+  ".motion-route-path { stroke: var(--accent); stroke-width: 8; stroke-dasharray: 1500; stroke-dashoffset: 1500; animation: motionPathFill 12s linear forwards; }",
+  "@keyframes motionPathFill { to { stroke-dashoffset: 0; } }",
   ".route-stop circle:first-child { fill: #fff; stroke: rgba(51,153,137,.32); stroke-width: 4; transition: fill .25s, stroke .25s; }",
   ".route-stop circle:last-child { fill: rgba(51,153,137,.08); opacity: 0; transform-origin: center; }",
   ".route-stop-active circle:first-child, .route-stop-done circle:first-child { fill: var(--accent); stroke: #fff; }",
@@ -3143,7 +3138,7 @@ const css = [
   ".motion-path-shadow, .motion-path-base, .motion-path-draw { fill: none; stroke-linecap: round; stroke-linejoin: round; }",
   ".motion-path-shadow { stroke: rgba(0,0,0,.08); stroke-width: 24; filter: blur(6px); }",
   ".motion-path-base { stroke: rgba(51,153,137,.15); stroke-width: 8; }",
-  ".motion-path-draw { stroke: var(--accent); stroke-width: 7; stroke-dasharray: 18 18; animation: routeDash 1.8s linear infinite; }",
+  ".motion-path-draw { stroke: var(--accent); stroke-width: 7; stroke-dasharray: 1500; stroke-dashoffset: 1500; animation: motionPathFill 12s linear forwards; }",
   ".motion-node circle:first-child { fill: #fff; stroke: rgba(51,153,137,.36); stroke-width: 3; }",
   ".motion-node circle:last-child { fill: rgba(51,153,137,.1); opacity: 0; transform-origin: center; }",
   ".motion-node-on circle:first-child { fill: var(--accent); stroke: #fff; }",
@@ -3255,8 +3250,3 @@ const css = [
   "  .mobile-tray-inner { width: 100% !important; max-height: min(74vh, 560px) !important; margin: 0 !important; border-radius: 28px 28px 0 0 !important; padding: 16px 22px max(28px, env(safe-area-inset-bottom)) !important; box-shadow: 0 -18px 70px rgba(0,0,0,.22) !important; }",
   "  .mobile-tray-inner .rec-mbar-btn { margin-top: 20px !important; }",
   "}",
-  "",
-  ""
-].join("\n");
-
-createRoot(document.getElementById("root")).render(<App />);
