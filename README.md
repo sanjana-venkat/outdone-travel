@@ -1,6 +1,10 @@
 # outdone
 
-outdone is an AI-assisted travel planning prototype that turns a destination, date, and a few vibe signals into a curated set of places the user can choose from. Instead of generating one fixed itinerary immediately, outdone lets people browse suggestions, add the stops they like, reorder them, and then create a final timeline-style plan.
+Ever felt like AI keeps recommending the same things? I'm a designer, and in one of my trips to Las Vegas, it kept thinking "Oh, you're a designer, so you must like art museums." I got an aha moment, and coded this! Outdone is an AI-assisted travel planner that turns your destination into a curated set of places based on what you want _right now._ Tell us your vibe and get 12 curated suggestions food and activities that are auto-arranged in an itinerary based on distance and time. BONUS! Instant booking links and Google maps with all the stops added, so all you gotta do is go :)
+
+# The design thinking
+
+Wanted to build an intent-classification model so I aggregated all possible vibes into 9 archetypes that are uniquely distinct and all encompassing. These vibe signals were then repeatedly tested to see if Gemini can then classify intent into specific activities, map it to the right suggestions based on distance, time and user preferences and return a filtered response that matches user preferences
 
 ![outdone itinerary builder](docs/readme-hero.png)
 
@@ -99,6 +103,6 @@ public/terms.html
 
 ## Notes
 
-outdone is a prototype. Generated recommendations should be checked before travel, especially opening hours, prices, booking requirements, safety conditions, and transportation details.
+Outdone is a prototype. Generated recommendations should be checked before travel, especially opening hours, prices, booking requirements, safety conditions, and transportation details.
 
 © 2026 Sanjana Venkat. All rights reserved.
