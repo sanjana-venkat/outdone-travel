@@ -1,4 +1,4 @@
-# outdone
+# Outdone
 
 Ever felt like AI keeps recommending the same things? I'm a designer, and in one of my trips to Las Vegas, it kept thinking "Oh, you're a designer, so you must like art museums." 
 
