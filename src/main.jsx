@@ -273,6 +273,7 @@ function App() {
   const [destination, setDestination] = useState("");
   const [placePredictions, setPlacePredictions] = useState([]);
   const [isAutocompleting, setIsAutocompleting] = useState(false);
+  const [autocompleteError, setAutocompleteError] = useState("");
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
   const [date, setDate] = useState(getToday());
   const [diet, setDiet] = useState("Vegetarian");
@@ -413,19 +414,29 @@ function App() {
   useEffect(() => {
     const query = destination.trim();
     if (query.length < 2) {
-      const clearTimer = setTimeout(() => setPlacePredictions([]), 0);
+      const clearTimer = setTimeout(() => {
+        setAutocompleteError("");
+        setPlacePredictions([]);
+      }, 0);
       return () => clearTimeout(clearTimer);
     }
     let cancelled = false;
     const timer = setTimeout(async () => {
       setIsAutocompleting(true);
+      setAutocompleteError("");
       try {
         const response = await fetch(`/api/place-autocomplete?input=${encodeURIComponent(query)}`);
         const data = await response.json();
-        if (!cancelled && Array.isArray(data.suggestions)) setPlacePredictions(data.suggestions);
+        if (!cancelled && Array.isArray(data.suggestions)) {
+          setPlacePredictions(data.suggestions);
+          setAutocompleteError(data.suggestions.length ? "" : data.error || "");
+        }
       } catch (error) {
         console.warn("Autocomplete fallback:", error);
-        if (!cancelled) setPlacePredictions([]);
+        if (!cancelled) {
+          setPlacePredictions([]);
+          setAutocompleteError("Could not load Google suggestions.");
+        }
       } finally {
         if (!cancelled) setIsAutocompleting(false);
       }
@@ -959,7 +970,7 @@ function App() {
                 autoComplete="off"
                 className="setup-card-input"
               />
-              {showDestinationSuggestions && destination.trim().length >= 2 && (isAutocompleting || destinationOptions.length > 0) && !destinationOptions.find(o => o.label === destination) && (
+              {showDestinationSuggestions && destination.trim().length >= 2 && !destinationOptions.find(o => o.label === destination) && (
                 <div className="setup-suggestions">
                   {destinationOptions.map((item) => (
                     <button
@@ -973,6 +984,8 @@ function App() {
                     </button>
                   ))}
                   {isAutocompleting && destinationOptions.length === 0 && <div className="autocomplete-loading">Searching...</div>}
+                  {!isAutocompleting && destinationOptions.length === 0 && autocompleteError && <div className="autocomplete-loading">{autocompleteError}</div>}
+                  {!isAutocompleting && destinationOptions.length === 0 && !autocompleteError && <div className="autocomplete-loading">No suggestions yet. Keep typing or press Next.</div>}
                 </div>
               )}
             </div>
@@ -1465,16 +1478,3 @@ function App() {
 }
 
 function Select({ label, value, setValue, options }) {
-  return (
-    <div className="field-block">
-      <p className="field-label">{label}</p>
-      <div className="chips">
-        {options.map((option) => (
-          <button type="button" className={value === option ? "chip active" : "chip"} onClick={() => setValue(option)} key={option}>{option}</button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-createRoot(document.getElementById("root")).render(<App />);
