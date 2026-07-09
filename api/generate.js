@@ -114,7 +114,7 @@ function fallbackItinerary({ destination, dates, diet, travelWith, selectedMoods
     dates: d,
     selectedMood: moodLine,
     generatedBy: "fallback",
-    summary: "Gemini credits are limited, so Travel DNA generated a local fallback preview while still enriching places with Google Places.",
+    summary: "Gemini credits are limited, so outdone generated a local fallback preview while still enriching places with Google Places.",
     stops: stops.map(([time, period, category, name, photoQuery, description, routeFromPrevious]) => ({
       time, period, category, name, photoQuery, description, routeFromPrevious
     }))
@@ -175,11 +175,14 @@ async function enrichStopWithPlaces(stop, destination, index, usedImages) {
   }
 
   const googlePhoto = photoUrlFromPlace(place);
+  const googlePlaceName = place.displayName?.text;
 
   return {
     ...stop,
+    generatedName: stop.name,
+    name: googlePlaceName || stop.name,
     placeId: place.id,
-    googlePlaceName: place.displayName?.text,
+    googlePlaceName,
     address: place.formattedAddress,
     rating: place.rating,
     userRatingCount: place.userRatingCount,
@@ -217,7 +220,7 @@ async function generateWithGemini(payload) {
   const moodText = getMoodText(selectedMoods);
 
   const prompt = `
-You are Travel DNA, a mood-first planner powered by Gemini.
+You are outdone, a mood-first planner powered by Gemini.
 
 Create a REAL, SPECIFIC itinerary for:
 Destination: ${destination}
