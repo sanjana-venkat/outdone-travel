@@ -228,6 +228,13 @@ input[type="date"].setup-card-input { font-size: 15px !important; }
   cursor: pointer; transition: background .1s;
 }
 .setup-sug:hover, .setup-sug.active { background: var(--surface); }
+.autocomplete-loading {
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: var(--ink-3);
+  font-size: 14px;
+  font-weight: 600;
+}
 
 @media(max-width: 760px) {
   .setup-stack { max-width: 100%; }
@@ -1792,11 +1799,4 @@ p { font-size: 16px; line-height: 1.72; color: var(--ink-2); }
 .compact-timeline .stop-active .s-pin { background: var(--accent) !important; border-color: var(--accent) !important; box-shadow: 0 0 0 7px rgba(51,153,137,.16) !important; }
 .compact-timeline .stop:hover:not(.stop-active) .s-pin { background: var(--surface-3) !important; border-color: var(--line-strong) !important; }
 @media(max-width: 900px) {
-  .suggestion-actions { grid-template-columns: 1fr !important; gap: 8px !important; }
-  .suggestion-actions button { display: flex !important; min-height: 46px !important; }
-  .builder-panel { bottom: max(22px, env(safe-area-inset-bottom)) !important; }
-  .builder-create-plan { margin: 20px 14px 0 !important; width: calc(100% - 28px) !important; }
-  .mobile-tray-sheet { position: fixed !important; inset: 0 !important; z-index: 9999 !important; display: flex !important; align-items: flex-end !important; justify-content: stretch !important; background: rgba(0,0,0,.42) !important; }
-  .mobile-tray-inner { width: 100% !important; max-height: min(74vh, 560px) !important; margin: 0 !important; border-radius: 28px 28px 0 0 !important; padding: 16px 22px max(28px, env(safe-area-inset-bottom)) !important; box-shadow: 0 -18px 70px rgba(0,0,0,.22) !important; }
-  .mobile-tray-inner .rec-mbar-btn { margin-top: 20px !important; }
-}
+ 
