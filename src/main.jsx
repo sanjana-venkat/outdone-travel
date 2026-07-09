@@ -1478,3 +1478,16 @@ function App() {
 }
 
 function Select({ label, value, setValue, options }) {
+  return (
+    <div className="field-block">
+      <p className="field-label">{label}</p>
+      <div className="chips">
+        {options.map((option) => (
+          <button type="button" className={value === option ? "chip active" : "chip"} onClick={() => setValue(option)} key={option}>{option}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+createRoot(document.getElementById("root")).render(<App />);
