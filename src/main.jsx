@@ -281,7 +281,7 @@ function App() {
   const [transportMode, setTransportMode] = useState("");
   const [timeRange, setTimeRange] = useState("");
   const [selectedMoods, setSelectedMoods] = useState([]);
-  const [loadingLine, setLoadingLine] = useState(0);
+  const [loadingPct, setLoadingPct] = useState(6);
   const [placesPhotos, setPlacesPhotos] = useState([]);
   const [itinerary, setItinerary] = useState(null);
   const [googleReady, setGoogleReady] = useState(false);
@@ -426,7 +426,16 @@ function App() {
       setAutocompleteError("");
       try {
         const response = await fetch(`/api/place-autocomplete?input=${encodeURIComponent(query)}`);
-        const data = await response.json();
+        const responseText = await response.text();
+        let data = null;
+        try {
+          data = responseText ? JSON.parse(responseText) : {};
+        } catch {
+          throw new Error(`Autocomplete route returned ${response.status}: ${responseText.slice(0, 120) || "No response body"}`);
+        }
+        if (!response.ok) {
+          throw new Error(data?.error || `Autocomplete route returned ${response.status}`);
+        }
         if (!cancelled && Array.isArray(data.suggestions)) {
           setPlacePredictions(data.suggestions);
           setAutocompleteError(data.suggestions.length ? "" : data.error || "");
@@ -435,7 +444,7 @@ function App() {
         console.warn("Autocomplete fallback:", error);
         if (!cancelled) {
           setPlacePredictions([]);
-          setAutocompleteError("Could not load Google suggestions.");
+          setAutocompleteError(error.message || "Could not load Google suggestions.");
         }
       } finally {
         if (!cancelled) setIsAutocompleting(false);
@@ -564,12 +573,17 @@ function App() {
     },
     {
       id: "gemini",
-      title: "AI generating itinerary",
+      title: "AI curating your suggestions",
       line: "Asking AI to think like today's version of you",
     }
   ], [destination, diet, planFor, selectedMoodObjects, user]);
-  const activeLoadingPhase = Math.min(loadingLine, loadingPhases.length - 1);
-  const loadingPct = Math.round((Math.min(loadingLine + 1, loadingPhases.length) / loadingPhases.length) * 100);
+  const displayLoadingPct = Math.round(loadingPct);
+  const activeLoadingPhase =
+    loadingPct >= 90 ? 4 :
+    loadingPct >= 70 ? 3 :
+    loadingPct >= 48 ? 2 :
+    loadingPct >= 26 ? 1 :
+    0;
 
   function toggleMood(id) {
     setSelectedMoods((current) => {
@@ -582,7 +596,7 @@ function App() {
   async function generatePlan() {
     goTo("loading");
     setError("");
-    setLoadingLine(0);
+    setLoadingPct(6);
     setItinerary(null);
     setPlacesPhotos([]);
     setCardIndex(0);
@@ -592,10 +606,15 @@ function App() {
     setMobileTrayOpen(false);
     setManualStopOrder(false);
 
-    const CLAMP_AT = 3;
     const interval = setInterval(() => {
-      setLoadingLine((v) => Math.min(v + 1, CLAMP_AT));
-    }, 2400);
+      setLoadingPct((pct) => {
+        if (pct >= 90) return 90;
+        if (pct < 26) return Math.min(26, pct + 3.2);
+        if (pct < 48) return Math.min(48, pct + 2.3);
+        if (pct < 70) return Math.min(70, pct + 1.6);
+        return Math.min(90, pct + 0.95);
+      });
+    }, 900);
 
     const fetchPlaces = async () => {
       try {
@@ -629,9 +648,10 @@ function App() {
       if (!res.ok || data?.error) throw new Error(data?.error || "The planning service is unavailable right now.");
       const completePlan = orderStopsMorningFirst(data);
       clearInterval(interval);
-      setLoadingLine(5);
+      setLoadingPct((pct) => Math.max(pct, 90));
       setItinerary(completePlan);
-      setTimeout(() => goTo("result"), 1800);
+      setTimeout(() => setLoadingPct(100), 850);
+      setTimeout(() => goTo("result"), 2200);
     } catch (err) {
       clearInterval(interval);
       console.error(err);
@@ -922,6 +942,11 @@ function App() {
               </div>
 
               <p className="lp-fine">No account needed. Sign in later to save itineraries.</p>
+              <div className="lp-legal-links">
+                <button type="button" onClick={() => goTo("privacy")}>Privacy Policy</button>
+                <span>·</span>
+                <button type="button" onClick={() => goTo("terms")}>Terms of Use</button>
+              </div>
             </div>
 
             <div className="lp-card-right">
@@ -943,6 +968,38 @@ function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {step === "privacy" && (
+        <LegalPage
+          title="Privacy Policy"
+          eyebrow="Legal"
+          onBack={() => goTo("login")}
+          sections={[
+            ["What Travel DNA Collects", "Travel DNA may collect the trip details you enter, such as destination, date, travel vibe, dietary preference, travel group, and optional activity requests. If you use Google sign-in, we receive basic profile information from Google, such as your name, email address, and profile picture."],
+            ["How We Use Information", "We use this information to generate travel suggestions, improve the prototype experience, support sign-in, and help you save or share itineraries when those features are available."],
+            ["Google Sign-In", "Google sign-in is optional. Authentication is handled by Google. Travel DNA does not receive or store your Google password."],
+            ["Third-Party Services", "Travel DNA may use Google Maps, Google Places, Gemini, and hosting services such as Vercel to generate recommendations, show maps, enrich place details, and run the application."],
+            ["Data Storage", "This prototype may store limited information locally in your browser, such as subscription email entries or temporary itinerary state. Production storage may change as the product evolves."],
+            ["Contact", "For privacy questions, contact Sanjana Venkat through the repository or project contact channel."]
+          ]}
+        />
+      )}
+
+      {step === "terms" && (
+        <LegalPage
+          title="Terms of Use"
+          eyebrow="Legal"
+          onBack={() => goTo("login")}
+          sections={[
+            ["Prototype Use", "Travel DNA is a prototype travel-planning tool. Recommendations are generated from user input and third-party services and may be incomplete, outdated, unavailable, or inaccurate."],
+            ["Travel Decisions", "You are responsible for confirming opening hours, safety conditions, prices, accessibility, booking requirements, transportation, and local rules before visiting any place."],
+            ["Bookings and External Links", "Links to booking pages, Google Maps, restaurants, attractions, or other third-party websites are provided for convenience. Travel DNA is not responsible for third-party content, availability, pricing, or transactions."],
+            ["Accounts", "If you sign in with Google, you agree to provide accurate account information and to use the application lawfully."],
+            ["Ownership", "The Travel DNA interface, branding, design, and prototype content are owned by Sanjana Venkat unless otherwise noted."],
+            ["Changes", "These terms may be updated as the prototype evolves."]
+          ]}
+        />
       )}
 
       {step === "setup" && (
@@ -1182,7 +1239,7 @@ function App() {
             ))}
             <g className="motion-svg-pointer">
               <animateMotion
-                dur="12s"
+                dur="28s"
                 repeatCount="1"
                 fill="freeze"
                 rotate="auto"
@@ -1246,9 +1303,9 @@ function App() {
 
           <div className="motion-loader-bottom">
             <div className="loader-bar-track">
-              <div className="loader-bar-fill" style={{ width: String(loadingPct) + "%" }} />
+              <div className="loader-bar-fill" style={{ width: String(displayLoadingPct) + "%" }} />
             </div>
-            <p className="loader-pct">{loadingPct}%</p>
+            <p className="loader-pct">{displayLoadingPct}%</p>
           </div>
         </main>
       )}
@@ -1401,6 +1458,12 @@ function App() {
                           </div>
                           <p>{stop.description}</p>
                           <small>{stop.routeFromPrevious}</small>
+                          {stop.bookingUrl && (
+                            <a className="rec-card-book itinerary-book-link" href={stop.bookingUrl} target="_blank" rel="noreferrer">
+                              Check availability and book
+                              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </a>
+                          )}
                         </div>
                       </article>
                     ))}
@@ -1473,7 +1536,33 @@ function App() {
           </div>
         </div>
       )}
+      {step !== "loading" && step !== "result" && (
+        <footer className="app-footer text-sm text-gray-500 text-center py-8">
+          © 2026 Sanjana Venkat. All rights reserved.
+        </footer>
+      )}
     </div>
+  );
+}
+
+function LegalPage({ eyebrow, title, sections, onBack }) {
+  return (
+    <main className="screen legal-screen on">
+      <section className="legal-card">
+        <button className="legal-back" type="button" onClick={onBack}>← Back to sign in</button>
+        <p className="label">{eyebrow}</p>
+        <h2>{title}</h2>
+        <p className="legal-updated">Last updated: July 9, 2026</p>
+        <div className="legal-sections">
+          {sections.map(([heading, body]) => (
+            <section key={heading}>
+              <h3>{heading}</h3>
+              <p>{body}</p>
+            </section>
+          ))}
+        </div>
+      </section>
+    </main>
   );
 }
 
