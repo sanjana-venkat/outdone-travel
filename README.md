@@ -1,6 +1,8 @@
 # outdone
 
-Ever felt like AI keeps recommending the same things? I'm a designer, and in one of my trips to Las Vegas, it kept thinking "Oh, you're a designer, so you must like art museums." I got an aha moment, and coded this! Outdone is an AI-assisted travel planner that turns your destination into a curated set of places based on what you want _right now._ Tell us your vibe and get 12 curated suggestions food and activities that are auto-arranged in an itinerary based on distance and time. BONUS! Instant booking links and Google maps with all the stops added, so all you gotta do is go :)
+Ever felt like AI keeps recommending the same things? I'm a designer, and in one of my trips to Las Vegas, it kept thinking "Oh, you're a designer, so you must like art museums." 
+
+I got an aha moment, and coded this! Outdone is an AI-assisted travel planner that turns your destination into a curated set of places based on what you want _right now._ Tell us your vibe and get 12 curated suggestions food and activities that are auto-arranged in an itinerary based on distance and time. BONUS! Instant booking links and Google maps with all the stops added, so all you gotta do is go :)
 
 # The design thinking
 
