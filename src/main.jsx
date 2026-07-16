@@ -101,15 +101,45 @@ const moodActivitySuggestions = {
 };
 
 function buildGoogleMapsTripUrl(stops = [], travelMode = "walking") {
-  const names = stops.map((stop) => stop.googlePlaceName || stop.name || stop.photoQuery).filter(Boolean).slice(0, 10);
+  const routeStops = stops.filter((stop) => stop.googlePlaceName || stop.name || stop.photoQuery).slice(0, 10);
+  const names = routeStops.map((stop) => stop.googlePlaceName || stop.name || stop.photoQuery);
   if (!names.length) return "";
-  if (names.length === 1) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(names[0])}`;
+  if (names.length === 1) {
+    const placeId = routeStops[0].placeId;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(names[0])}${placeId ? `&query_place_id=${encodeURIComponent(placeId)}` : ""}`;
+  }
   const origin = names[0];
   const destination = names[names.length - 1];
   const waypoints = names.slice(1, -1).join("|");
   let url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=${travelMode}`;
+  if (routeStops[0].placeId) url += `&origin_place_id=${encodeURIComponent(routeStops[0].placeId)}`;
+  if (routeStops[routeStops.length - 1].placeId) url += `&destination_place_id=${encodeURIComponent(routeStops[routeStops.length - 1].placeId)}`;
   if (waypoints) url += `&waypoints=${encodeURIComponent(waypoints)}`;
+  const waypointIds = routeStops.slice(1, -1).map((stop) => stop.placeId || "");
+  if (waypointIds.length && waypointIds.every(Boolean)) url += `&waypoint_place_ids=${encodeURIComponent(waypointIds.join("|"))}`;
   return url;
+}
+
+function stablePlanFingerprint(stops, date, transportMode) {
+  const identities = stops.map((stop) => stop.placeId || `${stop.name}|${stop.address || ""}`).sort();
+  const input = JSON.stringify({ identities, date, transportMode: transportMode || "Walking", version: 2 });
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `v2-${(hash >>> 0).toString(36)}`;
+}
+
+function formatTripDuration(seconds) {
+  const minutes = Math.max(0, Math.round(Number(seconds || 0) / 60));
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return hours ? `${hours}h ${remainder ? `${remainder}m` : ""}`.trim() : `${remainder}m`;
+}
+
+function formatTripDistance(meters) {
+  return `${(Number(meters || 0) / 1000).toFixed(Number(meters || 0) >= 10000 ? 0 : 1)} km`;
 }
 
 function parseStopMinutes(stop = {}) {
@@ -144,6 +174,62 @@ function orderStopsByTime(stops = []) {
 function orderStopsMorningFirst(plan) {
   const stops = Array.isArray(plan?.stops) ? [...plan.stops] : [];
   return { ...plan, stops: orderStopsByTime(stops) };
+}
+
+function mealTargetMinutes(stop = {}) {
+  const explicitRole = String(stop.mealRole || "").toLowerCase();
+  const text = `${explicitRole} ${stop.category || ""} ${stop.name || ""} ${stop.description || ""}`.toLowerCase();
+  if (/breakfast/.test(text)) return 8 * 60 + 30;
+  if (/brunch/.test(text)) return 10 * 60 + 30;
+  if (/lunch/.test(text)) return 12 * 60 + 30;
+  if (/coffee|cafe/.test(text)) return 10 * 60;
+  if (/snack|dessert|bakery|tea/.test(text)) return 15 * 60 + 30;
+  if (/dinner|supper/.test(text)) return 19 * 60;
+  if (/drinks|cocktail|wine|bar/.test(text)) return 21 * 60;
+  return null;
+}
+
+function planStopMinutes(stop = {}) {
+  return mealTargetMinutes(stop) ?? stopTimeRank(stop);
+}
+
+function arrangeStopsForPlan(stops = []) {
+  const groups = new Map();
+  [...stops].sort((a, b) => planStopMinutes(a) - planStopMinutes(b)).forEach((stop) => {
+    const timeWindow = Math.floor(planStopMinutes(stop) / 90);
+    if (!groups.has(timeWindow)) groups.set(timeWindow, []);
+    groups.get(timeWindow).push(stop);
+  });
+  return [...groups.entries()].sort(([a], [b]) => a - b).flatMap(([, group]) => {
+    const availabilityFirst = [...group].sort((a, b) => {
+      const rank = (stop) =>
+        (stop.businessStatus === "OPERATIONAL" ? 2 : 0) +
+        (Array.isArray(stop.openingHours) && stop.openingHours.length ? 1 : 0);
+      return rank(b) - rank(a);
+    });
+    return sortByProximity(availabilityFirst);
+  });
+}
+
+function openingSummary(stop, tripDate) {
+  const selectedDate = new Date(`${tripDate || getToday()}T12:00:00`);
+  const day = selectedDate.toLocaleDateString("en-US", { weekday: "long" });
+  const dateLabel = selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  const line = Array.isArray(stop?.openingHours)
+    ? stop.openingHours.find((item) => item.toLowerCase().startsWith(day.toLowerCase()))
+    : null;
+  if (line) {
+    const hours = line.slice(line.indexOf(":") + 1).trim();
+    return `${dateLabel} · ${hours}`;
+  }
+  return stop?.openTimingGuidance ? `${dateLabel} · ${stop.openTimingGuidance}` : null;
+}
+
+function specialTimingNote(stop) {
+  const note = stop?.specialHoursMetadata?.note || stop?.specialHoursNote;
+  if (!note) return null;
+  const name = stop?.specialDayName;
+  return name && !note.toLowerCase().includes(String(name).toLowerCase()) ? `${name}: ${note}` : note;
 }
 
 function getToday() { return new Date().toISOString().slice(0, 10); }
@@ -269,17 +355,22 @@ function PlacesCarousel({ moods, places }) {
 
 function App() {
   const [user, setUser] = useState(null);
-  const [step, setStep] = useState("login");
+  const [step, setStep] = useState(() => new URLSearchParams(window.location.search).has("outdoBuffer") ? "outdoBuffer" : "login");
   const [destination, setDestination] = useState("");
+  const [endDestination, setEndDestination] = useState("");
   const [placePredictions, setPlacePredictions] = useState([]);
   const [isAutocompleting, setIsAutocompleting] = useState(false);
   const [autocompleteError, setAutocompleteError] = useState("");
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
+  const [endPlacePredictions, setEndPlacePredictions] = useState([]);
+  const [isEndAutocompleting, setIsEndAutocompleting] = useState(false);
+  const [endAutocompleteError, setEndAutocompleteError] = useState("");
+  const [showEndDestinationSuggestions, setShowEndDestinationSuggestions] = useState(false);
   const [date, setDate] = useState(getToday());
   const [diet, setDiet] = useState("Vegetarian");
   const [planFor, setPlanFor] = useState("Date");
   const [transportMode, setTransportMode] = useState("");
-  const [timeRange, setTimeRange] = useState("");
+  const [requirements, setRequirements] = useState("");
   const [selectedMoods, setSelectedMoods] = useState([]);
   const [loadingPct, setLoadingPct] = useState(6);
   const [placesPhotos, setPlacesPhotos] = useState([]);
@@ -293,7 +384,6 @@ function App() {
   const [shareCopied, setShareCopied] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [calendarState, setCalendarState] = useState("idle");
-  const [customActivity, setCustomActivity] = useState("");
   const [cardIndex, setCardIndex] = useState(0);
   const [savedCards, setSavedCards] = useState(new Set());
   const [selectedStops, setSelectedStops] = useState([]);
@@ -301,11 +391,11 @@ function App() {
   const [mobileTrayOpen, setMobileTrayOpen] = useState(false);
   const [dragIndex, setDragIndex] = useState(null);
   const [manualStopOrder, setManualStopOrder] = useState(false);
+  const [outdoLoading, setOutdoLoading] = useState(false);
+  const [outdoPlanId, setOutdoPlanId] = useState("");
   const [addedStopName, setAddedStopName] = useState("");
   const [activeTimelineIndex, setActiveTimelineIndex] = useState(0);
   const [swipeDir, setSwipeDir] = useState(1);
-  const [activityFocus, setActivityFocus] = useState(false);
-  const [customActivities, setCustomActivities] = useState([]);
   const [loginSlide, setLoginSlide] = useState(0);
   const [showTapHint, setShowTapHint] = useState(false);
   const [heartBurst, setHeartBurst] = useState(false);
@@ -314,6 +404,8 @@ function App() {
   const swipeStartXRef = useRef(null);
   const timelineRefs = useRef([]);
   const shellRef = useRef(null);
+  const routeRefreshTimerRef = useRef(null);
+  const routeRefreshRequestRef = useRef(0);
 
   function goTo(s) {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -322,12 +414,63 @@ function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.has("outdoBuffer")) return;
+    const boardId = params.get("board");
+    if (boardId) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(`outdonePlan:${boardId}`) || "null");
+        const sourceItinerary = saved?.sourceItinerary || saved?.itinerary;
+        if (!sourceItinerary?.stops?.length) throw new Error("Cached outing board not found");
+        setItinerary(sourceItinerary);
+        setSelectedStops(saved.sourceSelectedStops || saved.itinerary?.stops || []);
+        setDate(saved.date || getToday());
+        setDestination(saved.destination || sourceItinerary.destination || "");
+        setEndDestination(saved.endDestination || "");
+        setTransportMode(saved.transportMode || "Walking");
+        setCardIndex(0);
+        setItineraryBuilt(false);
+        setManualStopOrder(false);
+        setOutdoPlanId("");
+        setStep("result");
+      } catch (error) {
+        console.warn("Could not restore outing board", error);
+        setError("This outing board is no longer available.");
+        setStep("apiError");
+      }
+      return;
+    }
+    const outdoId = params.get("outdo");
+    if (outdoId) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(`outdonePlan:${outdoId}`) || "null");
+        if (!saved?.itinerary?.stops?.length) throw new Error("Cached plan not found");
+        setItinerary(saved.itinerary);
+        setSelectedStops(saved.itinerary.stops);
+        setDate(saved.date || getToday());
+        setDestination(saved.destination || saved.itinerary.destination || "");
+        setEndDestination(saved.endDestination || "");
+        setTransportMode(saved.transportMode || "Walking");
+        setOutdoPlanId(outdoId);
+        setItineraryBuilt(true);
+        setManualStopOrder(Boolean(saved.manuallyEditedAt));
+        setStep("result");
+      } catch (error) {
+        console.warn("Could not load AI Outdo plan", error);
+        setError("This cached AI Outdo plan is no longer available. Return to your outing board and run it again.");
+        setStep("apiError");
+      }
+      return;
+    }
     const id = params.get("i");
     if (!id) return;
     fetch(`/api/save-itinerary?id=${encodeURIComponent(id)}`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(payload => {
-        if (payload.itinerary) setItinerary(payload.itinerary);
+        if (payload.itinerary) {
+          setItinerary(payload.itinerary);
+          setSelectedStops(payload.itinerary.stops || []);
+          setItineraryBuilt(true);
+        }
         if (payload.destination) setDestination(payload.destination);
         if (payload.date) setDate(payload.date);
         if (payload.selectedMoods) setSelectedMoods(payload.selectedMoods.map(m => m.id || m));
@@ -337,6 +480,27 @@ function App() {
       })
       .catch(() => console.warn("Could not load shared itinerary"));
   }, []);
+
+  useEffect(() => {
+    if (!outdoPlanId || !selectedStops.length || !manualStopOrder) return;
+    const key = `outdonePlan:${outdoPlanId}`;
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) || "null");
+      if (!saved) return;
+      localStorage.setItem(key, JSON.stringify({
+        ...saved,
+        optimization: itinerary?.optimization || saved.optimization,
+        itinerary: {
+          ...saved.itinerary,
+          stops: selectedStops,
+          optimization: itinerary?.optimization || saved.itinerary?.optimization
+        },
+        manuallyEditedAt: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.warn("Could not persist reordered AI Outdo plan", error);
+    }
+  }, [outdoPlanId, selectedStops, manualStopOrder, itinerary?.optimization]);
 
   useEffect(() => {
     document.title = "outdone - Vibe-first travel planning";
@@ -453,7 +617,48 @@ function App() {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [destination]);
 
+  useEffect(() => {
+    const query = endDestination.trim();
+    if (query.length < 2) {
+      const clearTimer = setTimeout(() => {
+        setEndAutocompleteError("");
+        setEndPlacePredictions([]);
+      }, 0);
+      return () => clearTimeout(clearTimer);
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setIsEndAutocompleting(true);
+      setEndAutocompleteError("");
+      try {
+        const response = await fetch(`/api/place-autocomplete?input=${encodeURIComponent(query)}`);
+        const responseText = await response.text();
+        let data = null;
+        try {
+          data = responseText ? JSON.parse(responseText) : {};
+        } catch {
+          throw new Error(`Autocomplete route returned ${response.status}: ${responseText.slice(0, 120) || "No response body"}`);
+        }
+        if (!response.ok) throw new Error(data?.error || `Autocomplete route returned ${response.status}`);
+        if (!cancelled && Array.isArray(data.suggestions)) {
+          setEndPlacePredictions(data.suggestions);
+          setEndAutocompleteError(data.suggestions.length ? "" : data.error || "");
+        }
+      } catch (error) {
+        console.warn("End destination autocomplete fallback:", error);
+        if (!cancelled) {
+          setEndPlacePredictions([]);
+          setEndAutocompleteError(error.message || "Could not load Google suggestions.");
+        }
+      } finally {
+        if (!cancelled) setIsEndAutocompleting(false);
+      }
+    }, 220);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [endDestination]);
+
   const destinationOptions = placePredictions;
+  const endDestinationOptions = endPlacePredictions;
 
   const selectedMoodObjects = selectedMoods.map((id) => moodVibes.find((vibe) => vibe.id === id)).filter(Boolean);
   // Preload all itinerary images so switching cards feels instant on mobile
@@ -473,8 +678,10 @@ function App() {
   const travelArchetype = getTravelArchetype(selectedMoodObjects);
   const googleTravelMode = transportMode === "Car" ? "driving" : transportMode === "Public transit" ? "transit" : "walking";
   const suggestionStops = itinerary?.stops || [];
-  const activeStop = suggestionStops[Math.min(cardIndex, Math.max(suggestionStops.length - 1, 0))] || {};
-  const itineraryStops = orderStopsByTime(selectedStops.length ? selectedStops : suggestionStops);
+  const activeStop = cardIndex < suggestionStops.length ? suggestionStops[cardIndex] : {};
+  const itineraryStops = selectedStops.length
+    ? (itineraryBuilt ? selectedStops : orderStopsByTime(selectedStops))
+    : orderStopsByTime(suggestionStops);
   const mapsStops = itineraryStops;
   const tripMapsUrl = mapsStops.length ? buildGoogleMapsTripUrl(mapsStops, googleTravelMode) : "";
 
@@ -486,16 +693,47 @@ function App() {
     setAddedStopName(stop.name);
     setTimeout(() => {
       setAddedStopName("");
-      setCardIndex((i) => Math.min(i + 1, Math.max(suggestionStops.length - 1, 0)));
+      setCardIndex((i) => Math.min(i + 1, suggestionStops.length));
     }, 520);
   }
 
   function discardCurrentStop() {
-    setCardIndex((i) => Math.min(i + 1, Math.max(suggestionStops.length - 1, 0)));
+    setCardIndex((i) => Math.min(i + 1, suggestionStops.length));
   }
 
   function removeSelectedStop(index) {
     setSelectedStops((items) => items.filter((_, i) => i !== index));
+  }
+
+  function scheduleConsecutiveLegRefresh(stops) {
+    if (!outdoPlanId || stops.length < 2) return;
+    clearTimeout(routeRefreshTimerRef.current);
+    const requestId = ++routeRefreshRequestRef.current;
+    routeRefreshTimerRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch("/api/optimize-route", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            stops,
+            date,
+            transportMode: transportMode || "Walking",
+            preserveOrder: true
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.orderedStops?.length) throw new Error(data.error || "Could not refresh route legs.");
+        if (requestId !== routeRefreshRequestRef.current) return;
+        setSelectedStops(data.orderedStops);
+        setItinerary((current) => current ? {
+          ...current,
+          stops: data.orderedStops,
+          optimization: data.optimization
+        } : current);
+      } catch (error) {
+        console.warn("Could not refresh consecutive route legs", error);
+      }
+    }, 350);
   }
 
   function moveSelectedStop(from, to) {
@@ -505,8 +743,24 @@ function App() {
       const next = [...items];
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);
-      return next;
+      const pending = next.map((stop, index) => ({
+        ...stop,
+        routeFromPrevious: index === 0 ? "" : "Updating route from previous stop…"
+      }));
+      scheduleConsecutiveLegRefresh(pending);
+      return pending;
     });
+  }
+
+  function returnToSuggestions() {
+    if (window.opener && !window.opener.closed) {
+      window.opener.focus();
+      return;
+    }
+    const url = new URL(window.location.href);
+    url.search = "";
+    url.searchParams.set("board", outdoPlanId);
+    window.location.assign(url.toString());
   }
 
   function beginMobileSort(index, event) {
@@ -532,9 +786,80 @@ function App() {
 
   function createItineraryFromSelected() {
     if (!selectedStops.length) return;
-    if (!manualStopOrder) setSelectedStops((items) => orderStopsByTime(items));
+    if (!manualStopOrder) setSelectedStops((items) => arrangeStopsForPlan(items));
     setItineraryBuilt(true);
     setMobileTrayOpen(false);
+  }
+
+  async function runAiOutdo() {
+    if (!selectedStops.length || outdoLoading) return;
+    const fingerprint = stablePlanFingerprint(selectedStops, date, transportMode);
+    const cachedPlanId = localStorage.getItem(`outdoneRouteCache:${fingerprint}`);
+    const buildPlanUrl = (planId) => {
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.searchParams.set("outdo", planId);
+      return url.toString();
+    };
+    const buildBufferUrl = () => {
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.searchParams.set("outdoBuffer", "1");
+      return url.toString();
+    };
+
+    if (cachedPlanId && localStorage.getItem(`outdonePlan:${cachedPlanId}`)) {
+      window.open(buildPlanUrl(cachedPlanId), "_blank", "noopener,noreferrer");
+      setMobileTrayOpen(false);
+      return;
+    }
+
+    const planTab = window.open(buildBufferUrl(), "_blank");
+    if (!planTab) {
+      setError("Allow pop-ups for outdone so AI Outdo can open the optimized route in a separate tab.");
+      return;
+    }
+    setOutdoLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/optimize-route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stops: selectedStops, date, transportMode: transportMode || "Walking" })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.orderedStops?.length) throw new Error(data.error || "AI Outdo could not optimize this route.");
+
+      const planId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${fingerprint}`;
+      const record = {
+        id: planId,
+        fingerprint,
+        date,
+        destination,
+        endDestination,
+        transportMode: transportMode || "Walking",
+        optimization: data.optimization,
+        createdAt: new Date().toISOString(),
+        sourceItinerary: itinerary,
+        sourceSelectedStops: selectedStops,
+        itinerary: {
+          ...itinerary,
+          stops: data.orderedStops,
+          optimization: data.optimization,
+          generatedBy: "ai-outdo"
+        }
+      };
+      localStorage.setItem(`outdonePlan:${planId}`, JSON.stringify(record));
+      localStorage.setItem(`outdoneRouteCache:${fingerprint}`, planId);
+      planTab.location.replace(buildPlanUrl(planId));
+      setMobileTrayOpen(false);
+    } catch (error) {
+      planTab.close();
+      setError(error.message || "AI Outdo could not optimize this route.");
+    } finally {
+      setOutdoLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -637,7 +962,18 @@ function App() {
     const geminiPromise = fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, destination, dates: prettyDate(date), date, diet, travelWith: planFor, transportMode, timeRange, recommendationCount: 12, numStops: 12, minStops: 12, maxStops: 12, requiredFoodStops: 5, selectedMoods: selectedMoodObjects, customActivity: [...customActivities, customActivity.trim()].filter(Boolean).join("; ") || null, instruction: "Create a pool of exactly 12 real, specific suggestions that the user can add to their own itinerary. The returned stops array must contain exactly 12 concrete places, no fewer and no more. Do not use placeholder or generic names like Breakfast pick, Lunch spot, Dinner pick, Scenic detour, or activity in destination. Every stop name must be the actual name of a real venue, restaurant, attraction, neighborhood, park, market, tour, or activity provider. Start the suggestions with morning-first options, then midday, afternoon, evening, and night. Include at least 5 food or drink places across breakfast, lunch, dinner, coffee, snacks, dessert, or drinks when timing and opening hours make sense. Include the remaining 7 suggestions as activities, sights, nature, culture, shopping, nightlife, or experiences that match the selected vibe. Each item should still be a stop object with name, category, time, period, description, routeFromPrevious, address when known, and open/timing guidance. For food, say whether it is best for breakfast, lunch, dinner, snack, coffee, dessert, or drinks, and respect dietary preference strictly. For each stop that is bookable (tours, tickets, activities like ziplining, theme parks, cabins, classes), include a bookingUrl field pointing to the official booking or ticketing page. For restaurants and paid venues, include priceLevel (1-4) when known. Infer longer-term travel style lightly from Google profile if available, but do not ask the user to select it. Use selectedMoods as today's short-term intent - the signal field for each vibe is the critical instruction that defines what kinds of activities to include or exclude. If customActivity is provided, treat it as a must-include experience and build at least one suggestion around it. GEOGRAPHIC SCOPE: match the scope of the destination exactly as the user typed it. If the destination is a broad region, state, or country (for example 'Tamil Nadu', 'Tuscany', 'Portugal'), spread the suggestions across the ENTIRE region. Only keep suggestions close together and walkable when the destination is a specific city or neighborhood. The server will enrich stops with Google Places photos, ratings, addresses, and map links." })
+      body: JSON.stringify({
+        user,
+        destination,
+        endDestination: endDestination.trim() || null,
+        dates: prettyDate(date),
+        date,
+        diet,
+        travelWith: planFor,
+        transportMode,
+        selectedMoods: selectedMoodObjects,
+        requirements: requirements.trim()
+      })
     });
 
     fetchPlaces();
@@ -646,7 +982,7 @@ function App() {
       const res = await geminiPromise;
       const data = await res.json();
       if (!res.ok || data?.error) throw new Error(data?.error || "The planning service is unavailable right now.");
-      const completePlan = orderStopsMorningFirst(data);
+      const completePlan = data;
       clearInterval(interval);
       setLoadingPct((pct) => Math.max(pct, 90));
       setItinerary(completePlan);
@@ -667,7 +1003,7 @@ function App() {
       const res = await fetch("/api/save-itinerary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itinerary, destination, date, selectedMoods: selectedMoodObjects, diet, planFor }),
+        body: JSON.stringify({ itinerary: { ...itinerary, stops: itineraryStops }, destination, date, selectedMoods: selectedMoodObjects, diet, planFor }),
       });
       const { id, error } = await res.json();
       if (!id) throw new Error(error || "No ID returned");
@@ -684,9 +1020,9 @@ function App() {
   }
 
   function startOver() {
-    setDestination(""); setDate(getToday()); setDiet("No preference"); setPlanFor("Date");
-    setTransportMode(""); setTimeRange(""); setSelectedMoods([]); setCustomActivity("");
-    setCustomActivities([]); setItinerary(null); setCardIndex(0); setSavedCards(new Set());
+    setDestination(""); setEndDestination(""); setRequirements(""); setDate(getToday()); setDiet("No preference"); setPlanFor("Date");
+    setTransportMode(""); setSelectedMoods([]); setRequirements(""); setEndDestination("");
+    setItinerary(null); setCardIndex(0); setSavedCards(new Set());
     setSelectedStops([]); setItineraryBuilt(false); setMobileTrayOpen(false); setManualStopOrder(false);
     goTo("setup");
   }
@@ -745,8 +1081,8 @@ function App() {
               if (tokenResponse.error) return reject(new Error(tokenResponse.error));
               try {
                 const accessToken = tokenResponse.access_token;
-                const stopsText = itinerary.stops.map((s, i) =>
-                  `${String(i + 1).padStart(2, "0")}. ${s.time || ""} ${s.name}${s.address ? ` — ${s.address}` : ""}`
+                const stopsText = itineraryStops.map((s, i) =>
+                  `${String(i + 1).padStart(2, "0")}. ${s.name}${s.address ? ` — ${s.address}` : ""}`
                 ).join("\n");
 
                 const event = {
@@ -786,8 +1122,8 @@ function App() {
     }
 
     const fmt = (d) => d.replace(/-/g, "");
-    const stopsText = itinerary.stops.map((s, i) =>
-      `${String(i + 1).padStart(2, "0")}. ${s.time || ""} ${s.name}${s.address ? " — " + s.address : ""}`
+    const stopsText = itineraryStops.map((s, i) =>
+      `${String(i + 1).padStart(2, "0")}. ${s.name}${s.address ? " — " + s.address : ""}`
     ).join("\\n");
 
     const ics = [
@@ -815,7 +1151,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell${step === "login" ? " login-active" : ""}${step === "loading" ? " loading-active" : ""}${step === "result" ? " result-active" : ""}${step === "result" && itineraryBuilt ? " itinerary-final-active" : ""}`} ref={shellRef}>
+    <div className={`app-shell${step === "login" ? " login-active" : ""}${step === "loading" ? " loading-active" : ""}${step === "outdoBuffer" ? " outdo-buffer-active" : ""}${step === "result" ? " result-active" : ""}${step === "result" && itineraryBuilt ? " itinerary-final-active" : ""}${outdoPlanId ? " ai-outdo-view" : ""}`} ref={shellRef}>
       <nav className="navbar">
         <div className="nav-left-group nav-desktop">
           <svg className="nav-mark" width="24" height="24" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-label="outdone">
@@ -958,9 +1294,8 @@ function App() {
                 {moodVibes[loginSlide].title}
               </span>
               <div className="lp-panel-itin" key={`itin-${loginSlide}`}>
-                {(loginItins[moodVibes[loginSlide].id] || loginItins.cultural).map(([time, label], i) => (
+                {(loginItins[moodVibes[loginSlide].id] || loginItins.cultural).map(([, label], i) => (
                   <div key={label} className={`lp-itin-line lp-itin-drop`} style={{ animationDelay: `${.25 + i * .16}s` }}>
-                    <span className="lp-itin-time">{time}</span>
                     <span className="lp-itin-label">{label}</span>
                   </div>
                 ))}
@@ -1051,8 +1386,42 @@ function App() {
               <span className="setup-card-label">WHEN</span>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="setup-card-input" />
               <div className="setup-card-divider" />
-              <span className="setup-card-label">START TIME <span className="setup-card-optional">— optional</span></span>
-              <input type="time" value={timeRange} onChange={(e) => setTimeRange(e.target.value)} className="setup-card-input" />
+              <span className="setup-card-label">END DESTINATION <span className="setup-card-optional">— optional</span></span>
+              <input
+                type="text"
+                value={endDestination}
+                onChange={(e) => {
+                  setEndDestination(e.target.value);
+                  setShowEndDestinationSuggestions(true);
+                }}
+                onFocus={() => setShowEndDestinationSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowEndDestinationSuggestions(false), 140)}
+                placeholder={showEndDestinationSuggestions ? "" : "Where would you like to end up?"}
+                className="setup-card-input"
+                autoComplete="off"
+              />
+              {showEndDestinationSuggestions && endDestination.trim().length >= 2 && !endDestinationOptions.find((option) => option.label === endDestination) && (
+                <div className="setup-suggestions end-destination-suggestions">
+                  {endDestinationOptions.map((item) => (
+                    <button
+                      type="button"
+                      key={item.placeId || item.label}
+                      className="setup-sug"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setEndDestination(item.label);
+                        setEndPlacePredictions([]);
+                        setShowEndDestinationSuggestions(false);
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                  {isEndAutocompleting && endDestinationOptions.length === 0 && <div className="autocomplete-loading">Searching...</div>}
+                  {!isEndAutocompleting && endDestinationOptions.length === 0 && endAutocompleteError && <div className="autocomplete-loading">{endAutocompleteError}</div>}
+                  {!isEndAutocompleting && endDestinationOptions.length === 0 && !endAutocompleteError && <div className="autocomplete-loading">No suggestions yet. Keep typing or leave this blank.</div>}
+                </div>
+              )}
             </div>
 
             <div className="setup-card">
@@ -1133,89 +1502,36 @@ function App() {
             ))}
           </section>
 
-          <div className="custom-activity-wrap">
-            <div className="action-search">
-              <span className="action-search-label">WANT SOMETHING SPECIFIC?</span>
-              <div className={`action-search-bar${activityFocus ? " action-search-open" : ""}${customActivities.length ? " action-search-has-chips" : ""}`}>
-                <svg className="action-search-icon" width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" strokeWidth="1.6" /><path d="M14 14l3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-                <div className="action-search-field">
-                  {customActivities.map((a) => (
-                    <span key={a} className="activity-chip">
-                      {a}
-                      <button
-                        type="button"
-                        className="activity-chip-x"
-                        onMouseDown={(e) => { e.preventDefault(); setCustomActivities(list => list.filter(x => x !== a)); }}
-                        aria-label={`Remove ${a}`}
-                      >×</button>
-                    </span>
-                  ))}
-                  <input
-                    id="customActivity"
-                    type="text"
-                    value={customActivity}
-                    onChange={e => setCustomActivity(e.target.value)}
-                    onFocus={() => setActivityFocus(true)}
-                    onBlur={() => setTimeout(() => setActivityFocus(false), 150)}
-                    onKeyDown={e => {
-                      if (e.key === "Enter" && customActivity.trim()) {
-                        e.preventDefault();
-                        const v = customActivity.trim();
-                        setCustomActivities(list => list.includes(v) ? list : [...list, v]);
-                        setCustomActivity("");
-                      }
-                      if (e.key === "Backspace" && !customActivity && customActivities.length) {
-                        setCustomActivities(list => list.slice(0, -1));
-                      }
-                    }}
-                    placeholder={customActivities.length ? "Add another…" : "Search activities — ziplining, cooking class, rooftop sunset…"}
-                    maxLength={200}
-                    autoComplete="off"
-                  />
-                </div>
-                {(customActivity || customActivities.length > 0) && (
-                  <button className="action-search-clear" onMouseDown={(e) => { e.preventDefault(); setCustomActivity(""); setCustomActivities([]); }} aria-label="Clear all">×</button>
-                )}
-              </div>
-
-              {activityFocus && (() => {
-                const pool = (selectedMoods.length ? selectedMoods : ["romantic", "adventurous", "culinary"])
-                  .flatMap(id => (moodActivitySuggestions[id] || []).map(a => ({ activity: a, mood: moodVibes.find(v => v.id === id)?.title || "" })));
-                const q = customActivity.trim().toLowerCase();
-                const filtered = pool.filter(p => !q || p.activity.toLowerCase().includes(q)).slice(0, 8);
-                if (!filtered.length) return null;
-                return (
-                  <div className="action-search-panel">
-                    <p className="action-search-panel-label">{selectedMoods.length ? "Based on your vibe" : "Popular right now"}</p>
-                    {filtered.map((p, i) => {
-                      const picked = customActivities.includes(p.activity);
-                      return (
-                        <button
-                          key={p.activity + i}
-                          type="button"
-                          className={`action-search-item${picked ? " asi-picked" : ""}`}
-                          style={{ animationDelay: `${i * 35}ms` }}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            setCustomActivities(list => picked ? list.filter(x => x !== p.activity) : [...list, p.activity]);
-                            setCustomActivity("");
-                          }}
-                        >
-                          <span className="asi-spark">{picked ? "✓" : "✦"}</span>
-                          <span className="asi-name">{p.activity}</span>
-                          <span className="asi-mood">{p.mood}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </div>
+          <div className="custom-activity-wrap requirements-wrap">
+            <label className="requirements-field" htmlFor="requirements">
+              <span className="action-search-label">ANY SPECIFIC REQUIREMENTS? <em>— optional, but powerful</em></span>
+              <textarea
+                id="requirements"
+                value={requirements}
+                onChange={(event) => setRequirements(event.target.value)}
+                placeholder="Tell us what matters in your own words — e.g. quiet bookstores and experimental art, no hikes, wheelchair accessible, under $60, avoid crowds…"
+                maxLength={800}
+                rows={4}
+              />
+              <small>{requirements.length}/800 · We prioritize this over generic suggestions.</small>
+            </label>
           </div>
 
           <section className="build-cta-row">
             <button className="btn-accent" onClick={generatePlan}>Generate the plan</button>
           </section>
+        </main>
+      )}
+
+      {step === "outdoBuffer" && (
+        <main className="outdo-buffer-screen">
+          <div className="outdo-buffer-orbit" aria-hidden="true">
+            <span>✦</span><i /><i /><i />
+          </div>
+          <p className="label">AI Outdo</p>
+          <h2>Finding the cleanest way through.</h2>
+          <p>Balancing real travel distances, opening hours, meals, and the shape of your night.</p>
+          <div className="outdo-buffer-bar"><span /></div>
         </main>
       )}
 
@@ -1314,8 +1630,8 @@ function App() {
         <main className="screen loading-screen on">
           <div className="api-error-card">
             <p className="label">outdone preview</p>
-            <h2>Live planning is taking a short pause.</h2>
-            <p>The prototype could not finish a fresh plan right now. Review your setup or try again in a moment.</p>
+            <h2>The planning backend seems to be down.</h2>
+            <p>Please try again later.</p>
             <div className="error-actions">
               <button className="btn-outline" onClick={() => goTo("setup")}>Edit setup</button>
               <button className="btn-accent" onClick={generatePlan}>Try again ✦</button>
@@ -1337,7 +1653,7 @@ function App() {
 
               <button className="mobile-selected-pill" type="button" onClick={() => setMobileTrayOpen(true)}>
                 <span>{selectedStops.length}</span>
-                Selected
+                Outing board
               </button>
 
               <div className="selected-tray">
@@ -1352,7 +1668,7 @@ function App() {
                       onDrop={() => { moveSelectedStop(dragIndex, i); setDragIndex(null); }}
                     >
                       <img src={stopImage(stop, i)} alt="" />
-                      <button type="button" onClick={() => removeSelectedStop(i)} aria-label="Remove from itinerary">×</button>
+                      {!outdoPlanId && <button type="button" onClick={() => removeSelectedStop(i)} aria-label="Remove from itinerary">×</button>}
                       <span>{String(i + 1).padStart(2, "0")}</span>
                       <p>{stop.name}</p>
                     </article>
@@ -1364,9 +1680,18 @@ function App() {
             <section className="builder-panel">
               {!itineraryBuilt ? (
                 <>
+                  {activeStop.name ? (
+                    <>
                   <header className="builder-panel-head">
                     <p className="rec-head-eyebrow">Suggestions · {String(cardIndex + 1).padStart(2, "0")} / {String(suggestionStops.length || 1).padStart(2, "0")}</p>
-                    <h2 className="rec-head-dest">Choose your stops</h2>
+                    <h2 className="rec-head-dest">Build your outing board</h2>
+                    {itinerary?.planningDecision && (
+                      <p className="planning-brief">
+                        {suggestionStops.length} tailored {suggestionStops.length === 1 ? "place" : "places"}
+                        {itinerary.planningDecision.inferredRadiusKm ? ` · about ${itinerary.planningDecision.inferredRadiusKm} km radius` : ""}
+                        {itinerary.generationSamples ? ` · ${itinerary.generationSamples} searches merged` : ""}
+                      </p>
+                    )}
                   </header>
 
                   <article
@@ -1375,7 +1700,7 @@ function App() {
                     onTouchEnd={(e) => {
                       const dx = e.changedTouches[0].clientX - (swipeStartXRef.current ?? e.changedTouches[0].clientX);
                       if (dx > 64) addStopToItinerary(activeStop);
-                      if (dx < -64) setCardIndex((i) => Math.min(i + 1, Math.max(suggestionStops.length - 1, 0)));
+                      if (dx < -64) discardCurrentStop();
                       swipeStartXRef.current = null;
                     }}
                   >
@@ -1391,11 +1716,10 @@ function App() {
                       <p className="rec-card-cat">{activeStop.category || "Suggestion"}</p>
                       <div className="rec-card-timerow">
                         {activeStop.rating && <span className="rec-card-pill rec-pill-rating">★ {activeStop.rating}</span>}
-                        {activeStop.openNow !== undefined && <span className="rec-card-pill">{activeStop.openNow ? "Open" : "Check hours"}</span>}
-                        {activeStop.time && <span className="rec-card-pill">{activeStop.time}</span>}
+                        {(activeStop.specialHoursMetadata?.hasExceptionalHours || activeStop.specialHoursStatus === "special") && <span className="rec-card-pill special-hours-pill">Special hours may apply</span>}
+                        {priceLabel(activeStop.priceLevel) && <span className="rec-card-pill">{priceLabel(activeStop.priceLevel)}</span>}
                       </div>
                       <h3 className="rec-card-name">{activeStop.name || "More suggestions are loading"}</h3>
-                      {activeStop.routeFromPrevious && <small className="rec-card-route rec-card-route-top">{activeStop.routeFromPrevious}</small>}
                       {activeStop.address && (
                         <a className="rec-card-addr" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeStop.address)}`} target="_blank" rel="noreferrer">
                           <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8.5 4.5 8.5S12.5 9.375 12.5 6c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
@@ -1403,6 +1727,9 @@ function App() {
                         </a>
                       )}
                       <p className="rec-card-desc">{activeStop.description}</p>
+                      {activeStop.requirementMatch && <p className="requirement-match"><span>✦</span>{activeStop.requirementMatch}</p>}
+                      {openingSummary(activeStop, date) && <p className="opening-guidance">{openingSummary(activeStop, date)}</p>}
+                      {specialTimingNote(activeStop) && <p className="opening-guidance special-hours-guidance">{specialTimingNote(activeStop)}</p>}
                       {activeStop.bookingUrl && (
                         <a className="rec-card-book" href={activeStop.bookingUrl} target="_blank" rel="noreferrer">
                           Check availability and book
@@ -1413,19 +1740,52 @@ function App() {
 
                     <div className="suggestion-actions">
                       <button type="button" onClick={() => addStopToItinerary(activeStop)}>Add to plan</button>
-                      <button type="button" onClick={() => setCardIndex((i) => Math.min(i + 1, Math.max(suggestionStops.length - 1, 0)))}>Skip</button>
+                      <button type="button" onClick={discardCurrentStop}>Skip</button>
                     </div>
                   </article>
                   {selectedStops.length > 0 && (
-                    <button type="button" className="builder-create-plan" onClick={createItineraryFromSelected}>Create plan</button>
+                    <button type="button" className="builder-create-plan stardust-plan ai-outdo-button" onClick={runAiOutdo} disabled={outdoLoading}>
+                      <span>✦</span> {outdoLoading ? "AI Outdo is arranging…" : "AI Outdo"} <span>✦</span>
+                    </button>
+                  )}
+                    </>
+                  ) : (
+                    <section className="board-complete-state">
+                      <p className="rec-head-eyebrow">OUTING BOARD</p>
+                      <h2>{selectedStops.length ? "Your picks are ready." : "Your board is empty."}</h2>
+                      <p>{selectedStops.length ? "Everything you chose is here. Remove anything that no longer fits, or let AI Outdo arrange the route." : "You reached the end without adding a place. Go back through the suggestions whenever you’re ready."}</p>
+                      {selectedStops.length > 0 && (
+                        <div className="board-complete-grid">
+                          {selectedStops.map((stop, index) => (
+                            <article key={`${stop.name}-${index}`}>
+                              <img src={stopImage(stop, index)} alt="" />
+                              <div><span>{String(index + 1).padStart(2, "0")}</span><strong>{stop.name}</strong></div>
+                              <button type="button" onClick={() => removeSelectedStop(index)} aria-label={`Remove ${stop.name}`}>×</button>
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                      <div className="board-complete-actions">
+                        <button type="button" className="btn-outline" onClick={() => setCardIndex(0)}>← Review suggestions</button>
+                        {selectedStops.length > 0 && <button type="button" className="btn-accent stardust-plan ai-outdo-button" onClick={runAiOutdo} disabled={outdoLoading}>✦ {outdoLoading ? "Arranging…" : "AI Outdo"} ✦</button>}
+                      </div>
+                    </section>
                   )}
                 </>
               ) : (
                 <section className="builder-timeline">
                   <header className="builder-panel-head">
                     <p className="rec-head-eyebrow">{selectedStops.length} stops · {itinerary?.dates || prettyDate(date)}</p>
-                    <h2 className="rec-head-dest">Your itinerary</h2>
+                    <h2 className="rec-head-dest">{outdoPlanId ? "AI Outdo route" : "Your itinerary"}</h2>
+                    {outdoPlanId && itinerary?.optimization && (
+                      <div className="outdo-route-summary">
+                        <span><strong>{formatTripDuration(itinerary.optimization.travelSeconds)}</strong> travel</span>
+                        <span><strong>{formatTripDistance(itinerary.optimization.distanceMeters)}</strong> total</span>
+                        <small>{manualStopOrder ? "Custom order saved · consecutive route legs and Google Maps are updated." : "Drag stops or use the arrows. Each leg shows travel from the previous stop."}</small>
+                      </div>
+                    )}
                     <div className="builder-final-actions">
+                      {outdoPlanId && <button className="btn-outline outdo-back-button" type="button" onClick={returnToSuggestions}>← Back to suggestions</button>}
                       {tripMapsUrl && <a className="rec-card-book builder-maps-link" href={tripMapsUrl} target="_blank" rel="noreferrer">Google Maps</a>}
                       <div className="builder-icon-stack">
                         <button className={`builder-icon-btn${calendarState === "done" ? " icon-btn-active" : ""}`} type="button" onClick={addToCalendar} aria-label="Add to calendar" data-label={calendarState === "done" ? "Added" : "Add to calendar"}>
@@ -1434,30 +1794,48 @@ function App() {
                         <button className="builder-icon-btn" type="button" onClick={shareItinerary} aria-label="Share" data-label={shareCopied ? "Copied" : "Share"}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 12l8-5M8 12l8 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2"/><circle cx="18" cy="6" r="3" stroke="currentColor" strokeWidth="2"/><circle cx="18" cy="18" r="3" stroke="currentColor" strokeWidth="2"/></svg>
                         </button>
-                        <button className="builder-icon-btn" type="button" onClick={() => goTo("mood")} aria-label="Edit vibe" data-label="Edit vibe">
+                        {!outdoPlanId && <button className="builder-icon-btn" type="button" onClick={() => goTo("mood")} aria-label="Edit vibe" data-label="Edit vibe">
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 20h4l10.5-10.5a2.8 2.8 0 0 0-4-4L4 16v4z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M13 7l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-                        </button>
-                        <button className="builder-icon-btn" type="button" onClick={generatePlan} aria-label="Regenerate" data-label="Regenerate">
+                        </button>}
+                        {!outdoPlanId && <button className="builder-icon-btn" type="button" onClick={generatePlan} aria-label="Regenerate" data-label="Regenerate">
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6v5h-5M4 18v-5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 10a7 7 0 0 0-12-3M5.5 14a7 7 0 0 0 12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-                        </button>
+                        </button>}
                       </div>
                     </div>
                   </header>
                   <div className="timeline compact-timeline">
                     {itineraryStops.map((stop, i) => (
-                      <article className={`stop${i === activeTimelineIndex ? " stop-active" : ""}`} key={`${stop.name}-${i}`} ref={(node) => { timelineRefs.current[i] = node; }} data-index={i}>
+                      <article
+                        className={`stop${i === activeTimelineIndex ? " stop-active" : ""}${outdoPlanId ? " outdo-sortable-stop" : ""}`}
+                        key={`${stop.name}-${i}`}
+                        ref={(node) => { timelineRefs.current[i] = node; }}
+                        data-index={i}
+                        draggable={Boolean(outdoPlanId)}
+                        onDragStart={() => outdoPlanId && setDragIndex(i)}
+                        onDragOver={(event) => outdoPlanId && event.preventDefault()}
+                        onDrop={() => { if (outdoPlanId) moveSelectedStop(dragIndex, i); setDragIndex(null); }}
+                      >
                         <div className="s-pin"><span className="s-pin-index">{String(i + 1).padStart(2, "0")}</span></div>
                         <div className="s-body">
+                          {outdoPlanId && (
+                            <div className="plan-order-controls" aria-label={`Reorder ${stop.name}`}>
+                              <span className="plan-drag-handle" aria-hidden="true">⠿</span>
+                              <button type="button" disabled={i === 0} onClick={() => moveSelectedStop(i, i - 1)} aria-label={`Move ${stop.name} earlier`}>↑</button>
+                              <button type="button" disabled={i === itineraryStops.length - 1} onClick={() => moveSelectedStop(i, i + 1)} aria-label={`Move ${stop.name} later`}>↓</button>
+                            </div>
+                          )}
                           <p className="s-cat">{stop.category}</p>
-                          <h3>{stop.time || "Flexible"} <span>{stop.period}</span></h3>
                           <h4>{stop.name}</h4>
                           <div className="place-meta prominent">
                             {stop.rating && <a className="rating-pill" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.googlePlaceName || stop.name)}`} target="_blank" rel="noreferrer">★ {stop.rating}</a>}
-                            {stop.openNow !== undefined && <span>{stop.openNow ? "Open now" : "Hours vary"}</span>}
+                            {(stop.specialHoursMetadata?.hasExceptionalHours || stop.specialHoursStatus === "special") && <span className="special-hours-pill">Special hours may apply</span>}
+                            {priceRange(stop.priceLevel) && <span>{priceRange(stop.priceLevel)}</span>}
                             {stop.address && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`} target="_blank" rel="noreferrer">{stop.address}</a>}
                           </div>
                           <p>{stop.description}</p>
-                          <small>{stop.routeFromPrevious}</small>
+                          {openingSummary(stop, date) && <p className="opening-guidance">{openingSummary(stop, date)}</p>}
+                          {specialTimingNote(stop) && <p className="opening-guidance special-hours-guidance">{specialTimingNote(stop)}</p>}
+                          {stop.routeFromPrevious && <small className="consecutive-leg">{stop.routeFromPrevious}</small>}
                           {stop.bookingUrl && (
                             <a className="rec-card-book itinerary-book-link" href={stop.bookingUrl} target="_blank" rel="noreferrer">
                               Check availability and book
@@ -1480,7 +1858,7 @@ function App() {
         <div className="mobile-tray-sheet" onClick={() => setMobileTrayOpen(false)}>
           <div className="mobile-tray-inner" onClick={(e) => e.stopPropagation()}>
             <div className="rec-more-grab" />
-            <div className="mobile-tray-title"><strong>Selected stops</strong><span>Sort and remove</span></div>
+            <div className="mobile-tray-title"><strong>Your outing board</strong><span>Sort and remove</span></div>
             {selectedStops.map((stop, i) => (
               <article
                 className={`mobile-sort-row${dragIndex === i ? " mobile-sort-row-dragging" : ""}`}
@@ -1505,10 +1883,10 @@ function App() {
                 </button>
                 <img src={stopImage(stop, i)} alt="" />
                 <p>{stop.name}</p>
-                <button type="button" onClick={() => removeSelectedStop(i)}>×</button>
+                {!outdoPlanId && <button type="button" onClick={() => removeSelectedStop(i)}>×</button>}
               </article>
             ))}
-            <button className="rec-mbar-btn rec-mbar-primary" disabled={!selectedStops.length} onClick={createItineraryFromSelected}>Create plan</button>
+            <button className="rec-mbar-btn rec-mbar-primary stardust-plan ai-outdo-button" disabled={!selectedStops.length || outdoLoading} onClick={runAiOutdo}>✦ {outdoLoading ? "Arranging…" : "AI Outdo"} ✦</button>
           </div>
         </div>
       )}
@@ -1520,7 +1898,7 @@ function App() {
             <div className="spark">✦</div>
             <p className="label">Early access</p>
             <h2>Like this idea?</h2>
-            <p>outdone is running in demo mode right now. AI credits are limited, so fallback plans keep the experience alive while the product evolves.</p>
+            <p>outdone is running in demo mode right now. Live recommendations require successful Gemini and Google Places research, so generation pauses clearly when those services are unavailable.</p>
             <p>Subscribe to get updates when live personalization, better Google Places photos, saved preferences, and richer planning are ready.</p>
             <form className="subscribe-form" onSubmit={(event) => {
               event.preventDefault();
